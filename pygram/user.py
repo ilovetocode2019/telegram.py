@@ -38,7 +38,7 @@ class User:
     @property
     def name(self):
         """
-        :class:`int`:
+        :class:`str`:
             Username if the user has one. Otherwise the full name of the user.
         """
 
