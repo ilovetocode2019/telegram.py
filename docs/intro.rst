@@ -19,9 +19,9 @@ Install via git and pip:
 .. code-block:: shell
 
     # Mac/Linux
-    python3 -m pip install git+
+    python3 -m pip install git+https://github.com/ilovetocode2019/telegram.py
 
     # Windows
-    py -3 -m pip install git+
+    py -3 -m pip install git+https://github.com/ilovetocode2019/telegram.py
 
 You should now have telegram.py installed! You are ready to continue.
