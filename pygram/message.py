@@ -3,6 +3,7 @@ import datetime
 from .chat import Chat
 from .user import User
 
+
 class Message:
     """
     Reprsents a message in Telegram
@@ -26,7 +27,7 @@ class Message:
     def __init__(self, http, data: dict):
         self._data = data
         self._http = http
-        
+
         self.id = data.get("message_id")
 
         self.created_at = data.get("date")
@@ -38,7 +39,7 @@ class Message:
             datetime.datetime.fromtimestamp(self.edited_at)
 
         self.content = data.get("text")
-        
+
         if "chat" in data:
             self.chat = Chat(http, data.get("chat"))
         else:
@@ -49,7 +50,7 @@ class Message:
         else:
             self.author = None
 
-    async def reply(self, content: str, parse_mode: str=None):
+    async def reply(self, content: str, parse_mode: str = None):
         """
         Replys to the message
 
@@ -59,7 +60,7 @@ class Message:
             The content of the message to send
         parse_mode: :class:`str`
             The parse mode of the message to send
-        
+
         Returns
         -------
         :class:`pygram.Message`

@@ -1,10 +1,10 @@
-import re
 import inspect
 
 from .errors import *
 from .user import User
 from .chat import Chat
 from .context import Context
+
 
 class Command:
     """
@@ -29,7 +29,7 @@ class Command:
     bot: :class:`pygram.Bot`
         The bot the command is in
     """
-    
+
     def __init__(self, func, **kwargs):
         self.callback = func
 
@@ -42,7 +42,7 @@ class Command:
         self.cog = None
         self.bot = None
         self.checks = []
-    
+
     def add_check(self, func):
         """
         Adds a check
@@ -54,7 +54,7 @@ class Command:
         """
 
         self.checks.append(func)
-    
+
     def remove_check(self, func):
         """
         Removes a check
@@ -79,60 +79,60 @@ class Command:
                 takes_args.pop(0)
             takes_args.pop(0)
 
-            #Iter through the arguments
+            # Iter through the arguments
             for counter, argument in enumerate(takes_args):
                 try:
-                    #If argument is not a keyword only argument, give one given arg
+                    # If argument is not a keyword only argument, give one given arg
                     if argument.kind != inspect._ParameterKind.KEYWORD_ONLY:
                         give = given_args[0]
 
                         converter = argument.annotation
-                        #If the argument as a converter, try and convert
+                        # If the argument as a converter, try and convert
                         if converter != inspect._empty:
                             try:
-                                #If the converter is a chat or a user, use get_chat or get_chat_member method to convert
+                                # If the converter is a chat or a user, use get_chat or get_chat_member method to convert
                                 if converter == User:
                                     give = ctx.bot.http.get_chat_member(chat_id=message.chat.id, user_id=give)
                                 elif converter == Chat:
                                     give = ctx.bot.http.bot.get_chat(chat_id=give)
-                                #Otherwise attempt to convert like this
+                                # Otherwise attempt to convert like this
                                 else:
                                     give = argument.annotation(give)
-                            except:
+                            except Exception:
                                 raise BadArgument(give, converter.__name__)
-    
+
                         ctx.args.append(give)
 
                         given_args.pop(0)
 
-                    #If argument is a keyword argument, give the rest of the arguments
+                    # If argument is a keyword argument, give the rest of the arguments
                     else:
                         give = " ".join(given_args)
                         if give == "":
                             raise IndexError()
 
                         converter = argument.annotation
-                        #If the argument has a converter, try and convert
+                        # If the argument has a converter, try and convert
                         if converter != inspect._empty:
                             try:
-                                #If the converter is a chat or a user, use get_chat or get_chat_member method to convert
+                                # If the converter is a chat or a user, use get_chat or get_chat_member method to convert
                                 if converter == User:
                                     give = ctx.bot.updater.bot.get_chat_member(chat_id=message.chat.id, user_id=give)
                                 elif converter == Chat:
                                     give = ctx.bot.updater.bot.get_chat(chat_id=give)
-                                #Otherwise attempt and convert it like this
+                                # Otherwise attempt and convert it like this
                                 else:
                                     give = argument.annotation(give)
-                            except:
+                            except Exception:
                                 raise BadArgument(give, converter.__name__)
 
                         ctx.kwargs[argument.name] = give
-                        
+
                 except IndexError:
-                    #If no argument does not have a default, raise MissingRequiredArgument
+                    # If no argument does not have a default, raise MissingRequiredArgument
                     if argument.default == inspect._empty:
                         raise MissingRequiredArgument(argument.name)
-                    #Otherwise set the argument to the default
+                    # Otherwise set the argument to the default
                     if argument.kind != inspect._ParameterKind.KEYWORD_ONLY:
                         ctx.args.append(argument.default)
 
@@ -146,7 +146,7 @@ class Command:
             The context to invoke the command with
         """
 
-        #Checks
+        # Checks
         for check in self.checks:
             if not check(ctx):
                 raise CheckFailure("A check for this command has failed")
@@ -163,7 +163,7 @@ class Command:
         await self._parse_args(ctx)
 
         return await self.callback(*other_args, *ctx.args, **ctx.kwargs)
-      
+
 def command(*args, **kwargs):
     """
     Turns a function into a command
@@ -181,11 +181,12 @@ def command(*args, **kwargs):
 
         command = Command(func, **kwargs)
         command.checks = getattr(func, "_command_checks", [])
-            
+
         command = Command(func, **kwargs)
         return command
-    
+
     return deco
+
 
 def check(check_function):
     """Makes a check for a command"""
@@ -204,6 +205,7 @@ def check(check_function):
 
     return deco
 
+
 def is_owner():
     """A command check for checking that the user is the owner"""
 
@@ -214,6 +216,7 @@ def is_owner():
 
     return check(is_owner_check)
 
+
 def is_private_chat():
     """A command check for checking that the chat is a private chat"""
 
@@ -223,6 +226,7 @@ def is_private_chat():
         return True
 
     return check(is_private_chat_check)
+
 
 def is_not_private_chat():
     """A command check for checking that the chat is not a private chat"""

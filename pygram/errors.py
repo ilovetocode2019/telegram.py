@@ -57,7 +57,7 @@ class MissingRequiredArgument(CommandError):
     """
 
     def __init__(self, param):
-        self.param  = param
+        self.param = param
         super().__init__(f"'{param}' is a required argument that is missing")
 
 class BadArgument(CommandError):
@@ -98,7 +98,7 @@ class GroupOnly(CheckFailure):
 
     def __init__(self, message=None):
         super().__init__(message or "This command can only be used in groups")
-    
+
     pass
 
 class HTTPException(TelegramException):

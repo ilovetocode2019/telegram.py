@@ -1,4 +1,3 @@
-import aiohttp
 import asyncio
 import logging
 import datetime
@@ -10,8 +9,6 @@ import importlib
 
 from .http import HTTPClient
 from .errors import *
-from .user import User
-from .chat import Chat
 from .message import Message
 from .context import Context
 from .poll import Poll
@@ -19,6 +16,7 @@ from .core import Command
 from .cog import Cog
 
 logger = logging.getLogger("pygram")
+
 
 class Bot:
     """
@@ -45,7 +43,7 @@ class Bot:
         The owner IDs
     """
 
-    def __init__(self, token: str,  owner_id: int=None, owner_ids: list=None):
+    def __init__(self, token: str,  owner_id: int = None, owner_ids: list = None):
         self.owner_id = owner_id
         self.owner_ids = owner_ids
 
@@ -76,7 +74,7 @@ class Bot:
         for command in self.commands_dict.values():
             all_names.append(command.name)
             all_names.extend(command.aliases)
-        
+
         return all_names
 
     async def user(self):
@@ -140,7 +138,7 @@ class Bot:
             The context created
         """
 
-        #Split the message
+        # Split the message
         splited = message.content.split(" ")
 
         if len(splited) != 0:
@@ -149,7 +147,7 @@ class Bot:
             command_text = command_text[1:]
             command = command_text
 
-            #If the command has a bot mention after the command, remove the mention from command_text
+            # If the command has a bot mention after the command, remove the mention from command_text
             if "@" in command_text:
                 finished_command_text = ""
                 past_mention = False
@@ -200,7 +198,7 @@ class Bot:
             raise AttributeError("Extension has no setup function")
 
         cog.setup(self)
-        
+
     def unload_extension(self, location: str):
         """
         Unloads an extension
@@ -236,7 +234,7 @@ class Bot:
         lib = sys.modules[location]
         importlib.reload(lib)
         self.remove_cog(self.extension_cogs[location])
-        
+
         sys.modules[location].setup(self)
 
     def add_cog(self, cog: Cog):
@@ -261,14 +259,14 @@ class Bot:
         cog_listeners = []
         for command in dir(cog):
             command = getattr(cog, command)
-            #Add the command if object is a command
+            # Add the command if object is a command
             if isinstance(command, Command):
                 cog_commands.append(command)
                 command.bot = self
                 command.cog = cog
                 self.add_command(command)
 
-            #If object is a method and it has _cog_listener attribute, add the listener
+            # If object is a method and it has _cog_listener attribute, add the listener
             elif isinstance(command, types.MethodType):
                 try:
                     listener_name = command._cog_listener
@@ -277,7 +275,7 @@ class Bot:
                 except AttributeError:
                     pass
 
-        #Add cog check if cog check, otherwise make one that automaticly returns True
+        # Add cog check if cog check, otherwise make one that automaticly returns True
         if hasattr(cog, "cog_check"):
             if not inspect.ismethod(cog.cog_check):
                 raise TypeError("Cog check is not a function")
@@ -288,13 +286,13 @@ class Bot:
                 return True
             cog.cog_check = cog_check
 
-        #Set some cog attributes
+        # Set some cog attributes
         cog.name = cog.__class__.__name__
         cog.commands = cog_commands
         cog.listeners = cog_listeners
         self.cogs[cog.name] = cog
 
-        #If cog is from an extension, add the extension to a dict with the cog name as the value
+        # If cog is from an extension, add the extension to a dict with the cog name as the value
         if str(cog.__module__) != "__main__":
             self.extension_cogs[cog.__module__] = cog.name
 
@@ -322,12 +320,12 @@ class Bot:
     async def _poll(self):
         logger.info("Bot is started")
 
-        #Create some variables
+        # Create some variables
         self._last_update_id = None
         self._last_update_time = datetime.datetime.now()
         self._wait_time = 1
 
-        #Get last update id
+        # Get last update id
 
         while True:
             try:
@@ -337,11 +335,11 @@ class Bot:
                     self._last_update_id = max(update_ids) + 1
                 break
 
-            except Exception as e:
-                traceback.print_exception(type(e), e, e.__traceback__, file=sys.stderr)
+            except Exception as exc:
+                traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
                 await asyncio.sleep(10)
 
-        #After fetching unread updates, start the loop
+        # After fetching unread updates, start the loop
         while self._running:
             self._last_looped = datetime.datetime.now()
 
@@ -376,31 +374,31 @@ class Bot:
                     key = None
                     event = None
 
-            except Exception as e:
-                traceback.print_exception(type(e), e, e.__traceback__, file=sys.stderr)
+            except Exception as exc:
+                traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
                 await asyncio.sleep(10)
 
             await asyncio.sleep(self._wait_time)
-    
+
         logger.info("Bot is finished")
 
     async def _use_event_handler(self, func, *args, **kwargs):
         try:
             await func(*args, **kwargs)
-        except Exception as e:
-            await self._dispatch("error", e)
+        except Exception as exc:
+            await self._dispatch("error", exc)
 
     async def _use_command(self, ctx):
         try:
             await ctx.command.invoke(ctx)
-        except Exception as e:
-            await self._dispatch("command_error", ctx, e)
+        except Exception as exc:
+            await self._dispatch("command_error", ctx, exc)
 
     async def _dispatch(self, event, *args):
-        #Add "on_" to the event name
+        # Add "on_" to the event name
         event = f"on_{event}"
 
-        #Get the listeners for the event
+        # Get the listeners for the event
         if event in self._listeners:
             handlers = self._listeners[event]
         else:
@@ -408,15 +406,15 @@ class Bot:
 
         try:
             handlers.append(getattr(self, event))
-        except AttributeError as e:
+        except AttributeError:
             pass
 
-        #Dispatch the event to the listeners
+        # Dispatch the event to the listeners
         for handler in handlers:
             self.loop.create_task(self._use_event_handler(handler, *args))
 
-        #If event is on_message, check if the message if a command
-        #If it is a command, invoke the command
+        # If event is on_message, check if the message if a command
+        # If it is a command, invoke the command
         if event == "on_message":
             message = args[0]
             if not message.content:
@@ -428,7 +426,7 @@ class Bot:
                 return
 
             self.loop.create_task(self._use_command(ctx))
-    
+
     def event(self, func):
         """
         Turns a function into an event handler
@@ -447,7 +445,7 @@ class Bot:
 
         if "on_command_error" in self._listeners:
             return
-        
+
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
     async def on_error(self, error):
@@ -455,7 +453,7 @@ class Bot:
 
         if "on_error" in self._listeners:
             return
-        
+
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
     def command(self, *args, **kwargs):
@@ -524,7 +522,7 @@ class Bot:
         ----------
         name: :class:`str`
             The name of the command to remove
-        
+
         Returns
         -------
         :class:`pygram.Command`:
@@ -540,8 +538,7 @@ class Bot:
 
         return command
 
-
-    def add_listener(self, func, name: str=None):
+    def add_listener(self, func, name: str = None):
         """
         Registers a function as a listener
 
@@ -587,7 +584,7 @@ class Bot:
         def deco(func):
             self.add_listener(func, name)
             return func
-        
+
         return deco
 
     async def stop(self):

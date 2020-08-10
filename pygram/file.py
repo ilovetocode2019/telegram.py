@@ -1,12 +1,14 @@
 from io import BytesIO
 
+
 class File:
     """A file to send"""
 
-    def __init__(self, file: BytesIO, filename: str=None):
+    def __init__(self, file: BytesIO, filename: str = None):
         self.file = file
         self.filename = filename
-        
+
+
 class Document(File):
     """
     A document to send
@@ -25,6 +27,7 @@ class Document(File):
     filename: :class:`str`
         The filename of the document
     """
+
 
 class Photo(File):
     """
@@ -49,6 +52,6 @@ class Photo(File):
         The caption of the photo
     """
 
-    def __init__(self, file: BytesIO, filename: str=None, caption: str=None):
+    def __init__(self, file: BytesIO, filename: str = None, caption: str = None):
         super().__init__(file, filename)
         self.caption = caption

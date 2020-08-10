@@ -1,9 +1,8 @@
-import aiohttp
 import asyncio
 import datetime
-import traceback
-import sys
 import json
+
+import aiohttp
 
 from .errors import HTTPException
 from .user import User
@@ -11,6 +10,7 @@ from .chat import Chat
 from .message import Message
 from .file import *
 from .poll import *
+
 
 class HTTPClient:
     """An HTTP client making requests to Telegram"""
