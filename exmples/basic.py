@@ -1,16 +1,3 @@
-# telegram.py
-
-An async API wrapper for Telegram in Python
-
-## Install
-
-```bash
-pip install git+https://github.com/ilovetocode2019/telegram.py
-```
-
-## Example
-
-```python
 import pygram
 import logging
 
@@ -24,4 +11,3 @@ async def send(ctx):
     await ctx.send("Hello")
     
 bot.run()
-```

@@ -1,16 +1,3 @@
-# telegram.py
-
-An async API wrapper for Telegram in Python
-
-## Install
-
-```bash
-pip install git+https://github.com/ilovetocode2019/telegram.py
-```
-
-## Example
-
-```python
 import pygram
 import logging
 
@@ -19,9 +6,11 @@ logger = logging.getLogger("pygram")
 
 bot = pygram.Bot("token here")
 
-@bot.command(name="hi")
+@bot.command(name="image")
 async def send(ctx):
-    await ctx.send("Hello")
-    
+    await ctx.send_action("typing")
+    f = open("file path here", "rb")
+    photo = pygram.Photo(file=f, caption="This is a photo")
+    await ctx.send(file=photo)
+
 bot.run()
-```
