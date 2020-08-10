@@ -1,6 +1,6 @@
 class Poll:
     """A telegram poll
-    
+
     Attributes
     ----------
     question: :class:`str`

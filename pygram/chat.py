@@ -1,6 +1,7 @@
 from .errors import *
 from .file import *
 
+
 class Chat:
     """
     Represents a chat in Telegram
@@ -25,7 +26,7 @@ class Chat:
         self.description = data.get("description")
         self.type = data.get("type")
 
-    async def send(self, content: str=None, file: str=None, parse_mode: str=None):
+    async def send(self, content: str = None, file: str = None, parse_mode: str = None):
         """
         Sends a message to the chat
 
@@ -37,7 +38,7 @@ class Chat:
             The file to send
         parse_mode: :class:`str`
             The parse mode of the message to send
-        
+
         Returns
         -------
         :class:`pygram.Message`
@@ -54,7 +55,7 @@ class Chat:
         else:
             if isinstance(file, Document):
                 return await self._http.send_document(chat_id=self.id, document=file.file, filename=file.filename)
-                
+
             elif isinstance(file, Photo):
                 return await self._http.send_photo(chat_id=self.id, photo=file.file, filename=file.filename, caption=file.caption)
 
@@ -129,7 +130,7 @@ class Chat:
         """
 
         return [x for x in self._http.messages if x.chat.id == self.id]
-    
+
     def fetch_message(self, message_id: int):
         """
         Fetches a message from the cache
@@ -138,7 +139,7 @@ class Chat:
         ----------
         message_id: :class:`int`
             The ID of the message to fetch
-        
+
         Returns
         -------
         :class:`chat.Message`

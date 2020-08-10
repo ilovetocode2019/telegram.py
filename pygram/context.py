@@ -1,5 +1,6 @@
 from .file import File
 
+
 class Context:
     """
     Context for a command
@@ -30,7 +31,7 @@ class Context:
         self.args = kwargs.get("args") or []
         self.kwargs = kwargs.get("kwargs") or {}
 
-    async def send(self, content: str=None, file: File=None, parse_mode=None):
+    async def send(self, content: str = None, file: File = None, parse_mode=None):
         """
         Sends a message in the chat
 
@@ -97,7 +98,7 @@ class Context:
 
         await self.chat.send_action(action)
 
-    async def reply(self, content: str, parse_mode: str=None):
+    async def reply(self, content: str, parse_mode: str = None):
         """
         Replys to the message
 
@@ -107,7 +108,7 @@ class Context:
             The content of the message to send
         parse_mode: :class:`str`
             The parse mode of the message to send
-        
+
         Returns
         -------
         :class:`pygram.Message`

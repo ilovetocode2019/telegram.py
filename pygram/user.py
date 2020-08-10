@@ -19,7 +19,7 @@ class User:
     def __init__(self, http, data):
         self._data = data
         self._http = http
-        
+
         self.id = data.get("id")
         self.is_bot = data.get("is_bot")
         self.username = data.get("username")
@@ -44,7 +44,7 @@ class User:
 
         return self.username or self.full_name
 
-    async def send(self, content: str, parse_mode: str=None):
+    async def send(self, content: str, parse_mode: str = None):
         """
         Sends a message directly to the user
 
@@ -52,7 +52,7 @@ class User:
         ----------
         content: :class:`str`
             The content of the message to send
-        
+
         Returns
         -------
         :class:`pygram.Message`
