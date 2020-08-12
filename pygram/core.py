@@ -71,7 +71,8 @@ class Command:
         self.checks.remove(func)
 
     async def _parse_args(self, ctx: Context):
-        given_args = ctx.message.content.split(" ").pop(0)
+        given_args = ctx.message.content.split(" ")
+        given_args.pop(0)
 
         if ctx.command:
             takes_args = [x[1] for x in list(inspect.signature(ctx.command.callback).parameters.items())]
@@ -92,9 +93,9 @@ class Command:
                             try:
                                 # If the converter is a chat or a user, use get_chat or get_chat_member method to convert
                                 if converter == User:
-                                    give = ctx.bot.http.get_chat_member(chat_id=message.chat.id, user_id=give)
+                                    give = await ctx.chat.get_member(user_id=give)
                                 elif converter == Chat:
-                                    give = ctx.bot.http.bot.get_chat(chat_id=give)
+                                    give = await ctx.bot.get_chat(chat_id=give)
                                 # Otherwise attempt to convert like this
                                 else:
                                     give = argument.annotation(give)
@@ -117,9 +118,9 @@ class Command:
                             try:
                                 # If the converter is a chat or a user, use get_chat or get_chat_member method to convert
                                 if converter == User:
-                                    give = ctx.bot.updater.bot.get_chat_member(chat_id=message.chat.id, user_id=give)
+                                    give = await ctx.chat.get_member(user_id=give)
                                 elif converter == Chat:
-                                    give = ctx.bot.updater.bot.get_chat(chat_id=give)
+                                    give = await ctx.bot.get_chat(chat_id=give)
                                 # Otherwise attempt and convert it like this
                                 else:
                                     give = argument.annotation(give)
