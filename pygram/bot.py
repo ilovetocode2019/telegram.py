@@ -508,10 +508,10 @@ class Bot:
         if not isinstance(command, Command):
             raise TypeError("Command must be a subclass of Command")
 
-        if name in _self._get_all_command_names():
+        if command.name in self._get_all_command_names():
             raise CommandRegistrationError(command.name)
 
-        self.commands_dict[name] = command
+        self.commands_dict[command.name] = command
         return command
 
     def remove_command(self, name: str):
