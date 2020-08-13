@@ -25,3 +25,7 @@ async def send(ctx):
     
 bot.run()
 ```
+
+## Documentation
+
+Documentation can be found [here](https://telegrampy.readthedocs.io)
