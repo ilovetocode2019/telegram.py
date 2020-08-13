@@ -361,6 +361,9 @@ class Bot:
 
             except Exception as exc:
                 traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
+                if exc.response.status in (401, 403, 404):
+                    await self.stop()
+                    return
                 await asyncio.sleep(10)
 
         # After fetching unread updates, start the loop
@@ -400,6 +403,9 @@ class Bot:
 
             except Exception as exc:
                 traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
+                if exc.response.status in (401, 403, 404):
+                    await self.stop()
+                    return
                 await asyncio.sleep(10)
 
             await asyncio.sleep(self._wait_time)
