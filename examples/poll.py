@@ -7,9 +7,11 @@ logger = logging.getLogger("pygram")
 # Make sure never to share your token
 bot = pygram.Bot("token here")
 
+
 @bot.command()
 async def poll(ctx):
     await ctx.send_poll(question="What is your favorite pet?", options=["Dogs", "Cats"])
+
 
 @bot.event
 async def on_poll(poll):
@@ -17,5 +19,6 @@ async def on_poll(poll):
     # You can use this to collect poll answers.
     # A poll class is automatically passed in.
     pass
-    
+
+
 bot.run()
