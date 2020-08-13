@@ -10,32 +10,35 @@ Bot
     :members:
 
 
+Telegram Models
+---------------
+
 Message
--------
+~~~~~~~
 
 .. autoclass:: Message
     :members:
 
 Context
--------
+~~~~~~~
 
 .. autoclass:: Context
     :members:
 
 User
-----
+~~~~
 
 .. autoclass:: User
     :members:
 
 Chat
-----
+~~~~
 
 .. autoclass:: Chat
     :members:
 
 Files
------
+~~~~~
 
 .. autoclass:: Document
     :members:
@@ -43,13 +46,47 @@ Files
    :members:
 
 Poll
-----
+~~~~
 
 .. autoclass:: Poll
     :members:
 
-Errors
-------
+Commands
+--------
+
+Command
+~~~~~~~
+
+.. autoclass:: Command
+    :members:
+
+Cog
+~~~
+
+.. autoclass:: Cog
+    :members:
+
+Checks
+~~~~~~
+.. function:: check(check_function)
+
+    Turns a function into a check
+
+.. function:: is_owner()
+
+    A command check for checking that the user is the owner
+
+.. function:: is_private_chat()
+
+    A command check for checking that the chat is a private chat
+
+.. function:: is_not_private_chat()
+
+    A command check for checking that the chat is not a private chat
+
+
+Exceptions
+----------
 
 .. autoclass:: TelegramException
     :members:
@@ -89,30 +126,3 @@ Errors
 
 .. autoclass:: HTTPException
     :members:
-
-Commands
---------
-
-.. autoclass:: Command
-    :members:
-
-.. autoclass:: Cog
-    :members:
-
-Checks
-------
-.. function:: check(check_function)
-
-    Turns a function into a check
-
-.. function:: is_owner()
-
-    A command check for checking that the user is the owner
-
-.. function:: is_private_chat()
-
-    A command check for checking that the chat is a private chat
-
-.. function:: is_not_private_chat()
-
-    A command check for checking that the chat is not a private chat
