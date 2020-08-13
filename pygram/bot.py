@@ -87,8 +87,7 @@ class Bot:
     @property
     def commands(self):
         """
-        :class:`list`:
-            A list of the commands
+        :class:`list`: A list of registered commands
         """
 
         return list(self.commands_dict.values())
@@ -102,12 +101,22 @@ class Bot:
         return all_names
 
     async def user(self):
-        """The user of the bot"""
+        """
+        |coro|
+
+        Fetch the connected :class:`pygram.User`
+
+        Returns
+        -------
+        :class:`pygram.User`: The connected Bot
+        """
 
         return await self.http.get_me()
 
     async def get_chat(self, chat_id: int):
         """
+        |coro|
+
         Fetches a chat by ID
 
         Parameters
@@ -618,7 +627,11 @@ class Bot:
         return deco
 
     async def stop(self):
-        """Stops the bot"""
+        """
+        |coro|
+
+        Logout and stop the bot
+        """
 
         if not self._running:
             raise RuntimeError("Bot is not running")
@@ -637,7 +650,7 @@ class Bot:
         self.loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
 
     def run(self):
-        """Runs the bot"""
+        """Run the bot"""
 
         self._running = True
 
