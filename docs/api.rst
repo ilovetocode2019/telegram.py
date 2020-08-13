@@ -9,6 +9,21 @@ Bot
 .. autoclass:: Bot
     :members:
 
+Events
+------
+
+.. function:: on_message(message: pygram.Message)
+
+    Called when a message is sent
+
+.. function:: on_message_edit(message: pygram.Message)
+
+    Called when a message is edited
+
+.. function:: on_poll(poll: pygram.Poll)
+
+    Called when poll is created or updated 
+
 
 Message
 -------
