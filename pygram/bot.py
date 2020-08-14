@@ -457,6 +457,35 @@ class Bot:
 
             self.loop.create_task(self._use_command(ctx))
 
+    async def wait_for(self, event: str, check=None, timeout=None):
+        """
+        Waits for an event
+
+        Parameters
+        ----------
+        event: :class:`str`
+            The name of the event to wait for
+        """
+
+        name = f"on_{event}"
+        event = asyncio.Event()
+
+        if not check:
+            def check(*args):
+                return True
+
+        async def wait_listener(*args):
+            if check(*args):
+                event.set()
+
+        self.add_listener(wait_listener, name)
+        try:
+            await asyncio.wait_for(event.wait(), timeout=timeout)
+            self.remove_listener(wait_listener)
+        except:
+            self.remove_listener(wait_listener)
+            raise
+
     def event(self, func):
         """
         Turns a function into an event handler
