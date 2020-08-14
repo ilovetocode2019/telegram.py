@@ -30,6 +30,21 @@ class Chat:
     """
     Represents a chat in Telegram
 
+    .. container:: operations
+
+        .. describe:: x == y
+
+            Checks if two chats are equal.
+
+        .. describe:: x != y
+
+            Checks if two chats are not equal.
+
+        .. describe:: str(x)
+
+            Returns the chat's title.
+
+
     Attributes
     ----------
     id: :class:`int`
@@ -49,6 +64,17 @@ class Chat:
         self.title = data.get("title")
         self.description = data.get("description")
         self.type = data.get("type")
+
+    def __eq__(self, other):
+        return isinstance(other, Chat) and self.id == other.id
+
+    def __ne__(self, other):
+        if isinstance(other, Chat):
+            return other.id != self.id
+        return True
+
+    def __str__(self):
+        return self.title
 
     async def send(self, content: str = None, file: str = None, parse_mode: str = None):
         """
