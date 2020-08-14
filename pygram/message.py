@@ -32,6 +32,16 @@ class Message:
     """
     Reprsents a message in Telegram
 
+    .. container:: operations
+
+        .. describe:: x == y
+
+            Checks if two messages are equal.
+
+        .. describe:: x != y
+
+            Checks if two messages are not equal.
+
     Attributes
     ----------
     id: :class:`int`
@@ -73,6 +83,14 @@ class Message:
             self.author = User(http, data.get("from"))
         else:
             self.author = None
+
+    def __eq__(self, other):
+        return isinstance(other, Message) and self.id == other.id
+
+    def __ne__(self, other):
+        if isinstance(other, Message):
+            return other.id != self.id
+        return True
 
     async def reply(self, content: str, parse_mode: str = None):
         """
