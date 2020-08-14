@@ -50,7 +50,7 @@ class Question:
 
         self.starting_question = self.kwargs.pop("starting_question", False)
 
-    def __call__(self, conversation, message):
+    async def __call__(self, conversation, message):
         await self.callback(conversation, message)
 
 
