@@ -26,6 +26,15 @@ Extensions
 telegram.py offers extra features that may assist in
 the development of Telegram bots.
 
-Currently, all extensions are in development.
-You can view the in-development extensions in the features
-branch folder.
+Conversations Extension
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The conversations extension helps with building
+conversations with another user.
+
+.. toctree::
+    :maxdepth: 2
+
+    ext/conversations/index
+    ext/conversations/api
+    ext/conversations/examples

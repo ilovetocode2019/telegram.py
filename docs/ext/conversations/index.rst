@@ -3,8 +3,7 @@
 ``pygram.ext.conversations`` -- Conversation helper tool
 ========================================================
 
-With ``pygram.ext.conversations``, ``telegram.py`` allows you to easily make
-pre-determined conversations with users.
+The conversations extension helps with building conversations with another user.
 
 
 .. toctree::
