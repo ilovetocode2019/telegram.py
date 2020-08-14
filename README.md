@@ -20,7 +20,7 @@ logger = logging.getLogger("pygram")
 bot = pygram.Bot("token here")
 
 @bot.command(name="hi")
-async def send(ctx):
+async def hi(ctx):
     await ctx.send("Hello")
     
 bot.run()
