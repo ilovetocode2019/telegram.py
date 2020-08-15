@@ -87,6 +87,13 @@ class HTTPClient:
         if resp.status != 200:
             raise HTTPException(resp, (await resp.json()).get("description") or "Failed to forward message")
 
+        message_data = await resp.json()
+
+        if "result" in message_data:
+            msg = Message(self, message_data["result"])
+            self.messages_dict[msg.id] = msg
+            return msg
+
     async def send_document(self, chat_id: int, document: Document, filename: str=None):
         """Sends a document to a chat"""
 

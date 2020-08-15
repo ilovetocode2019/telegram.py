@@ -117,10 +117,15 @@ class Message(TelegramObject):
         destination: :class:pygram.Chat`
             The chat forward the message to
         
+        Returns
+        -------
+        :class:`pygram.Message`
+            The message sent
+        
         Raises
         ------
         :exc:`pygram.HTTPException`
             Forwarding the message failed
         """
 
-        await self._http.forward_message(chat_id=destination.id, from_chat_id=self.chat.id, message_id=self.id)
+        return await self._http.forward_message(chat_id=destination.id, from_chat_id=self.chat.id, message_id=self.id)
