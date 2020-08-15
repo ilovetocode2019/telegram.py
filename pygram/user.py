@@ -87,7 +87,8 @@ class User(TelegramObject):
         return self.username or self.full_name
 
     async def send(self, content: str = None, file: File = None, parse_mode: str = None):
-        """
+        """|coro|
+        
         Sends a message directly to the user
 
         Parameters

@@ -82,7 +82,8 @@ class Message(TelegramObject):
             self.author = None
 
     async def reply(self, content: str, parse_mode: str = None):
-        """
+        """|coro|
+        
         Replys to the message
 
         Parameters

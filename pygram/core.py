@@ -162,8 +162,7 @@ class Command:
                         ctx.args.append(argument.default)
 
     async def invoke(self, ctx: Context):
-        """
-        |coro|
+        """|coro|
 
         Invokes the command with given context
 

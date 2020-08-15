@@ -101,8 +101,7 @@ class Bot:
         return all_names
 
     async def user(self):
-        """
-        |coro|
+        """|coro|
 
         Fetch the connected :class:`pygram.User`
 
@@ -114,8 +113,7 @@ class Bot:
         return await self.http.get_me()
 
     async def get_chat(self, chat_id: int):
-        """
-        |coro|
+        """|coro|
 
         Fetches a chat by ID
 
@@ -473,7 +471,8 @@ class Bot:
             self.loop.create_task(self._use_command(ctx))
 
     async def wait_for(self, event: str, check=None, timeout=None):
-        """
+        """|coro|
+        
         Waits for an event
 
         Parameters
