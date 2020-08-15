@@ -22,7 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-class User:
+
+from .abc import TelegramObject
+
+
+class User(TelegramObject):
     """
     Represents a Telegram user
 
@@ -55,22 +59,11 @@ class User:
     """
 
     def __init__(self, http, data):
-        self._data = data
-        self._http = http
-
-        self.id = data.get("id")
+        super().__init__(http, data)
         self.is_bot = data.get("is_bot")
         self.username = data.get("username")
         self.first_name = data.get("first_name")
         self.last_name = data.get("last_name")
-
-    def __eq__(self, other):
-        return isinstance(other, User) and self.id == other.id
-
-    def __ne__(self, other):
-        if isinstance(other, User):
-            return other.id != self.id
-        return True
 
     def __str__(self):
         return self.username

@@ -24,9 +24,10 @@ SOFTWARE.
 
 from .errors import *
 from .file import *
+from .abc import TelegramObject
 
 
-class Chat:
+class Chat(TelegramObject):
     """
     Represents a chat in Telegram
 
@@ -58,20 +59,10 @@ class Chat:
     """
 
     def __init__(self, http, data: dict):
-        self._data = data
-        self._http = http
-        self.id = data.get("id")
+        super().__init__(http, data)
         self.title = data.get("title")
         self.description = data.get("description")
         self.type = data.get("type")
-
-    def __eq__(self, other):
-        return isinstance(other, Chat) and self.id == other.id
-
-    def __ne__(self, other):
-        if isinstance(other, Chat):
-            return other.id != self.id
-        return True
 
     def __str__(self):
         return self.title

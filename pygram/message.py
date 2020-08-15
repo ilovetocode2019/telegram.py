@@ -26,9 +26,10 @@ import datetime
 
 from .chat import Chat
 from .user import User
+from .abc import TelegramObject
 
 
-class Message:
+class Message(TelegramObject):
     """
     Reprsents a message in Telegram
 
@@ -59,11 +60,7 @@ class Message:
     """
 
     def __init__(self, http, data: dict):
-        self._data = data
-        self._http = http
-
-        self.id = data.get("message_id")
-
+        super().__init__(http, data)
         self.created_at = data.get("date")
         if self.created_at:
             datetime.datetime.fromtimestamp(self.created_at)
@@ -83,14 +80,6 @@ class Message:
             self.author = User(http, data.get("from"))
         else:
             self.author = None
-
-    def __eq__(self, other):
-        return isinstance(other, Message) and self.id == other.id
-
-    def __ne__(self, other):
-        if isinstance(other, Message):
-            return other.id != self.id
-        return True
 
     async def reply(self, content: str, parse_mode: str = None):
         """
