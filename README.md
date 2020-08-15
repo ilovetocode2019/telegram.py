@@ -24,13 +24,15 @@ py -3 -m pip install git+https://github.com/ilovetocode2019/telegram.py
 ## Quick Example
 
 ```python
-import pygram
 import logging
+
+import pygram
+from pygram.ext import commands
 
 logging.basicConfig(level=logging.INFO, format="(%(asctime)s) %(levelname)s %(message)s", datefmt="%m/%d/%y - %H:%M:%S %Z")
 logger = logging.getLogger("pygram")
 
-bot = pygram.Bot("token here")
+bot = commands.Bot("token here")
 
 @bot.command()
 async def hi(ctx):

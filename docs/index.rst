@@ -33,10 +33,6 @@ The commands extension allows you to easily create
 and organize commands for your bot.
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 3
 
     ext/commands/index
-    ext/commands/commands
-    ext/commands/cogs
-    ext/commands/extensions
-    ext/commands/api

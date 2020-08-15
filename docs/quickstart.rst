@@ -14,13 +14,15 @@ line-by-line.
 .. code-block:: python
     :linenos:
 
-    import pygram
     import logging
+
+    import pygram
+    from pygram.ext import commands
 
     logging.basicConfig(level=logging.INFO, format="(%(asctime)s) %(levelname)s %(message)s", datefmt="%m/%d/%y - %H:%M:%S %Z")
     logger = logging.getLogger("pygram")
 
-    bot = pygram.Bot("token here")
+    bot = commands.Bot("token here")
 
     @bot.command()
     async def hi(ctx):
@@ -29,16 +31,16 @@ line-by-line.
     bot.run()
 
 
-================  ==================================================================================================================================
+================  ========================================================================================================================================
 Line number(s)    Description
-================  ==================================================================================================================================
-Lines 1-2         Import pygram (telegram.py) and logging
-Lines 4-5         Configure basic logging to get updates in console
-Line 7            Create a pygram.Bot instance with a token (get a token from `BotFather <https://core.telegram.org/bots#3-how-do-i-create-a-bot>`_)
-Line 9-10         Define and add a command to our bot called 'hi'
-Line 11           Send a greeting message to the chat where the command was invoked
-Line 13           Start the bot (connects to Telegram and starts polling)
-================  ==================================================================================================================================
+================  ========================================================================================================================================
+Lines 1-4         Import logging, pygram (telegram.py), and the pygram commands extension
+Lines 6-7         Configure basic logging to get updates in console
+Line 9            Create a ``commands.Bot`` instance with a token (get a token from `BotFather <https://core.telegram.org/bots#3-how-do-i-create-a-bot>`_)
+Line 11-12        Define and add a command to our bot called 'hi'
+Line 13           Send a greeting message to the chat where the command was invoked
+Line 15           Start the bot (connects to Telegram and starts polling)
+================  ========================================================================================================================================
 
 .. _more examples:
 

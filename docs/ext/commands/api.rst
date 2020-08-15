@@ -22,13 +22,13 @@ Command
 
 Check
 -----
-.. autofunction:: check
+.. autofunction:: pygram.ext.commands.check
 
-.. autofunction:: is_owner
+.. autofunction:: pygram.ext.commands.pygram.ext.commands.is_owner
 
-.. autofunction:: is_private_chat
+.. autofunction:: pygram.ext.commands.is_private_chat
 
-.. autofunction:: is_not_private_chat
+.. autofunction:: pygram.ext.commands.is_not_private_chat
 
 Cog
 ---
