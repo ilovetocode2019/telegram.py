@@ -82,6 +82,85 @@ class Client:
 
         return await self.http.get_chat(chat_id=chat_id)
 
+    async def _poll(self):
+        logger.info("Bot is started")
+
+        # Create some variables
+        self._last_update_id = None
+        self._last_update_time = datetime.datetime.now()
+        self._wait_time = 1
+
+        # Get last update id
+
+        while True:
+            try:
+                updates = await self.http.get_updates(self._last_update_id)
+                if len(updates) != 0:
+                    update_ids = [int(update["update_id"]) for update in updates]
+                    self._last_update_id = max(update_ids) + 1
+                break
+
+            except HTTPException as exc:
+                traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
+                if exc.response.status in (401, 403, 404):
+                    await self.stop()
+                    return
+                await asyncio.sleep(10)
+            except Exception as exc:
+                traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
+                await asyncio.sleep(10)
+
+        # After fetching unread updates, start the loop
+        while self._running:
+            self._last_looped = datetime.datetime.now()
+
+            try:
+                updates = await self.http.get_updates(self._last_update_id)
+                if len(updates) != 0:
+                    for update in updates:
+                        if "message" in update:
+                            key = "message"
+                            event = "message"
+                        elif "edited_message" in update:
+                            key = "edited_message"
+                            event = "edit"
+                        elif "poll" in update:
+                            key = "poll"
+                            event = "poll"
+
+                    data = update[key]
+
+                    if event == "poll":
+                        await self._dispatch(event, Poll(data))
+                    elif event == "edit":
+                        await self._dispatch(event, self.http.messages_dict.get(data["message_id"]), Message(self.http, data))
+                    else:
+                        await self._dispatch(event, Message(self.http, data))
+
+                    update_ids = [int(update["update_id"]) for update in updates]
+                    self._last_update_id = max(update_ids) + 1
+                    key = None
+                    event = None
+
+                for x in [x for x in updates if "message" in x]:
+                    self.http.messages_dict[x["message"]["message_id"]] = Message(self.http, x["message"])
+                for x in [x for x in updates if "edited_message" in x]:
+                    self.http.messages_dict[x["edited_message"]["message_id"]] = Message(self.http, x["edited_message"])
+
+            except HTTPException as exc:
+                traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
+                if exc.response.status in (401, 403, 404):
+                    await self.stop()
+                    return
+                await asyncio.sleep(10)
+            except Exception as exc:
+                traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
+                await asyncio.sleep(10)
+
+            await asyncio.sleep(self._wait_time)
+
+        logger.info("Bot is finished")
+
     async def _use_event_handler(self, func, *args, **kwargs):
         try:
             await func(*args, **kwargs)

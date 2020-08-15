@@ -59,7 +59,9 @@ class Bot(pygram.Client):
     """
 
     def __init__(self, token: str,  *, owner_id: int = None, owner_ids: list = None):
-        super().__init__(token, owner_id, owner_ids)
+        super().__init__(token)
+        self.owner_id = owner_id
+        self.owner_ids = owner_ids
 
         self.commands_dict = {}
 
@@ -302,6 +304,23 @@ class Bot(pygram.Client):
             await ctx.command.invoke(ctx)
         except Exception as exc:
             await self._dispatch("command_error", ctx, exc)
+
+    async def _dipsatch(self, event, *args):
+        await super()._dispatch(event, *args)
+
+        # If event is on_message, check if the message if a command
+        # If it is a command, invoke the command
+        if event == "message":
+            message = args[0]
+            if not message.content:
+                return
+
+            ctx = self.get_context(message)
+
+            if not ctx.command:
+                return
+
+            self.loop.create_task(self._use_command(ctx))
 
     def command(self, *args, **kwargs):
         """
