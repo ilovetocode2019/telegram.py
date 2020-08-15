@@ -22,7 +22,12 @@ Events
 
 .. function:: on_poll(poll: pygram.Poll)
 
-    Called when poll is created or updated 
+    Called when poll is created or updated
+
+Utilities
+---------
+
+.. autofunction:: pygram.utils.escape_markdown
 
 
 Message
