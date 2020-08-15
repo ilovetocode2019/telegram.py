@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-
+from .file import *
 from .abc import TelegramObject
 
 
@@ -86,7 +86,7 @@ class User(TelegramObject):
 
         return self.username or self.full_name
 
-    async def send(self, content: str, parse_mode: str = None):
+    async def send(self, content: str = None, file: str = None, parse_mode: str = None):
         """
         Sends a message directly to the user
 
@@ -94,16 +94,27 @@ class User(TelegramObject):
         ----------
         content: :class:`str`
             The content of the message to send
+        file: :class:`pygram.File`
+            The file to send
+        parse_mode: :class:`str`
+            The parse mode of the message to send
 
         Returns
         -------
         :class:`pygram.Message`
-            The messsage sent
+            The message sent
 
         Raises
         ------
-        :exc:`pygram.HTTPException`
+        :exc:`errors.HTTPException`
             Sending the message failed
         """
 
-        return await self._http.send_message(chat_id=self.id, content=content, parse_mode="HTML")
+        if not file:
+            return await self._http.send_message(chat_id=self.id, content=content, parse_mode=parse_mode)
+        else:
+            if isinstance(file, Document):
+                return await self._http.send_document(chat_id=self.id, document=file.file, filename=file.filename)
+
+            elif isinstance(file, Photo):
+                return await self._http.send_photo(chat_id=self.id, photo=file.file, filename=file.filename, caption=file.caption)
