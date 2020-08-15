@@ -11,7 +11,7 @@ setuptools.setup(
     author="Ilovetocode",
     url="https://github.com/ilovetocode2019/telegram.py",
     version=version,
-    packages=["pygram"],
+    packages=["pygram", "pygram/ext/commands"],
     extras_require={"docs": ["sphinx==2.4.3", "sphinx-rtd-theme"]},
     classifiers=[
         "Programming Language :: Python :: 3",
