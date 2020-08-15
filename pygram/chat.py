@@ -67,7 +67,7 @@ class Chat(TelegramObject):
     def __str__(self):
         return self.title
 
-    async def send(self, content: str = None, file: str = None, parse_mode: str = None):
+    async def send(self, content: str = None, file: File = None, parse_mode: str = None):
         """|coro|
 
         Sends a message to the chat
