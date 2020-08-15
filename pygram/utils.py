@@ -37,11 +37,13 @@ def escape_markdown(text: str, *, version: int = 2):
 
     Returns
     -------
-    :class:`str`: The escaped text
+    :class:`str`
+        The escaped text
 
-    Raiases
-    -------
-    :exc:`ValueError`: An unsupported version was provided
+    Raises
+    ------
+    :exc:`ValueError`
+        An unsupported version was provided
     """
     if version == 1:
         characters = r"_*`["
