@@ -190,6 +190,7 @@ class Command:
 
         return await self.callback(*other_args, *ctx.args, **ctx.kwargs)
 
+
 def command(*args, **kwargs):
     """
     Turns a function into a command

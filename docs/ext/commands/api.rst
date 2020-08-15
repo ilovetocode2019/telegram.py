@@ -12,36 +12,29 @@ Bot
     :members:
     :inherited-members:
 
-Commands
---------
+Command
+-------
 
-.. autofunction: pygram.ext.commands.command
-
-.. autofunction: pygram.ext.commands.group
+.. autofunction:: pygram.ext.commands.command
 
 .. autoclass:: pygram.ext.commands.Command
     :members:
 
+Check
+-----
+.. autofunction:: check
+
+.. autofunction:: is_owner
+
+.. autofunction:: is_private_chat
+
+.. autofunction:: is_not_private_chat
+
+Cog
+---
+
 .. autoclass:: pygram.ext.commands.Cog
     :members:
-
-Checks
-------
-.. function:: check(check_function)
-
-    Turns a function into a check
-
-.. function:: is_owner()
-
-    A command check for checking that the user is the owner
-
-.. function:: is_private_chat()
-
-    A command check for checking that the chat is a private chat
-
-.. function:: is_not_private_chat()
-
-    A command check for checking that the chat is not a private chat
 
 Context
 -------
@@ -49,8 +42,8 @@ Context
 .. autoclass:: pygram.ext.commands.Context
     :members:
 
-Errors
-------
+Exceptions
+----------
 
 .. autoclass:: pygram.ext.commands.CommandError
     :members:

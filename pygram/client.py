@@ -27,17 +27,11 @@ import logging
 import datetime
 import traceback
 import sys
-import inspect
-import types
-import importlib
 
 from .http import HTTPClient
 from .errors import *
 from .message import Message
-from .context import Context
 from .poll import Poll
-from .core import Command
-from .cog import Cog
 
 logger = logging.getLogger("pygram")
 

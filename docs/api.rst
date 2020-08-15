@@ -4,7 +4,7 @@ API Reference
 =============
 
 Client
----
+------
 
 .. autoclass:: Client
     :members:
@@ -57,43 +57,10 @@ Poll
 .. autoclass:: Poll
     :members:
 
-Errors
-------
+Exceptions
+----------
 
 .. autoclass:: TelegramException
-    :members:
-
-.. autoclass:: CommandError
-    :members:
-
-.. autoclass:: CommandNotFound
-    :members:
-
-.. autoclass:: CommandRegistrationError
-    :members:
-
-.. autoclass:: ExtensionNotLoaded
-    :members:
-
-.. autoclass:: ExtensionAlreadyLoaded
-    :members:
-
-.. autoclass:: MissingRequiredArgument
-    :members:
-
-.. autoclass:: BadArgument
-    :members:
-
-.. autoclass:: CheckFailure
-    :members:
-
-.. autoclass:: NotOwner
-    :members:
-
-.. autoclass:: PrivateChatOnly
-    :members:
-
-.. autoclass:: GroupOnly
     :members:
 
 .. autoclass:: HTTPException
