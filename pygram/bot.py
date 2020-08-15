@@ -381,12 +381,6 @@ class Bot:
             self._last_looped = datetime.datetime.now()
 
             try:
-                updates = await self.http.get_updates(self._last_update_id)
-                for x in [x for x in updates if "message" in x]:
-                    self.http.messages_dict[x["message"]["message_id"]] = Message(self.http, x["message"])
-                for x in [x for x in updates if "edited_message" in x]:
-                    self.http.messages_dict[x["edited_message"]["message_id"]] = Message(self.http, x["edited_message"])
-
                 if len(updates) != 0:
                     for update in updates:
                         if "message" in update:
@@ -403,6 +397,8 @@ class Bot:
 
                     if event == "poll":
                         await self._dispatch(event, Poll(data))
+                    elif event == "edit":
+                        await self._dispatch(event, self.http.messages_dict.get(data["message_id"]), Message(self.http, data))
                     else:
                         await self._dispatch(event, Message(self.http, data))
 
@@ -410,6 +406,12 @@ class Bot:
                     self._last_update_id = max(update_ids) + 1
                     key = None
                     event = None
+
+                updates = await self.http.get_updates(self._last_update_id)
+                for x in [x for x in updates if "message" in x]:
+                    self.http.messages_dict[x["message"]["message_id"]] = Message(self.http, x["message"])
+                for x in [x for x in updates if "edited_message" in x]:
+                    self.http.messages_dict[x["edited_message"]["message_id"]] = Message(self.http, x["edited_message"])
 
             except HTTPException as exc:
                 traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)

@@ -16,7 +16,7 @@ Events
 
     Called when a message is sent
 
-.. function:: on_message_edit(message: pygram.Message)
+.. function:: on_edit(before: pygram.Message, after: pygram.Message)
 
     Called when a message is edited
 
