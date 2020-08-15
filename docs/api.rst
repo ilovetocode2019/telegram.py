@@ -3,10 +3,10 @@
 API Reference
 =============
 
-Bot
+Client
 ---
 
-.. autoclass:: Bot
+.. autoclass:: Client
     :members:
 
 Events
@@ -29,12 +29,6 @@ Message
 -------
 
 .. autoclass:: Message
-    :members:
-
-Context
--------
-
-.. autoclass:: Context
     :members:
 
 User
@@ -104,30 +98,3 @@ Errors
 
 .. autoclass:: HTTPException
     :members:
-
-Commands
---------
-
-.. autoclass:: Command
-    :members:
-
-.. autoclass:: Cog
-    :members:
-
-Checks
-------
-.. function:: check(check_function)
-
-    Turns a function into a check
-
-.. function:: is_owner()
-
-    A command check for checking that the user is the owner
-
-.. function:: is_private_chat()
-
-    A command check for checking that the chat is a private chat
-
-.. function:: is_not_private_chat()
-
-    A command check for checking that the chat is not a private chat

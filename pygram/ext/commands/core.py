@@ -24,9 +24,10 @@ SOFTWARE.
 
 import inspect
 
+import pygram
+from pygram import User, Chat
+
 from .errors import *
-from .user import User
-from .chat import Chat
 from .context import Context
 
 

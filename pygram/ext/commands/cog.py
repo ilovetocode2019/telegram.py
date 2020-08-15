@@ -22,11 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+
 class Cog:
     """Base cog class"""
 
     @classmethod
-    def listener(cls, name: str=None):
+    def listener(cls, name: str = None):
         """
         Makes a method in a cog a listener
 
