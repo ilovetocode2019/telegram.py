@@ -61,6 +61,8 @@ class Message(TelegramObject):
 
     def __init__(self, http, data: dict):
         super().__init__(http, data)
+        self.id = data.get("message_id")
+
         self.created_at = data.get("date")
         if self.created_at:
             datetime.datetime.fromtimestamp(self.created_at)
@@ -105,3 +107,20 @@ class Message(TelegramObject):
         """
 
         return await self._http.send_message(chat_id=self.chat.id, content=content, parse_mode=parse_mode, reply_message_id=self.id)
+
+    async def forward(self, destination):
+        """
+        Forwards a message to a destination
+
+        Parameters
+        ----------
+        destination: :class:pygram.Chat`
+            The chat forward the message to
+        
+        Raises
+        ------
+        :exc:`pygram.HTTPException`
+            Forwarding the message failed
+        """
+
+        await self._http.forward_message(chat_id=destination.id, from_chat_id=self.chat.id, message_id=self.id)
