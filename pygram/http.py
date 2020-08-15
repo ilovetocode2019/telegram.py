@@ -54,7 +54,10 @@ class HTTPClient:
         return list(self.messages_dict.values())
 
     async def send_message(self, chat_id: int, content: str, parse_mode: str=None, reply_message_id: int=None):
-        """Sends a message to a chat"""
+        """|coro|
+
+        Sends a message to a chat
+        """
 
         url = self._base_url + "sendMessage"
         data = {"chat_id": chat_id, "text": content}
@@ -77,7 +80,10 @@ class HTTPClient:
             return msg
 
     async def send_document(self, chat_id: int, document: Document, filename: str=None):
-        """Sends a document to a chat"""
+        """|coro|
+
+        Sends a document to a chat
+        """
 
         url = self._base_url + "sendDocument"
 
@@ -97,7 +103,9 @@ class HTTPClient:
             return msg
 
     async def send_photo(self, chat_id: int, photo: Photo, filename: str=None, caption: str=None):
-        """Sends a photo to a chat"""
+        """|coro|
+        Sends a photo to a chat
+        """
 
         url = self._base_url + "sendPhoto"
         writer = aiohttp.FormData()
@@ -118,7 +126,7 @@ class HTTPClient:
             msg = Message(self, message_data["result"])
             self.messages_dict[msg.id] = msg
             return msg
-    
+
     async def send_poll(self, chat_id: int, question: str, options: list):
         """Sends a poll to a chat"""
 
@@ -136,7 +144,9 @@ class HTTPClient:
             msg = Poll(poll_data["result"])
 
     async def send_chat_action(self, chat_id: int, action: str):
-        """Sends a chat action to a chat"""
+        """|coro|
+        Sends a chat action to a chat
+        """
 
         url = self._base_url + "sendChatAction"
         data = {"chat_id": chat_id, "action": action}
@@ -163,10 +173,12 @@ class HTTPClient:
             return Chat(self, chat_data["result"])
 
     async def get_chat_member(self, chat_id: int, user_id: int):
-        """Fetches a member from a chat"""
+        """|coro|
+        Fetches a member from a chat
+        """
 
         url = self._base_url + "getChatMember"
-        
+
         resp = await self.session.post(url, data={"chat_id": chat_id, "user_id": user_id})
 
         if resp.status != 200:
@@ -189,7 +201,9 @@ class HTTPClient:
             return User(self, me_data["result"])
 
     async def get_updates(self, offset=None):
-        """Fetches the new updates for the bot"""
+        """
+        Fetches the new updates for the bot
+        """
 
         url = self._base_url + "getUpdates"
         session = self.session
@@ -199,7 +213,7 @@ class HTTPClient:
 
         else:
             resp = await session.post(url=url, data={"offset":offset})
-    
+
         if resp.status != 200:
             raise HTTPException(resp, message=(await resp.json()).get("result"))
 
@@ -207,6 +221,8 @@ class HTTPClient:
         return (await resp.json())["result"]
 
     async def close(self):
-        """Closes the connection"""
+        """|coro|
+        Closes the connection
+        """
 
         await self.session.close()

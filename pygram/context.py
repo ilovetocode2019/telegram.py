@@ -57,6 +57,8 @@ class Context:
 
     async def send(self, content: str = None, file: File = None, parse_mode=None):
         """
+        |coro|
+
         Sends a message in the chat
 
         Parameters

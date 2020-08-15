@@ -68,7 +68,8 @@ class Chat(TelegramObject):
         return self.title
 
     async def send(self, content: str = None, file: str = None, parse_mode: str = None):
-        """
+        """|coro|
+
         Sends a message to the chat
 
         Parameters
@@ -101,7 +102,8 @@ class Chat(TelegramObject):
                 return await self._http.send_photo(chat_id=self.id, photo=file.file, filename=file.filename, caption=file.caption)
 
     async def send_poll(self, question: str, options: list):
-        """
+        """|coro|
+
         Sends a poll to the chat
 
         Parameters
@@ -125,7 +127,8 @@ class Chat(TelegramObject):
         return await self._http.send_poll(chat_id=self.id, question=question, options=options)
 
     async def send_action(self, action: str):
-        """
+        """|coro|
+
         Sends an action to the chat
 
         Parameters
@@ -142,7 +145,8 @@ class Chat(TelegramObject):
         await self._http.send_chat_action(chat_id=self.id, action=action)
 
     async def get_member(self, user_id: int):
-        """
+        """|coro|
+
         Fetches a member in the chat
 
         Parameters

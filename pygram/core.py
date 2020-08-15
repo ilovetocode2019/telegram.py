@@ -163,6 +163,8 @@ class Command:
 
     async def invoke(self, ctx: Context):
         """
+        |coro|
+
         Invokes the command with given context
 
         Parameters
@@ -188,6 +190,7 @@ class Command:
         await self._parse_args(ctx)
 
         return await self.callback(*other_args, *ctx.args, **ctx.kwargs)
+
 
 def command(*args, **kwargs):
     """

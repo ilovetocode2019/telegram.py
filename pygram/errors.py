@@ -44,7 +44,7 @@ class CommandRegistrationError(CommandError):
 
 class ExtensionNotLoaded(CommandError):
     """
-    Raised when an extension is not loaded
+    Raised when an extension is not loaded due to an error while loading
 
     Attributes
     ----------
