@@ -381,6 +381,7 @@ class Bot:
             self._last_looped = datetime.datetime.now()
 
             try:
+                updates = await self.http.get_updates(self._last_update_id)
                 if len(updates) != 0:
                     for update in updates:
                         if "message" in update:
@@ -407,7 +408,6 @@ class Bot:
                     key = None
                     event = None
 
-                updates = await self.http.get_updates(self._last_update_id)
                 for x in [x for x in updates if "message" in x]:
                     self.http.messages_dict[x["message"]["message_id"]] = Message(self.http, x["message"])
                 for x in [x for x in updates if "edited_message" in x]:
