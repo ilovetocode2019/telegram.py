@@ -122,7 +122,7 @@ class Command:
             # Iter through the arguments
             for counter, argument in enumerate(takes_args):
                 try:
-                    # If argument can be positional, give on arg
+                    # If argument can be positional, give one arg
                     if argument.kind in (inspect._ParameterKind.POSITIONAL_OR_KEYWORD, inspect._ParameterKind.POSITIONAL_ONLY):
                         give = given_args[0]
                         converter = argument.annotation
