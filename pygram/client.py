@@ -186,20 +186,6 @@ class Client:
         for handler in handlers:
             self.loop.create_task(self._use_event_handler(handler, *args))
 
-        # If event is on_message, check if the message if a command
-        # If it is a command, invoke the command
-        if event == "on_message":
-            message = args[0]
-            if not message.content:
-                return
-
-            ctx = self.get_context(message)
-
-            if not ctx.command:
-                return
-
-            self.loop.create_task(self._use_command(ctx))
-
     async def wait_for(self, event: str, check=None, timeout=None):
         """
         Waits for an event

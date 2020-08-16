@@ -305,7 +305,7 @@ class Bot(pygram.Client):
         except Exception as exc:
             await self._dispatch("command_error", ctx, exc)
 
-    async def _dipsatch(self, event, *args):
+    async def _dispatch(self, event, *args):
         await super()._dispatch(event, *args)
 
         # If event is on_message, check if the message if a command
