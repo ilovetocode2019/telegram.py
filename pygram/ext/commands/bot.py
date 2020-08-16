@@ -41,18 +41,18 @@ _default_help = DefaultHelpCommand()
 
 class Bot(pygram.Client):
     """
-    Represents a Telegram bot
+    Represents a Telegram bot.
 
     Parameters
     ----------
     token: :class:`str`
-        The API token
+        The API token.
     description: Optional[:class:`str`]
-        The bot's description
+        The bot's description.
     owner_id: Optional[:class:`int`]
-        The owner's ID
+        The owner's ID.
     owner_ids: Optional[List[:class:`int`]]
-        The owner IDs
+        The owner IDs.
     help_command: Optional[:class:`pygram.ext.commands.HelpCommand`]
         The bot's help command.
         Defaults to :class:`pygram.ext.commands.DefaultHelpCommand`
@@ -60,15 +60,15 @@ class Bot(pygram.Client):
     Attributes
     ----------
     description: Optional[:class:`str`]
-        The bot's description
+        The bot's description.
     owner_id: Optional[:class:`int`]
-        The owner's ID
+        The owner's ID.
     owner_ids: Optional[List[:class:`int`]]
-        The owner IDs
+        The owner IDs.
     cogs: Mapping[:class:`str`: :class:`pygram.Cog`]
-        A dictonary of cogs that are loaded
+        A dictonary of cogs that are loaded.
     extensions: Mapping[:class:`str`: :class:`types.ModuleType`]
-        A dictonary of extensions that are loaded
+        A dictonary of extensions that are loaded.
     """
 
     def __init__(self, token: str,  *, description: str = None, owner_id: int = None, owner_ids: list = None, help_command: HelpCommand = _default_help):
@@ -89,7 +89,7 @@ class Bot(pygram.Client):
     @property
     def help_command(self):
         """:class:`pygram.ext.commands.HelpCommand`:
-            The bot's help command
+            The bot's help command.
         """
         return self._help_command
 
@@ -105,7 +105,7 @@ class Bot(pygram.Client):
     def commands(self):
         """
         :class:`list`:
-            A list of the commands
+            A list of the commands.
         """
 
         return list(self.commands_dict.values())
@@ -120,17 +120,17 @@ class Bot(pygram.Client):
 
     def get_command(self, name: str):
         """
-        Gets a command by name
+        Gets a command by name.
 
         Parameters
         ----------
         name: :class:`str`
-            The command name
+            The command name.
 
         Returns
         --------
         :class:`pygram.Command`
-            The command with the name
+            The command with the name.
         """
 
         for command in self.commands_dict.values():
@@ -139,17 +139,17 @@ class Bot(pygram.Client):
 
     def get_context(self, message: pygram.Message):
         """
-        Gets context for a given message
+        Gets context for a given message.
 
         Parameters
         ----------
         message: :class:`pygram.Message`
-            The message to get context from
+            The message to get context from.
 
         Returns
         -------
         :class:`pygram.Context`
-            The context created
+            The context created.
         """
 
         # Split the message
@@ -187,19 +187,19 @@ class Bot(pygram.Client):
 
     def load_extension(self, location: str):
         """
-        Loads an extension
+        Loads an extension.
 
         Parameters
         ----------
         location: :class:`str`
-            The location of the extension
+            The location of the extension.
 
         Raises
         ------
         :exc:`pygram.ExtensionAlreadyLoaded`
-            The extension is already loaded
+            The extension is already loaded.
         :exc:`AttributeError`
-            The extension has no setup function
+            The extension has no setup function.
         """
 
         if location in self.extensions:
@@ -215,12 +215,12 @@ class Bot(pygram.Client):
 
     def unload_extension(self, location: str):
         """
-        Unloads an extension
+        Unloads an extension.
 
         Parameters
         ----------
         location: :class:`str`
-             The location of the extension
+             The location of the extension.
         """
 
         cog_name = self.extension_cogs.get(location)
@@ -234,12 +234,12 @@ class Bot(pygram.Client):
 
     def reload_extension(self, location: str):
         """
-        Reloads an extension
+        Reloads an extension.
 
         Parameters
         ----------
         location: :class:`str`
-            The location of the extension
+            The location of the extension.
         """
 
         if location not in self.extension_cogs:
@@ -253,17 +253,17 @@ class Bot(pygram.Client):
 
     def add_cog(self, cog: Cog):
         """
-        Adds a cog to the bot
+        Adds a cog to the bot.
 
         Parameters
         ----------
         cog: :class:`pygram.Cog`
-            The cog to add
+            The cog to add.
 
         Raises
         ------
         :exc:`TypeError`
-            The cog is not a subclass of :class:`pygram.Cog` or the cog check is not a method
+            The cog is not a subclass of :class:`pygram.Cog` or the cog check is not a method.
         """
 
         if not issubclass(cog.__class__, Cog):
@@ -312,12 +312,12 @@ class Bot(pygram.Client):
 
     def remove_cog(self, cog: str):
         """
-        Removes and cog from the bot
+        Removes and cog from the bot.
 
         Parameters
         ----------
         cog: :class:`str`
-            The name of the cog to remove
+            The name of the cog to remove.
         """
 
         if cog not in self.cogs:
@@ -356,14 +356,14 @@ class Bot(pygram.Client):
 
     def command(self, *args, **kwargs):
         """
-        Turns a function into a command
+        Turns a function into a command.
 
         Parameters
         ----------
         \*args:
-            The arguments
+            The arguments.
         \*\*kwargs:
-            The keyword arguments
+            The keyword arguments.
         """
 
         def deco(func):
@@ -383,24 +383,24 @@ class Bot(pygram.Client):
 
     def add_command(self, command):
         """
-        Adds a command
+        Adds a command.
 
         Parameters
         ----------
         command: :class:`pygram.Command`
-            The command to add
+            The command to add.
 
         Returns
         -------
         :class:`pygram.Command`
-            The command added
+            The command added.
 
         Raises
         ------
         :exc:`pygram.CommandRegistrationError`
-            The command name or one if its aliases is already registered by a different command
+            The command name or one if its aliases is already registered by a different command.
         :exc:`TypeError`
-            The command is not an instance of :class:`pygram.Command`
+            The command is not an instance of :class:`pygram.Command`.
         """
 
         if not isinstance(command, Command):
@@ -414,17 +414,17 @@ class Bot(pygram.Client):
 
     def remove_command(self, name: str):
         """
-        Removes a command by name
+        Removes a command by name.
 
         Parameters
         ----------
         name: :class:`str`
-            The name of the command to remove
+            The name of the command to remove.
 
         Returns
         -------
         :class:`pygram.Command`:
-            The command removed
+            The command removed.
         """
 
         command = self.get_command(name)
@@ -437,7 +437,7 @@ class Bot(pygram.Client):
         return command
 
     async def on_command_error(self, ctx, error):
-        """The default command error handler"""
+        """The default command error handler."""
         print(f"Ignoring exception in command {ctx.command}:", file=sys.stderr)
         traceback.print_exception(
             type(error), error, error.__traceback__, file=sys.stderr

@@ -33,26 +33,26 @@ from .context import Context
 
 class Command:
     """
-    Represents a command
+    Represents a command.
 
     Attributes
     ----------
     name: :class:`str`
-        The name of the command
+        The name of the command.
     description: :class:`str`
-        The description of the command
+        The description of the command.
     usage: :class:`str`
-        The usage of the command
+        The usage of the command.
     aliases: :class:`str`
-        The aliases for the command
+        The aliases for the command.
     callback:
-        The callback of the command
+        The callback of the command.
     hidden: :class:`bool`
-        If the command is hidden
+        If the command is hidden.
     cog: :class:`pygram.Cog`
-        The cog the command is in
+        The cog the command is in.
     bot: :class:`pygram.Bot`
-        The bot the command is in
+        The bot the command is in.
     """
 
     def __init__(self, func, **kwargs):
@@ -73,24 +73,24 @@ class Command:
 
     def add_check(self, func):
         """
-        Adds a check
+        Adds a check.
 
         Parameters
         ----------
         func:
-            The function to add to the checks
+            The function to add to the checks.
         """
 
         self.checks.append(func)
 
     def remove_check(self, func):
         """
-        Removes a check
+        Removes a check.
 
         Parameters
         ----------
         func:
-           The function to remove from the checks
+           The function to remove from the checks.
         """
 
         if func not in self.checks:
@@ -167,12 +167,12 @@ class Command:
 
     async def invoke(self, ctx: Context):
         """
-        Invokes the command with given context
+        Invokes the command with given context.
 
         Parameters
         ----------
         ctx: :class:`pygram.Context`
-            The context to invoke the command with
+            The context to invoke the command with.
         """
 
         # Checks
@@ -214,7 +214,7 @@ def command(*args, **kwargs):
 
 
 def check(check_function):
-    """Makes a check for a command"""
+    """Makes a check for a command."""
 
     def deco(func):
         if isinstance(func, Command):
@@ -232,7 +232,7 @@ def check(check_function):
 
 
 def is_owner():
-    """A command check for checking that the user is the owner"""
+    """A command check for checking that the user is the owner."""
 
     def is_owner_check(ctx):
         if ctx.author.id not in (ctx.bot.owner_ids or [ctx.bot.owner_id]):
@@ -243,7 +243,7 @@ def is_owner():
 
 
 def is_private_chat():
-    """A command check for checking that the chat is a private chat"""
+    """A command check for checking that the chat is a private chat."""
 
     def is_private_chat_check(ctx):
         if ctx.chat.type != "private":
@@ -254,7 +254,7 @@ def is_private_chat():
 
 
 def is_not_private_chat():
-    """A command check for checking that the chat is not a private chat"""
+    """A command check for checking that the chat is not a private chat."""
 
     def is_not_private_chat_check(ctx):
         if ctx.chat.type == "private":

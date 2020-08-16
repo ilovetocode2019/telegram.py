@@ -160,7 +160,7 @@ class HelpCommand:
 class DefaultHelpCommand(HelpCommand):
     """The default help command.
 
-    This help command mimics BotFather's help command look
+    This help command mimics BotFather's help command look.
 
     Parameters
     ----------
@@ -169,7 +169,7 @@ class DefaultHelpCommand(HelpCommand):
         Defaults to "No Category".
     sort_commands: Optional[:class:`bool`]
         Whether to sort the commands.
-        Defaults to ``True``
+        Defaults to ``True``.
     """
 
     def __init__(self, **options):
@@ -186,14 +186,14 @@ class DefaultHelpCommand(HelpCommand):
         )
 
     def format_commands(self, commands: typing.List[Command], *, heading: str):
-        """The method that formats a given list of commands
+        """The method that formats a given list of commands.
 
         Parameters
         ----------
         commands: List[:class`pygram.ext.commands.Command`]
-            The list of commands to format
+            The list of commands to format.
         heading: :class:`str`
-            The heading to display
+            The heading to display.
         """
         if not commands:
             return []
@@ -221,7 +221,7 @@ class DefaultHelpCommand(HelpCommand):
         return formatted
 
     def format_command(self, command):
-        """The method that formats an indivitual command
+        """The method that formats an indivitual command.
 
         Parameters
         ------------

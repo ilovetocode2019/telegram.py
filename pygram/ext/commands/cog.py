@@ -27,7 +27,7 @@ SOFTWARE.
 
 
 class CogMeta(type):
-    """Metaclass for Cog"""
+    """Metaclass for Cog."""
 
     def __new__(cls, *args, **kwargs):
         name, bases, attrs = args
@@ -39,22 +39,22 @@ class CogMeta(type):
 
 
 class Cog(metaclass=CogMeta):
-    """Base cog class"""
+    """Base cog class."""
 
     @property
     def qualified_name(self):
-        """:class:`str`: The cog's name"""
+        """:class:`str`: The cog's name."""
         return self.__cog_name__
 
     @classmethod
     def listener(cls, name: str = None):
         """
-        Makes a method in a cog a listener
+        Makes a method in a cog a listener.
 
         Parameters
         ----------
         name: Optional[:class:`str`]
-            The name of the event to register the function as
+            The name of the event to register the function as.
         """
 
         def deco(func):
