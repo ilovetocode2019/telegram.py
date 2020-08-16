@@ -37,6 +37,15 @@ class Bot(pygram.Client):
     """
     Represents a Telegram bot
 
+    Parameters
+    ----------
+    token: :class:`str`
+        The API token
+    owner_id: Optional[:class:`int`]
+        The owner's ID
+    owner_ids: Optional[List[:class:`int`]]
+        The owner IDs
+
     Attributes
     ----------
     owner_id: Optional[:class:`int`]
@@ -47,15 +56,6 @@ class Bot(pygram.Client):
         A dictonary of cogs that are loaded
     extensions: Mapping[:class:`str`: :class:`types.ModuleType`]
         A dictonary of extensions that are loaded
-
-    Parameters
-    ----------
-    token: :class:`str`
-        The API token
-    owner_id: Optional[:class:`int`]
-        The owner's ID
-    owner_ids: Optional[]
-        The owner IDs
     """
 
     def __init__(self, token: str,  *, owner_id: int = None, owner_ids: list = None):
