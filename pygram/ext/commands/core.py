@@ -192,15 +192,10 @@ class Command:
 
 
 def command(*args, **kwargs):
-    """
-    Turns a function into a command
+    """Turns a function into a command.
 
-    Parameters
-    ----------
-    \*args:
-        The arguments
-    \*\*kwargs:
-        The keyword arguments
+    See :class:`pygram.ext.commands.Command`
+    for parameters.
     """
 
     def deco(func):
