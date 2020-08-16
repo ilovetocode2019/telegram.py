@@ -22,9 +22,29 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+# TODO: move command registration from Bot.add_cog to CogMeta
+# TODO: add properties like Cog.commands to Cog
 
-class Cog:
+
+class CogMeta(type):
+    """Metaclass for Cog"""
+
+    def __new__(cls, *args, **kwargs):
+        name, bases, attrs = args
+        attrs["__cog_name__"] = kwargs.pop("name", name)
+
+        new_cls = super().__new__(cls, name, bases, attrs, **kwargs)
+
+        return new_cls
+
+
+class Cog(metaclass=CogMeta):
     """Base cog class"""
+
+    @property
+    def qualified_name(self):
+        """:class:`str`: The cog's name"""
+        return self.__cog_name__
 
     @classmethod
     def listener(cls, name: str = None):

@@ -68,6 +68,9 @@ class Command:
         self.bot = None
         self.checks = []
 
+    def __str__(self):
+        return self.name
+
     def add_check(self, func):
         """
         Adds a check

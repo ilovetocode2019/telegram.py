@@ -14,4 +14,5 @@ managing commands.
     commands
     cogs
     extensions
+    help
     api

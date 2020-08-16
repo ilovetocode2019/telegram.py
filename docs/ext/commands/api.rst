@@ -22,6 +22,7 @@ Command
 
 Check
 -----
+
 .. autofunction:: pygram.ext.commands.check
 
 .. autofunction:: pygram.ext.commands.pygram.ext.commands.is_owner
@@ -29,6 +30,15 @@ Check
 .. autofunction:: pygram.ext.commands.is_private_chat
 
 .. autofunction:: pygram.ext.commands.is_not_private_chat
+
+Help Command
+------------
+
+.. autoclass:: pygram.ext.commands.HelpCommand
+    :members:
+
+.. autoclass:: pygram.ext.commands.DefaultHelpCommand
+    :members:
 
 Cog
 ---
