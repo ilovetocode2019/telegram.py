@@ -28,7 +28,7 @@ from .abc import TelegramObject
 
 class User(TelegramObject):
     """
-    Represents a Telegram user
+    Represents a Telegram user.
 
     .. container:: operations
 
@@ -47,15 +47,15 @@ class User(TelegramObject):
     Attributes
     ----------
     id: :class:`int`
-        The ID of the user
+        The ID of the user.
     is_bot: :class:`bool`
-        If the user is a bot
+        If the user is a bot.
     username: Optional[:class:`str`]
-        The username of the user
+        The username of the user.
     first_name: :class:`str`
-        The first name of the user
+        The first name of the user.
     last_name: Optional[:class:`str`]
-        The last name of the user
+        The last name of the user.
     """
 
     def __init__(self, http, data):
@@ -72,7 +72,7 @@ class User(TelegramObject):
     def full_name(self):
         """
         :class:`str`:
-             The user's full name
+             The user's full name.
         """
 
         return f"{self.first_name or ''} {self.last_name or ''}"
@@ -89,26 +89,26 @@ class User(TelegramObject):
     async def send(self, content: str = None, file: File = None, parse_mode: str = None):
         """|coro|
         
-        Sends a message directly to the user
+        Sends a message directly to the user.
 
         Parameters
         ----------
         content: :class:`str`
-            The content of the message to send
+            The content of the message to send.
         file: :class:`pygram.File`
             The file to send
         parse_mode: :class:`str`
-            The parse mode of the message to send
+            The parse mode of the message to send.
 
         Returns
         -------
         :class:`pygram.Message`
-            The message sent
+            The message sent.
 
         Raises
         ------
         :exc:`errors.HTTPException`
-            Sending the message failed
+            Sending the message failed.
         """
 
         if not file:

@@ -23,24 +23,24 @@ SOFTWARE.
 """
 
 class Poll:
-    """A telegram poll
+    """A telegram poll.
 
     Attributes
     ----------
     question: :class:`str`
-        The question of the poll
+        The question of the poll.
     options: :class:`list`
-        The options of the poll
+        The options of the poll.
     total_voter_count: :class:`int`
-        The total voter count of the poll
+        The total voter count of the poll.
     is_closed: :class:`bool`
-        If the poll is closed
+        If the poll is closed.
     is_anonymous: :class:`bool`
-        If the poll is anonymous
+        If the poll is anonymous.
     type: :class:`str`
-        The type of the poll
+        The type of the poll.
     allow_multiple_answers: :class:`bool`
-        If the poll allows multiple answers
+        If the poll allows multiple answers.
     """
 
     def __init__(self, data):

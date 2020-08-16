@@ -14,15 +14,15 @@ Events
 
 .. function:: on_message(message: pygram.Message)
 
-    Called when a message is sent
+    Called when a message is sent.
 
 .. function:: on_edit(before: pygram.Message, after: pygram.Message)
 
-    Called when a message is edited
+    Called when a message is edited.
 
 .. function:: on_poll(poll: pygram.Poll)
 
-    Called when poll is created or updated
+    Called when poll is created or updated.
 
 Utilities
 ---------
@@ -123,16 +123,16 @@ Checks
 ------
 .. function:: check(check_function)
 
-    Turns a function into a check
+    Turns a function into a check.
 
 .. function:: is_owner()
 
-    A command check for checking that the user is the owner
+    A command check for checking that the user is the owner.
 
 .. function:: is_private_chat()
 
-    A command check for checking that the chat is a private chat
+    A command check for checking that the chat is a private chat.
 
 .. function:: is_not_private_chat()
 
-    A command check for checking that the chat is not a private chat
+    A command check for checking that the chat is not a private chat.

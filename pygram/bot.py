@@ -44,27 +44,27 @@ logger = logging.getLogger("pygram")
 
 class Bot:
     """
-    Represents a Telegram bot
+    Represents a Telegram bot.
 
     Attributes
     ----------
     owner_id: Optional[:class:`int`]
-        The owner's ID
+        The owner's ID.
     owner_ids: Optional[List[:class:`int`]]
-        The owner IDs
+        The owner IDs.
     cogs: Mapping[:class:`str`: :class:`pygram.Cog`]
-        A dictonary of cogs that are loaded
+        A dictonary of cogs that are loaded.
     extensions: Mapping[:class:`str`: :class:`types.ModuleType`]
-        A dictonary of extensions that are loaded
+        A dictonary of extensions that are loaded.
 
     Parameters
     ----------
     token: :class:`str`
-        The API token
+        The API token.
     owner_id: Optional[:class:`int`]
-        The owner's ID
+        The owner's ID.
     owner_ids: Optional[]
-        The owner IDs
+        The owner IDs.
     """
 
     def __init__(self, token: str,  owner_id: int = None, owner_ids: list = None):
@@ -87,7 +87,7 @@ class Bot:
     @property
     def commands(self):
         """
-        :class:`list`: A list of registered commands
+        :class:`list`: A list of registered commands.
         """
 
         return list(self.commands_dict.values())
@@ -103,11 +103,11 @@ class Bot:
     async def user(self):
         """|coro|
 
-        Fetch the connected :class:`pygram.User`
+        Fetch the connected :class:`pygram.User`.
 
         Returns
         -------
-        :class:`pygram.User`: The connected Bot
+        :class:`pygram.User`: The connected Bot.
         """
 
         return await self.http.get_me()
@@ -115,39 +115,39 @@ class Bot:
     async def get_chat(self, chat_id: int):
         """|coro|
 
-        Fetches a chat by ID
+        Fetches a chat by ID.
 
         Parameters
         ----------
         chat_id: :class:`int`
-            The ID of the chat to fetch
+            The ID of the chat to fetch.
 
         Returns
         -------
         :class:`pygram.Chat`
-            The chat that was fetched
+            The chat that was fetched.
 
         Raises
         ------
         :exc:`pygram.HTTPException`
-            Fetching the chat failed
+            Fetching the chat failed.
         """
 
         return await self.http.get_chat(chat_id=chat_id)
 
     def get_command(self, name: str):
         """
-        Gets a command by name
+        Gets a command by name.
 
         Parameters
         ----------
         name: :class:`str`
-            The command name
+            The command name.
 
         Returns
         --------
         :class:`pygram.Command`
-            The command with the name
+            The command with the name.
         """
 
         for command in self.commands_dict.values():
@@ -156,17 +156,17 @@ class Bot:
 
     def get_context(self, message: Message):
         """
-        Gets context for a given message
+        Gets context for a given message.
 
         Parameters
         ----------
         message: :class:`pygram.Message`
-            The message to get context from
+            The message to get context from.
 
         Returns
         -------
         :class:`pygram.Context`
-            The context created
+            The context created.
         """
 
         # Split the message
@@ -204,19 +204,19 @@ class Bot:
 
     def load_extension(self, location: str):
         """
-        Loads an extension
+        Loads an extension.
 
         Parameters
         ----------
         location: :class:`str`
-            The location of the extension
+            The location of the extension.
 
         Raises
         ------
         :exc:`pygram.ExtensionAlreadyLoaded`
-            The extension is already loaded
+            The extension is already loaded.
         :exc:`AttributeError`
-            The extension has no setup function
+            The extension has no setup function.
         """
 
         if location in self.extensions:
@@ -232,12 +232,12 @@ class Bot:
 
     def unload_extension(self, location: str):
         """
-        Unloads an extension
+        Unloads an extension.
 
         Parameters
         ----------
         location: :class:`str`
-             The location of the extension
+             The location of the extension.
         """
 
         cog_name = self.extension_cogs.get(location)
@@ -251,12 +251,12 @@ class Bot:
 
     def reload_extension(self, location: str):
         """
-        Reloads an extension
+        Reloads an extension.
 
         Parameters
         ----------
         location: :class:`str`
-            The location of the extension
+            The location of the extension.
         """
 
         if location not in self.extension_cogs:
@@ -270,17 +270,17 @@ class Bot:
 
     def add_cog(self, cog: Cog):
         """
-        Adds a cog to the bot
+        Adds a cog to the bot.
 
         Parameters
         ----------
         cog: :class:`pygram.Cog`
-            The cog to add
+            The cog to add.
 
         Raises
         ------
         :exc:`TypeError`
-            The cog is not a subclass of :class:`pygram.Cog` or the cog check is not a method
+            The cog is not a subclass of :class:`pygram.Cog` or the cog check is not a method.
         """
 
         if not issubclass(cog.__class__, Cog):
@@ -329,12 +329,12 @@ class Bot:
 
     def remove_cog(self, cog: str):
         """
-        Removes and cog from the bot
+        Removes and cog from the bot.
 
         Parameters
         ----------
         cog: :class:`str`
-            The name of the cog to remove
+            The name of the cog to remove.
         """
 
         if cog not in self.cogs:
@@ -475,12 +475,12 @@ class Bot:
     async def wait_for(self, event: str, check=None, timeout=None):
         """|coro|
         
-        Waits for an event
+        Waits for an event.
 
         Parameters
         ----------
         event: :class:`str`
-            The name of the event to wait for
+            The name of the event to wait for.
         """
 
         name = f"on_{event}"
@@ -504,19 +504,19 @@ class Bot:
 
     def event(self, func):
         """
-        Turns a function into an event handler
+        Turns a function into an event handler.
 
         Parameters
         ----------
         func:
-            The function to make an event handler
+            The function to make an event handler.
         """
 
         setattr(self, func.__name__, func)
         return func
 
     async def on_command_error(self, ctx, error):
-        """Default command error handler"""
+        """Default command error handler."""
 
         if "on_command_error" in self._listeners:
             return
@@ -524,7 +524,7 @@ class Bot:
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
     async def on_error(self, error):
-        """Default error handler"""
+        """Default error handler."""
 
         if "on_error" in self._listeners:
             return
@@ -533,14 +533,14 @@ class Bot:
 
     def command(self, *args, **kwargs):
         """
-        Turns a function into a command
+        Turns a function into a command.
 
         Parameters
         ----------
         \*args:
-            The arguments
+            The arguments.
         \*\*kwargs:
-            The keyword arguments
+            The keyword arguments.
         """
 
         def deco(func):
@@ -560,24 +560,24 @@ class Bot:
 
     def add_command(self, command):
         """
-        Adds a command
+        Adds a command.
 
         Parameters
         ----------
         command: :class:`pygram.Command`
-            The command to add
+            The command to add.
 
         Returns
         -------
         :class:`pygram.Command`
-            The command added
+            The command added.
 
         Raises
         ------
         :exc:`pygram.CommandRegistrationError`
-            The command name or one if its aliases is already registered by a different command
+            The command name or one if its aliases is already registered by a different command.
         :exc:`TypeError`
-            The command is not an instance of :class:`pygram.Command`
+            The command is not an instance of :class:`pygram.Command`.
         """
 
         if not isinstance(command, Command):
@@ -591,17 +591,17 @@ class Bot:
 
     def remove_command(self, name: str):
         """
-        Removes a command by name
+        Removes a command by name.
 
         Parameters
         ----------
         name: :class:`str`
-            The name of the command to remove
+            The name of the command to remove.
 
         Returns
         -------
         :class:`pygram.Command`:
-            The command removed
+            The command removed.
         """
 
         command = self.get_command(name)
@@ -615,14 +615,14 @@ class Bot:
 
     def add_listener(self, func, name: str = None):
         """
-        Registers a function as a listener
+        Registers a function as a listener.
 
         Parameters
         ----------
         func:
-            The function to register
+            The function to register.
         name: Optional[:class:`str`]
-            The name of the event to register the function as
+            The name of the event to register the function as.
         """
 
         name = name or func.__name__
@@ -634,12 +634,12 @@ class Bot:
 
     def remove_listener(self, func):
         """
-        Removes a listener
+        Removes a listener.
 
         Parameters
         ----------
         func:
-            The function that is registered as a listener
+            The function that is registered as a listener.
         """
 
         for event in self._listeners:
@@ -648,12 +648,12 @@ class Bot:
 
     def listen(self, name=None):
         """
-        A decorator that registers a function as a listener
+        A decorator that registers a function as a listener.
 
         Parameters
         ---------
         name: Optional[:class:`str`]
-             The name of the event to register the function as
+             The name of the event to register the function as.
         """
 
         def deco(func):
@@ -666,7 +666,7 @@ class Bot:
         """
         |coro|
 
-        Logout and stop the bot
+        Logout and stop the bot.
         """
 
         if not self._running:
@@ -686,7 +686,7 @@ class Bot:
         self.loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
 
     def run(self):
-        """Run the bot"""
+        """Run the bot."""
 
         self._running = True
 

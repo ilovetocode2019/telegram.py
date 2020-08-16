@@ -23,7 +23,7 @@ SOFTWARE.
 """
 
 class TelegramObject:
-    """Base telegram object"""
+    """Base telegram object."""
 
     def __init__(self, http, data):
         self._http = http
