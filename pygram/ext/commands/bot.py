@@ -266,49 +266,15 @@ class Bot(pygram.Client):
             The cog is not a subclass of :class:`pygram.Cog` or the cog check is not a method.
         """
 
-        if not issubclass(cog.__class__, Cog):
-            raise TypeError("Cogs must be a subclass of Cog")
+        if not isinstance(cog, Cog):
+            raise TypeError("Cog is not a subclass of Cog")
 
-        cog_commands = []
-        cog_listeners = []
-        for command in dir(cog):
-            command = getattr(cog, command)
-            # Add the command if object is a command
-            if isinstance(command, Command):
-                cog_commands.append(command)
-                command.bot = self
-                command.cog = cog
-                self.add_command(command)
-
-            # If object is a method and it has _cog_listener attribute, add the listener
-            elif isinstance(command, types.MethodType):
-                try:
-                    listener_name = command._cog_listener
-                    self.add_listener(command, listener_name)
-                    cog_listeners.append(command)
-                except AttributeError:
-                    pass
-
-        # Add cog check if cog check, otherwise make one that automaticly returns True
-        if hasattr(cog, "cog_check"):
-            if not inspect.ismethod(cog.cog_check):
-                raise TypeError("Cog check is not a function")
-
-            cog_check = cog.cog_check
-        else:
-            def cog_check(context):
-                return True
-            cog.cog_check = cog_check
-
-        # Set some cog attributes
-        cog.name = cog.__class__.__name__
-        cog.commands = cog_commands
-        cog.listeners = cog_listeners
-        self.cogs[cog.name] = cog
-
+        #Add the cog
+        cog._add(self)
+        self.cogs[cog.qualified_name] = cog
         # If cog is from an extension, add the extension to a dict with the cog name as the value
         if str(cog.__module__) != "__main__":
-            self.extension_cogs[cog.__module__] = cog.name
+            self.extension_cogs[cog.__module__] = cog.qualified_name
 
     def remove_cog(self, cog: str):
         """
@@ -320,16 +286,11 @@ class Bot(pygram.Client):
             The name of the cog to remove.
         """
 
-        if cog not in self.cogs:
+        cog = self.cogs.get(cog)
+        if not cog:
             return
-
-        for command in self.cogs[cog].commands:
-            self.commands_dict.pop(command.name)
-
-        for listener in self.cogs[cog].listeners:
-            self.remove_listener(listener)
-
-        self.cogs.pop(cog)
+        cog._remove(self)
+        self.cogs.pop(cog.qualified_name)
 
     async def _use_command(self, ctx):
         try:
