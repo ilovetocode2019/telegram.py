@@ -1,4 +1,4 @@
-.. _extensions:
+.. _ext_commands_extensions:
 
 Introduction to Extensions
 ==========================

@@ -23,14 +23,20 @@ SOFTWARE.
 """
 
 import inspect
+import traceback
 import types
 import importlib
+import sys
 
 import pygram
 from .core import Command
 from .cog import Cog
 from .context import Context
 from .errors import *
+from .help import HelpCommand, DefaultHelpCommand
+
+
+_default_help = DefaultHelpCommand()
 
 
 class Bot(pygram.Client):
@@ -41,13 +47,20 @@ class Bot(pygram.Client):
     ----------
     token: :class:`str`
         The API token
+    description: Optional[:class:`str`]
+        The bot's description
     owner_id: Optional[:class:`int`]
         The owner's ID
     owner_ids: Optional[List[:class:`int`]]
         The owner IDs
+    help_command: Optional[:class:`pygram.ext.commands.HelpCommand`]
+        The bot's help command.
+        Defaults to :class:`pygram.ext.commands.DefaultHelpCommand`
 
     Attributes
     ----------
+    description: Optional[:class:`str`]
+        The bot's description
     owner_id: Optional[:class:`int`]
         The owner's ID
     owner_ids: Optional[List[:class:`int`]]
@@ -58,16 +71,35 @@ class Bot(pygram.Client):
         A dictonary of extensions that are loaded
     """
 
-    def __init__(self, token: str,  *, owner_id: int = None, owner_ids: list = None):
+    def __init__(self, token: str,  *, description: str = None, owner_id: int = None, owner_ids: list = None, help_command: HelpCommand = _default_help):
         super().__init__(token)
         self.owner_id = owner_id
         self.owner_ids = owner_ids
+        self.description = description
 
         self.commands_dict = {}
 
         self.cogs = {}
         self.extension_cogs = {}
         self.extensions = {}
+
+        if help_command:
+            self.help_command = help_command
+
+    @property
+    def help_command(self):
+        """:class:`pygram.ext.commands.HelpCommand`:
+            The bot's help command
+        """
+        return self._help_command
+
+    @help_command.setter
+    def help_command(self, value: HelpCommand):
+        if not isinstance(value, HelpCommand):
+            raise TypeError("The new help command must inherit from HelpCommand.")
+
+        value._add_to_bot(self)
+        self._help_command = value
 
     @property
     def commands(self):
@@ -403,3 +435,10 @@ class Bot(pygram.Client):
         self.commands_dict.pop(name)
 
         return command
+
+    async def on_command_error(self, ctx, error):
+        """The default command error handler"""
+        print(f"Ignoring exception in command {ctx.command}:", file=sys.stderr)
+        traceback.print_exception(
+            type(error), error, error.__traceback__, file=sys.stderr
+        )
