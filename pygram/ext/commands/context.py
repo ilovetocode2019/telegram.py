@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from .file import File
+from pygram import File
 
 
 class Context:
@@ -57,8 +57,6 @@ class Context:
 
     async def send(self, content: str = None, file: File = None, parse_mode=None):
         """
-        |coro|
-
         Sends a message in the chat.
 
         Parameters
@@ -84,8 +82,7 @@ class Context:
         return await self.chat.send(content=content, file=file, parse_mode=parse_mode)
 
     async def send_poll(self, question: str, options: list):
-        """|coro|
-
+        """
         Sends a poll to the chat.
 
         Parameters
@@ -109,8 +106,7 @@ class Context:
         return await self.chat.send_poll(question, options)
 
     async def send_action(self, action: str):
-        """|coro|
-
+        """
         Sends an action to the chat.
 
         Parameters
@@ -127,8 +123,7 @@ class Context:
         await self.chat.send_action(action)
 
     async def reply(self, content: str, parse_mode: str = None):
-        """|coro|
-        
+        """
         Replys to the message.
 
         Parameters

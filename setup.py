@@ -26,7 +26,7 @@ setuptools.setup(
         "Issue tracker": "https://github.com/ilovetocode2019/telegram.py/issues",
     },
     version=version,
-    packages=["pygram"],
+    packages=["pygram", "pygram/ext/commands"],
     install_requires=requirements,
     extras_require={
         "docs": [

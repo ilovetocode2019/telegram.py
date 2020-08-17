@@ -26,6 +26,13 @@ Extensions
 telegram.py offers extra features that may assist in
 the development of Telegram bots.
 
-Currently, all extensions are in development.
-You can view the in-development extensions in the features
-branch folder.
+Commands Extension
+~~~~~~~~~~~~~~~~~~
+
+The commands extension allows you to easily create
+and organize commands for your bot.
+
+.. toctree::
+    :maxdepth: 3
+
+    ext/commands/index

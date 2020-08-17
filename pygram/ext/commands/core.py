@@ -24,9 +24,10 @@ SOFTWARE.
 
 import inspect
 
+import pygram
+from pygram import User, Chat
+
 from .errors import *
-from .user import User
-from .chat import Chat
 from .context import Context
 
 
@@ -67,6 +68,9 @@ class Command:
         self.bot = None
         self.checks = []
 
+    def __str__(self):
+        return self.name
+
     def add_check(self, func):
         """
         Adds a check.
@@ -94,6 +98,17 @@ class Command:
 
         self.checks.remove(func)
 
+    async def _convert_arg(self, ctx, converter, arg):
+        try:
+            if converter == User:
+                return ctx.chat.get_member(arg)
+            elif converter == Chat:
+                return ctx.bot.get_chat(arg)
+            else:
+                return converter(arg)
+        except:
+            return None
+
     async def _parse_args(self, ctx: Context):
         given_args = ctx.message.content.split(" ")
         given_args.pop(0)
@@ -107,31 +122,20 @@ class Command:
             # Iter through the arguments
             for counter, argument in enumerate(takes_args):
                 try:
-                    # If argument is not a keyword only argument, give one given arg
-                    if argument.kind != inspect._ParameterKind.KEYWORD_ONLY:
+                    # If argument can be positional, give one arg
+                    if argument.kind in (inspect._ParameterKind.POSITIONAL_OR_KEYWORD, inspect._ParameterKind.POSITIONAL_ONLY):
                         give = given_args[0]
-
                         converter = argument.annotation
                         # If the argument as a converter, try and convert
                         if converter != inspect._empty:
-                            try:
-                                # If the converter is a chat or a user, use get_chat or get_chat_member method to convert
-                                if converter == User:
-                                    give = await ctx.chat.get_member(user_id=give)
-                                elif converter == Chat:
-                                    give = await ctx.bot.get_chat(chat_id=give)
-                                # Otherwise attempt to convert like this
-                                else:
-                                    give = argument.annotation(give)
-                            except Exception:
+                            give = await self._convert_arg(ctx, converter, give)
+                            if not give:
                                 raise BadArgument(give, converter.__name__)
-
                         ctx.args.append(give)
-
                         given_args.pop(0)
 
                     # If argument is a keyword argument, give the rest of the arguments
-                    else:
+                    elif argument.kind == inspect._ParameterKind.KEYWORD_ONLY:
                         give = " ".join(given_args)
                         if give == "":
                             raise IndexError()
@@ -139,31 +143,32 @@ class Command:
                         converter = argument.annotation
                         # If the argument has a converter, try and convert
                         if converter != inspect._empty:
-                            try:
-                                # If the converter is a chat or a user, use get_chat or get_chat_member method to convert
-                                if converter == User:
-                                    give = await ctx.chat.get_member(user_id=give)
-                                elif converter == Chat:
-                                    give = await ctx.bot.get_chat(chat_id=give)
-                                # Otherwise attempt and convert it like this
-                                else:
-                                    give = argument.annotation(give)
-                            except Exception:
+                            give = await self._convert_arg(ctx, converter, give)
+                            if not give:
                                 raise BadArgument(give, converter.__name__)
-
                         ctx.kwargs[argument.name] = give
+
+                    elif argument.kind == inspect._ParameterKind.VAR_POSITIONAL:
+                        if len(given_args) == 0:
+                            raise IndexError()
+                        for give in given_args:
+                            converter = argument.annotation
+                            if converter != inspect._empty:
+                                give = await self._convert_arg(ctx, converter, give)
+                                if not give:
+                                    raise BadArgument(give, converter.__name__)
+                            ctx.args.append(give)
 
                 except IndexError:
                     # If no argument does not have a default, raise MissingRequiredArgument
                     if argument.default == inspect._empty:
                         raise MissingRequiredArgument(argument.name)
                     # Otherwise set the argument to the default
-                    if argument.kind != inspect._ParameterKind.KEYWORD_ONLY:
+                    if argument.kind in (inspect._ParameterKind.POSITIONAL_OR_KEYWORD, inspect._ParameterKind.POSITIONAL_ONLY):
                         ctx.args.append(argument.default)
 
     async def invoke(self, ctx: Context):
-        """|coro|
-
+        """
         Invokes the command with given context.
 
         Parameters
@@ -192,15 +197,10 @@ class Command:
 
 
 def command(*args, **kwargs):
-    """
-    Turns a function into a command.
+    """Turns a function into a command.
 
-    Parameters
-    ----------
-    \*args:
-        The arguments.
-    \*\*kwargs:
-        The keyword arguments.
+    See :class:`pygram.ext.commands.Command`
+    for parameters.
     """
 
     def deco(func):
