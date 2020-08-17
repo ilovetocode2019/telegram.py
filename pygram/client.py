@@ -56,12 +56,14 @@ class Client:
         self._listeners = {}
 
     async def user(self):
-        """The user of the bot"""
+        """|coro|
+        The user of the bot
+        """
 
         return await self.http.get_me()
 
     async def get_chat(self, chat_id: int):
-        """
+        """|coro|
         Fetches a chat by ID
 
         Parameters
@@ -187,7 +189,7 @@ class Client:
             self.loop.create_task(self._use_event_handler(handler, *args))
 
     async def wait_for(self, event: str, check=None, timeout=None):
-        """
+        """|coro|
         Waits for an event
 
         Parameters
@@ -229,7 +231,9 @@ class Client:
         return func
 
     async def on_error(self, error):
-        """Default error handler"""
+        """|coro|
+        Default error handler
+        """
 
         if "on_error" in self._listeners:
             return
