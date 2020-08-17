@@ -1,11 +1,11 @@
-.. currentmodule:: pygram
+.. currentmodule:: telegrampy
 
 .. _ext_commands:
 
-``pygram.ext.commands`` - Commands Extension
-============================================
+``telegrampy.ext.commands`` - Commands Extension
+================================================
 
-The pygram commands extension aids in making and
+The telegrampy commands extension aids in making and
 managing commands.
 
 .. toctree::

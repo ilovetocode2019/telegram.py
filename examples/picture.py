@@ -1,10 +1,10 @@
 import logging
 
-import pygram
-from pygram.ext import commands
+import telegrampy
+from telegrampy.ext import commands
 
 logging.basicConfig(level=logging.INFO, format="(%(asctime)s) %(levelname)s %(message)s", datefmt="%m/%d/%y - %H:%M:%S %Z")
-logger = logging.getLogger("pygram")
+logger = logging.getLogger("telegrampy")
 
 # Make sure never to share your token
 bot = commands.Bot("token here")
@@ -20,7 +20,7 @@ async def image_command(ctx):
     # Open an image...
     with open("file path here", "rb") as f:
         # ...convert it to a sendable photo...
-        photo = pygram.Photo(file=f, caption="This is a photo")
+        photo = telegrampy.Photo(file=f, caption="This is a photo")
 
     # ...and upload/send it.
     await ctx.send(file=photo)

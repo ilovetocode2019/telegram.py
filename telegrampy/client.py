@@ -33,7 +33,7 @@ from .errors import *
 from .message import Message
 from .poll import Poll
 
-logger = logging.getLogger("pygram")
+logger = logging.getLogger("telegrampy")
 
 
 class Client:
@@ -57,6 +57,7 @@ class Client:
 
     async def user(self):
         """|coro|
+
         The user of the bot
         """
 
@@ -64,6 +65,7 @@ class Client:
 
     async def get_chat(self, chat_id: int):
         """|coro|
+
         Fetches a chat by ID
 
         Parameters
@@ -73,12 +75,12 @@ class Client:
 
         Returns
         -------
-        :class:`pygram.Chat`
+        :class:`telegrampy.Chat`
             The chat that was fetched
 
         Raises
         ------
-        :exc:`pygram.HTTPException`
+        :exc:`telegrampy.HTTPException`
             Fetching the chat failed
         """
 
@@ -190,6 +192,7 @@ class Client:
 
     async def wait_for(self, event: str, check=None, timeout=None):
         """|coro|
+
         Waits for an event
 
         Parameters
@@ -232,6 +235,7 @@ class Client:
 
     async def on_error(self, error):
         """|coro|
+
         Default error handler
         """
 

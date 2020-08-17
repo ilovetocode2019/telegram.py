@@ -24,8 +24,8 @@ SOFTWARE.
 
 import inspect
 
-import pygram
-from pygram import User, Chat
+import telegrampy
+from telegrampy import User, Chat
 
 from .errors import *
 from .context import Context
@@ -49,9 +49,9 @@ class Command:
         The callback of the command.
     hidden: :class:`bool`
         If the command is hidden.
-    cog: :class:`pygram.Cog`
+    cog: :class:`telegrampy.ext.commands.Cog`
         The cog the command is in.
-    bot: :class:`pygram.Bot`
+    bot: :class:`telegrampy.ext.commands.Bot`
         The bot the command is in.
     """
 
@@ -173,7 +173,7 @@ class Command:
 
         Parameters
         ----------
-        ctx: :class:`pygram.Context`
+        ctx: :class:`telegrampy.ext.commands.Context`
             The context to invoke the command with.
         """
 
@@ -199,7 +199,7 @@ class Command:
 def command(*args, **kwargs):
     """Turns a function into a command.
 
-    See :class:`pygram.ext.commands.Command`
+    See :class:`telegrampy.ext.commands.Command`
     for parameters.
     """
 

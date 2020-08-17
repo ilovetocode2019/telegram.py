@@ -95,14 +95,14 @@ class User(TelegramObject):
         ----------
         content: :class:`str`
             The content of the message to send.
-        file: :class:`pygram.File`
+        file: :class:`telegrampy.File`
             The file to send
         parse_mode: :class:`str`
             The parse mode of the message to send.
 
         Returns
         -------
-        :class:`pygram.Message`
+        :class:`telegrampy.Message`
             The message sent.
 
         Raises
