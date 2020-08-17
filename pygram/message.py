@@ -31,7 +31,7 @@ from .abc import TelegramObject
 
 class Message(TelegramObject):
     """
-    Reprsents a message in Telegram.
+    Represents a message in Telegram.
 
     .. container:: operations
 
