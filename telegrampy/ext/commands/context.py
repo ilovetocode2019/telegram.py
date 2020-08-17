@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from pygram import File
+from telegrampy import File
 
 
 class Context:
@@ -31,13 +31,13 @@ class Context:
 
     Attributes
     ----------
-    bot: :class:`pygram.Bot`
+    bot: :class:`telegrampy.ext.commands.Bot`
         The bot that created the context.
-    message: :class:`pygram.Message`
+    message: :class:`telegrampy.Message`
         The message the context is for.
-    chat: :class:`pygram.Chat`
+    chat: :class:`telegrampy.Chat`
         The chat the context is for.
-    author: :class:`pygram.User`
+    author: :class:`telegrampy.User`
         The author of the message.
     args: :class:`list`
         The arguments passed into the command.
@@ -63,19 +63,19 @@ class Context:
         ----------
         content: :class:`str`
             The content of the message to send.
-        file: :class:`pygram.File`
+        file: :class:`telegrampy.File`
             The file to send.
         parse_mode: :class:`str`
             The parse mode of the message to send.
 
         Returns
         -------
-        :class:`pygram.Message`
+        :class:`telegrampy.Message`
             The message sent.
 
         Raises
         ------
-        :exc:`pygram.HTTPException`
+        :exc:`telegrampy.HTTPException`
             Sending the message failed.
         """
 
@@ -94,12 +94,12 @@ class Context:
 
         Returns
         -------
-        :class:`pygram.Poll`
+        :class:`telegrampy.Poll`
             The poll sent.
 
         Raises
         ------
-        :exc:`pygram.HTTPException`
+        :exc:`telegrampy.HTTPException`
             Sending the poll failed.
         """
 
@@ -116,7 +116,7 @@ class Context:
 
         Raises
         ------
-        :exc:`pygram.HTTPException`
+        :exc:`telegrampy.HTTPException`
             Sending the action failed.
         """
 
@@ -135,12 +135,12 @@ class Context:
 
         Returns
         -------
-        :class:`pygram.Message`
+        :class:`telegrampy.Message`
             The message sent.
 
         Raises
         ------
-        :exc:`pygram.HTTPException`
+        :exc:`telegrampy.HTTPException`
             Sending the message failed.
         """
 

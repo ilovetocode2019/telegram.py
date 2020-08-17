@@ -16,11 +16,11 @@ line-by-line.
 
     import logging
 
-    import pygram
-    from pygram.ext import commands
+    import telegrampy
+    from telegrampy.ext import commands
 
     logging.basicConfig(level=logging.INFO, format="(%(asctime)s) %(levelname)s %(message)s", datefmt="%m/%d/%y - %H:%M:%S %Z")
-    logger = logging.getLogger("pygram")
+    logger = logging.getLogger("telegrampy")
 
     bot = commands.Bot("token here")
 
@@ -34,7 +34,7 @@ line-by-line.
 ================  ========================================================================================================================================
 Line number(s)    Description
 ================  ========================================================================================================================================
-Lines 1-4         Import logging, pygram (telegram.py), and the pygram commands extension
+Lines 1-4         Import logging, telegrampy, and the telegram.py commands extension
 Lines 6-7         Configure basic logging to get updates in console
 Line 9            Create a ``commands.Bot`` instance with a token (get a token from `BotFather <https://core.telegram.org/bots#3-how-do-i-create-a-bot>`_)
 Line 11-12        Define and add a command to our bot called 'hi'

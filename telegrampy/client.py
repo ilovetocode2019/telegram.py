@@ -33,7 +33,7 @@ from .errors import *
 from .message import Message
 from .poll import Poll
 
-logger = logging.getLogger("pygram")
+logger = logging.getLogger("telegrampy")
 
 
 class Client:
@@ -75,12 +75,12 @@ class Client:
 
         Returns
         -------
-        :class:`pygram.Chat`
+        :class:`telegrampy.Chat`
             The chat that was fetched
 
         Raises
         ------
-        :exc:`pygram.HTTPException`
+        :exc:`telegrampy.HTTPException`
             Fetching the chat failed
         """
 

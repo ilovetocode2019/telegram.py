@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from pygram import TelegramException
+from telegrampy import TelegramException
 
 
 class CommandError(TelegramException):

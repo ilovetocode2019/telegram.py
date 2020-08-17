@@ -1,4 +1,4 @@
-.. currentmodule:: pygram
+.. currentmodule:: telegrampy
 
 API Reference
 =============
@@ -12,22 +12,22 @@ Client
 Events
 ------
 
-.. function:: on_message(message: pygram.Message)
+.. function:: on_message(message: telegrampy.Message)
 
     Called when a message is sent.
 
-.. function:: on_edit(before: pygram.Message, after: pygram.Message)
+.. function:: on_edit(before: telegrampy.Message, after: telegrampy.Message)
 
     Called when a message is edited.
 
-.. function:: on_poll(poll: pygram.Poll)
+.. function:: on_poll(poll: telegrampy.Poll)
 
     Called when poll is created or updated.
 
 Utilities
 ---------
 
-.. autofunction:: pygram.utils.escape_markdown
+.. autofunction:: telegrampy.utils.escape_markdown
 
 
 Telegram Models

@@ -26,14 +26,14 @@ import html
 import itertools
 import typing
 
-import pygram
+import telegrampy
 
 from .core import Command
 from .cog import Cog
 
 
 class _HelpCommandImplementation(Command):
-    """Class that interfaces with :class:`pygram.ext.commands.Command`"""
+    """Class that interfaces with :class:`telegrampy.ext.commands.Command`"""
 
     def __init__(self, help_cmd, command_attrs):
         self.help_cmd = help_cmd
@@ -46,10 +46,10 @@ class HelpCommand:
 
     Attributes
     ----------
-    ctx: :class:`pygram.ext.commands.Context`
-        The :class:`pygram.ext.commands.Context` for the command
-    bot: :class:`pygram.ext.commands.Bot`
-        The :class:`pygram.ext.commands.Bot` from the Context
+    ctx: :class:`telegrampy.ext.commands.Context`
+        The :class:`telegrampy.ext.commands.Context` for the command
+    bot: :class:`telegrampy.ext.commands.Bot`
+        The :class:`telegrampy.ext.commands.Bot` from the Context
     """
 
     def __init__(self, **options):
@@ -84,7 +84,7 @@ class HelpCommand:
 
         Parameters
         ----------
-        cog: :class:`pygram.ext.commands.Cog`
+        cog: :class:`telegrampy.ext.commands.Cog`
             The cog that matched the query
         """
         raise NotImplementedError("Subclasses must implement this.")
@@ -97,7 +97,7 @@ class HelpCommand:
 
         Parameters
         ----------
-        command: :class:`pygram.ext.commands.Command`
+        command: :class:`telegrampy.ext.commands.Command`
             The command that matched the query
         """
         raise NotImplementedError("Subclasses must implement this.")
@@ -190,7 +190,7 @@ class DefaultHelpCommand(HelpCommand):
 
         Parameters
         ----------
-        commands: List[:class`pygram.ext.commands.Command`]
+        commands: List[:class`telegrampy.ext.commands.Command`]
             The list of commands to format.
         heading: :class:`str`
             The heading to display.
