@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import asyncio
 import typing
 
 import telegrampy
@@ -48,29 +49,42 @@ class Question:
         self.callback = func
         self.text = text
 
-        self.starting_question = self.kwargs.pop("starting_question", False)
+        self.starting_question = kwargs.pop("starting_question", False)
 
     async def __call__(self, conversation, message):
         await self.callback(conversation, message)
 
 
+def question(text: str, **kwargs):
+    """Turn a function into a conversation Question.
+
+    For more info, see :class:`telegrampy.ext.conversations.Question`
+    """
+
+    def deco(func):
+        return Question(func, text, **kwargs)
+
+    return deco
+
+
 class _ConversationMeta(type):
-    def __new__(cls, *args, **kwargs):
-        name, bases, attrs = args
-        questions = {}
+    def __new__(cls, name, bases, attrs, **kwargs):
+        questions = []
+        starting_question = None
 
         new_cls = super().__new__(cls, name, bases, attrs, **kwargs)
-        new_cls.__starting_question__ = None
-
-        # Attempt to find all Question methods and add them to the class
         for base in reversed(new_cls.__mro__):
             for elem, value in base.__dict__.items():
                 if isinstance(value, Question):
-                    if value.starting_question:
-                        new_cls.__starting_question__ = value
                     questions.append(value)
+                    if value.starting_question:
+                        if starting_question is not None:
+                            raise TypeError("More than one starting Question provided. "
+                                            "There can only be one starting question.")
+                        starting_question = value
 
         new_cls.__questions__ = questions
+        new_cls.__starting_question__ = starting_question
 
         return new_cls
 
@@ -80,11 +94,19 @@ class Conversation(metaclass=_ConversationMeta):
 
     Parameters
     ----------
-    timeout: :class:`int`
+    abort_command :class:`str`
+        The name of the command that will stop the conversation
+    timeout: Optional[:class:`int`]
         How long to wait before the conversation times out.
         Defaults to None.
     """
-    def __init__(self, *, timeout: bool = None):
+    def __init__(self, *, abort_command: str, timeout: bool = None):
+        if not self.__starting_question__:
+            raise TypeError("No starting Question found. "
+                            "Please specify a starting question through "
+                            "the 'starting_question' kwarg in Question.")
+
+        self.abort_command = abort_command
         self.timeout = timeout
 
         self.started = False  # when start() is run
@@ -101,27 +123,32 @@ class Conversation(metaclass=_ConversationMeta):
         client: :class:`telegrampy.Client`
             The :class:`telegrampy.Client` instance to use
         """
-        self.started = True
         self.message = message
         self.chat = message.chat
         self.user = message.author
-        self.bot = client
+        self.client = client
+        self.started = True
 
-        await self.ask_question(self.__starting_question__)
+        await self.ask(self.__starting_question__)
 
-    async def ask_question(self, question: Question):
-        """Ask a question
+    async def ask(self, question: Question, *, send_question: bool = True):
+        """|coro|
+
+        Ask a question.
 
         Parameters
         ----------
         question: :class:`.Question`
             The :class:`.Question` to ask
+        send_question Optional[:class:`bool`]
+            Whether to send the question's text before waiting for a response.
+            Defaults to ``True``.
 
         Raises
         ------
         :exc:`.NotStarted`:
             The conversation hasn't been started
-        :exc:`TypeError`:
+        :exc:`ValueError`:
             The question provided is not registered to the conversation
         """
         if not self.started:
@@ -133,26 +160,39 @@ class Conversation(metaclass=_ConversationMeta):
             def check(ms):
                 return ms.chat == self.chat and ms.author == self.user
 
-            message = await self.client.wait_for("message", check=check, timeout=self.timeout)
+            try:
+                message = await self.client.wait_for("message", check=check, timeout=self.timeout)
+            except asyncio.TimeoutError:
+                await self.timed_out()
+                return
+
+            if message.content.startswith(f"/{self.abort_command}"):
+                await self.abort(message)
 
             await question(self, message)
 
         else:
-            raise TypeError("Not a registered Question.")
+            raise ValueError("The method provided is not a registered Question.")
 
     async def stop(self):
-        """Stop the conversation"""
+        """|coro|
+
+        Stop the conversation.
+        """
         self.stopped = True
 
+    async def abort(self, message):
+        """|coro|
 
-def question(text: str, **kwargs):
-    """Turn a function into a conversation Question
+        Called when the abort command is used during a conversation.
+        """
+        await self.ctx.send("Aborted.")
+        await self.stop()
 
-    For more info, see :class:`telegrampy.ext.conversations.Question`
-    """
+    async def timed_out(self):
+        """|coro|
 
-    def deco(func):
-        question = Question(func, text, **kwargs)
-        return question
-
-    return deco
+        Called when the conversation times out.
+        """
+        await self.ctx.send("You timed out.")
+        await self.stop()
