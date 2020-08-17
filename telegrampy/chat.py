@@ -76,14 +76,14 @@ class Chat(TelegramObject):
         ----------
         content: :class:`str`
             The content of the message to send.
-        file: :class:`pygram.File`
+        file: :class:`telegrampy.File`
             The file to send.
         parse_mode: :class:`str`
             The parse mode of the message to send.
 
         Returns
         -------
-        :class:`pygram.Message`
+        :class:`telegrampy.Message`
             The message sent.
 
         Raises
@@ -115,12 +115,12 @@ class Chat(TelegramObject):
 
         Returns
         -------
-        :class:`pygram.Poll`
+        :class:`telegrampy.Poll`
             The poll sent.
 
         Raises
         ------
-        :exc:`pygram.HTTPException`
+        :exc:`telegrampy.HTTPException`
             Sending the poll failed.
         """
 
@@ -138,7 +138,7 @@ class Chat(TelegramObject):
 
         Raises
         ------
-        :exc:`pygram.HTTPException`
+        :exc:`telegrampy.HTTPException`
             Sending the action failed.
         """
 
@@ -156,12 +156,12 @@ class Chat(TelegramObject):
 
         Returns
         -------
-        :class:`pygram.User`
+        :class:`telegrampy.User`
             The member fetched.
 
         Raises
         ------
-        :exc:`pygram.HTTPException`
+        :exc:`telegrampy.HTTPException`
             Fetching the member failed.
         """
 

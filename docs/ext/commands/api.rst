@@ -1,4 +1,4 @@
-.. currentmodule:: pygram
+.. currentmodule:: telegrampy
 
 .. _ext_commands_api:
 
@@ -8,82 +8,82 @@ API Reference
 Bot
 ---
 
-.. autoclass:: pygram.ext.commands.Bot
+.. autoclass:: telegrampy.ext.commands.Bot
     :members:
     :inherited-members:
 
 Command
 -------
 
-.. autofunction:: pygram.ext.commands.command
+.. autofunction:: telegrampy.ext.commands.command
 
-.. autoclass:: pygram.ext.commands.Command
+.. autoclass:: telegrampy.ext.commands.Command
     :members:
 
 Check
 -----
 
-.. autofunction:: pygram.ext.commands.check
+.. autofunction:: telegrampy.ext.commands.check
 
-.. autofunction:: pygram.ext.commands.pygram.ext.commands.is_owner
+.. autofunction:: telegrampy.ext.commands.telegrampy.ext.commands.is_owner
 
-.. autofunction:: pygram.ext.commands.is_private_chat
+.. autofunction:: telegrampy.ext.commands.is_private_chat
 
-.. autofunction:: pygram.ext.commands.is_not_private_chat
+.. autofunction:: telegrampy.ext.commands.is_not_private_chat
 
 Help Command
 ------------
 
-.. autoclass:: pygram.ext.commands.HelpCommand
+.. autoclass:: telegrampy.ext.commands.HelpCommand
     :members:
 
-.. autoclass:: pygram.ext.commands.DefaultHelpCommand
+.. autoclass:: telegrampy.ext.commands.DefaultHelpCommand
     :members:
 
 Cog
 ---
 
-.. autoclass:: pygram.ext.commands.Cog
+.. autoclass:: telegrampy.ext.commands.Cog
     :members:
 
 Context
 -------
 
-.. autoclass:: pygram.ext.commands.Context
+.. autoclass:: telegrampy.ext.commands.Context
     :members:
 
 Exceptions
 ----------
 
-.. autoclass:: pygram.ext.commands.CommandError
+.. autoclass:: telegrampy.ext.commands.CommandError
     :members:
 
-.. autoclass:: pygram.ext.commands.CommandNotFound
+.. autoclass:: telegrampy.ext.commands.CommandNotFound
     :members:
 
-.. autoclass:: pygram.ext.commands.CommandRegistrationError
+.. autoclass:: telegrampy.ext.commands.CommandRegistrationError
     :members:
 
-.. autoclass:: pygram.ext.commands.ExtensionNotLoaded
+.. autoclass:: telegrampy.ext.commands.ExtensionNotLoaded
     :members:
 
-.. autoclass:: pygram.ext.commands.ExtensionAlreadyLoaded
+.. autoclass:: telegrampy.ext.commands.ExtensionAlreadyLoaded
     :members:
 
-.. autoclass:: pygram.ext.commands.MissingRequiredArgument
+.. autoclass:: telegrampy.ext.commands.MissingRequiredArgument
     :members:
 
-.. autoclass:: pygram.ext.commands.BadArgument
+.. autoclass:: telegrampy.ext.commands.BadArgument
     :members:
 
-.. autoclass:: pygram.ext.commands.CheckFailure
+.. autoclass:: telegrampy.ext.commands.CheckFailure
     :members:
 
-.. autoclass:: pygram.ext.commands.NotOwner
+.. autoclass:: telegrampy.ext.commands.NotOwner
     :members:
 
-.. autoclass:: pygram.ext.commands.PrivateChatOnly
+.. autoclass:: telegrampy.ext.commands.PrivateChatOnly
     :members:
 
-.. autoclass:: pygram.ext.commands.GroupOnly
+.. autoclass:: telegrampy.ext.commands.GroupOnly
     :members:

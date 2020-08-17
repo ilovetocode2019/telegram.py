@@ -24,10 +24,10 @@ SOFTWARE.
 
 import typing
 
-import pygram
+import telegrampy
 
 
-class NotStarted(pygram.TelegramException):
+class NotStarted(telegrampy.TelegramException):
     """
     Raised when a conversation-specific method is called
     and the conversation has not been started.
@@ -90,16 +90,16 @@ class Conversation(metaclass=_ConversationMeta):
         self.started = False  # when start() is run
         self.stopped = False  # when stop() is run
 
-    async def start(self, message: pygram.Message, *, client: pygram.Client):
+    async def start(self, message: telegrampy.Message, *, client: telegrampy.Client):
         """
         Start the conversation
 
         Parameters
         ----------
-        message: :class:`pygram.Message`
+        message: :class:`telegrampy.Message`
             The message that invoked the conversation
-        client: :class:`pygram.Client`
-            The :class:`pygram.Client` instance to use
+        client: :class:`telegrampy.Client`
+            The :class:`telegrampy.Client` instance to use
         """
         self.started = True
         self.message = message
@@ -148,7 +148,7 @@ class Conversation(metaclass=_ConversationMeta):
 def question(text: str, **kwargs):
     """Turn a function into a conversation Question
 
-    For more info, see :class:`pygram.ext.conversation.Question`
+    For more info, see :class:`telegrampy.ext.conversations.Question`
     """
 
     def deco(func):

@@ -1,4 +1,4 @@
-.. currentmodule:: pygram
+.. currentmodule:: telegrampy
 
 API Reference
 =============
@@ -12,22 +12,22 @@ Client
 Events
 ------
 
-.. function:: on_message(message: pygram.Message)
+.. function:: on_message(message: telegrampy.Message)
 
     Called when a message is sent.
 
-.. function:: on_edit(before: pygram.Message, after: pygram.Message)
+.. function:: on_edit(before: telegrampy.Message, after: telegrampy.Message)
 
     Called when a message is edited.
 
-.. function:: on_poll(poll: pygram.Poll)
+.. function:: on_poll(poll: telegrampy.Poll)
 
     Called when poll is created or updated.
 
 Utilities
 ---------
 
-.. autofunction:: pygram.utils.escape_markdown
+.. autofunction:: telegrampy.utils.escape_markdown
 
 
 Telegram Models
@@ -37,12 +37,6 @@ Message
 ~~~~~~~
 
 .. autoclass:: Message
-    :members:
-
-Context
-~~~~~~~
-
-.. autoclass:: Context
     :members:
 
 User
@@ -71,39 +65,6 @@ Poll
 .. autoclass:: Poll
     :members:
 
-Errors
-------
-
-Command
-~~~~~~~
-
-.. autoclass:: Command
-    :members:
-
-Cog
-~~~
-
-.. autoclass:: Cog
-    :members:
-
-Checks
-~~~~~~
-.. function:: check(check_function)
-
-    Turns a function into a check.
-
-.. function:: is_owner()
-
-    A command check for checking that the user is the owner.
-
-.. function:: is_private_chat()
-
-    A command check for checking that the chat is a private chat.
-
-.. function:: is_not_private_chat()
-
-    A command check for checking that the chat is not a private chat.
-
 
 Exceptions
 ----------
@@ -113,30 +74,3 @@ Exceptions
 
 .. autoclass:: HTTPException
     :members:
-
-Commands
---------
-
-.. autoclass:: Command
-    :members:
-
-.. autoclass:: Cog
-    :members:
-
-Checks
-------
-.. function:: check(check_function)
-
-    Turns a function into a check
-
-.. function:: is_owner()
-
-    A command check for checking that the user is the owner
-
-.. function:: is_private_chat()
-
-    A command check for checking that the chat is a private chat
-
-.. function:: is_not_private_chat()
-
-    A command check for checking that the chat is not a private chat
