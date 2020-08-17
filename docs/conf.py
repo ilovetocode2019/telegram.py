@@ -37,7 +37,8 @@ release = version
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
+    'sphinxcontrib_trio',
 ]
 
 intersphinx_mapping = {
