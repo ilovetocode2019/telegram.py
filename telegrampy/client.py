@@ -54,6 +54,7 @@ class Client:
         self.http = HTTPClient(token=token, loop=self.loop)
 
         self._listeners = {}
+        self._waiting_for = {}
 
     async def user(self):
         """|coro|
@@ -172,6 +173,39 @@ class Client:
             await self._dispatch("error", exc)
 
     async def _dispatch(self, event, *args):
+        # Handle the active wait_fors
+        waiting_for = self._waiting_for.get(event)
+        if waiting_for:
+            removed_futures = []
+            for i, (future, check) in enumerate(waiting_for):
+                if future.cancelled():
+                    removed_futures.append(i)
+                    continue
+
+                # Run the check associated with the future
+                # and set the future's result or exception
+                try:
+                    result = check(*args)
+                except Exception as exc:
+                    future.set_exception(exc)
+                    removed_futures.append(i)
+                else:
+                    if result:
+                        if len(args) == 0:
+                            future.set_result(None)
+                        elif len(args) == 1:
+                            future.set_result(args[0])
+                        else:
+                            future.set_result(args)
+                        removed_futures.append(i)
+
+            # Clean up waiting_for
+            if len(removed_futures) == len(waiting_for):
+                self._waiting_for.pop(event)
+            else:
+                for idx in reversed(removed_futures):
+                    del waiting_for[idx]
+
         # Add "on_" to the event name
         event = f"on_{event}"
 
@@ -200,27 +234,23 @@ class Client:
         event: :class:`str`
             The name of the event to wait for
         """
-
-        name = f"on_{event}"
-        event = asyncio.Event()
+        ev = event.lower()
 
         if not check:
             def check(*args):
                 return True
 
-        async def wait_listener(*args):
-            if check(*args):
-                event.set()
+        future = self.loop.create_future()
 
-        self.add_listener(wait_listener, name)
         try:
-            ret = await asyncio.wait_for(event.wait(), timeout=timeout)
-            self.remove_listener(wait_listener)
-        except Exception:
-            self.remove_listener(wait_listener)
-            raise
+            waiting_for = self._waiting_for[ev]
+        except KeyError:
+            waiting_for = []
+            self._waiting_for[ev] = waiting_for
 
-        return ret
+        waiting_for.append((future, check))
+
+        return await asyncio.wait_for(future, timeout=timeout)
 
     def event(self, func):
         """
