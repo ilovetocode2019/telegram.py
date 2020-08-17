@@ -1,4 +1,4 @@
-.. currentmodule:: pygram
+.. currentmodule:: telegrampy
 
 API Reference
 =============
@@ -6,19 +6,19 @@ API Reference
 Conversation
 ------------
 
-.. autoclass:: pygram.ext.conversations.Conversation
+.. autoclass:: telegrampy.ext.conversations.Conversation
     :members:
 
 Question
 --------
 
-.. autofunction:: pygram.ext.conversations.question
+.. autofunction:: telegrampy.ext.conversations.question
 
-.. autoclass:: pygram.ext.conversations.Question
+.. autoclass:: telegrampy.ext.conversations.Question
     :members:
 
 Exceptions
 ----------
 
-.. autoexception:: pygram.ext.conversations.NotStarted
+.. autoexception:: telegrampy.ext.conversations.NotStarted
     :members:

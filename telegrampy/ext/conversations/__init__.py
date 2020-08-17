@@ -43,7 +43,10 @@ class Question:
     Parameters
     ----------
     text: :class:`str`
-        The question to ask the user
+        The question to ask the user.
+    starting_question: Optional[:class:`bool`]
+        Designates a Question as the starting question.
+        Defaults to ``False``.
     """
     def __init__(self, func: typing.Callable, text: str, **kwargs):
         self.callback = func
@@ -94,13 +97,33 @@ class Conversation(metaclass=_ConversationMeta):
 
     Parameters
     ----------
-    abort_command :class:`str`
-        The name of the command that will stop the conversation
+    abort_command: Optional[:class:`str`]
+        The name of the command that will stop the conversation.
+        Defaults to "abort".
     timeout: Optional[:class:`int`]
         How long to wait before the conversation times out.
-        Defaults to None.
+        Defaults to ``None``.
+
+    Attributes
+    ----------
+    message: :class:`telegrampy.Message`
+        The message (from the user) that started the conversation
+    chat: :class:`telegrampy.Chat`
+        The chat where the conversation is taking place
+    user: :class:`telegrampy.User`
+        The user who the bot is conversing with
+    client: :class:`telegrampy.Client`
+        The client instance of the bot
+    started: :class:`bool`
+        Whether the conversation has been started
+    stopped: :class:`bool`
+        Whether the conversation has been stopped
+    timeout: :class:`float`
+        The amount of time to wait before the conversation times out
+    abort_command: :class:`str`
+        The abort command name
     """
-    def __init__(self, *, abort_command: str, timeout: bool = None):
+    def __init__(self, *, abort_command: str = "abort", timeout: float = None):
         if not self.__starting_question__:
             raise TypeError("No starting Question found. "
                             "Please specify a starting question through "
@@ -111,6 +134,11 @@ class Conversation(metaclass=_ConversationMeta):
 
         self.started = False  # when start() is run
         self.stopped = False  # when stop() is run
+
+        self.message = None
+        self.chat = None
+        self.user = None
+        self.client = None
 
     async def start(self, message: telegrampy.Message, *, client: telegrampy.Client):
         """
@@ -140,7 +168,7 @@ class Conversation(metaclass=_ConversationMeta):
         ----------
         question: :class:`.Question`
             The :class:`.Question` to ask
-        send_question Optional[:class:`bool`]
+        send_question: Optional[:class:`bool`]
             Whether to send the question's text before waiting for a response.
             Defaults to ``True``.
 
@@ -166,8 +194,11 @@ class Conversation(metaclass=_ConversationMeta):
                 await self.timed_out()
                 return
 
-            if message.content.startswith(f"/{self.abort_command}"):
+            content = message.content
+            base_cmd = f"/{self.abort_command}"
+            if content == base_cmd or content.startswith(f"{base_cmd}@"):
                 await self.abort(message)
+                return
 
             await question(self, message)
 
@@ -186,7 +217,7 @@ class Conversation(metaclass=_ConversationMeta):
 
         Called when the abort command is used during a conversation.
         """
-        await self.ctx.send("Aborted.")
+        await self.chat.send("Aborted.")
         await self.stop()
 
     async def timed_out(self):
@@ -194,5 +225,5 @@ class Conversation(metaclass=_ConversationMeta):
 
         Called when the conversation times out.
         """
-        await self.ctx.send("You timed out.")
+        await self.chat.send("You timed out.")
         await self.stop()
