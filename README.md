@@ -4,8 +4,8 @@
 
 # telegram.py
 
-[![GitHub - License](https://img.shields.io/github/license/ilovetocode2019/telegram.py)](LICENSE)
 [![Documentation Status](https://readthedocs.org/projects/telegrampy/badge/?version=latest)](https://telegrampy.readthedocs.io/en/latest/?badge=latest)
+[![GitHub - License](https://img.shields.io/github/license/ilovetocode2019/telegram.py)](LICENSE)
 [![Telegram Channel](https://img.shields.io/badge/telegram-t.me%2Ftpy__updates-0088cc)](https://t.me/tpy_updates)
 
 An async API wrapper for Telegram in Python

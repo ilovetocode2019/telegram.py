@@ -214,11 +214,13 @@ class Client:
 
         self.add_listener(wait_listener, name)
         try:
-            await asyncio.wait_for(event.wait(), timeout=timeout)
+            ret = await asyncio.wait_for(event.wait(), timeout=timeout)
             self.remove_listener(wait_listener)
-        except:
+        except Exception:
             self.remove_listener(wait_listener)
             raise
+
+        return ret
 
     def event(self, func):
         """
