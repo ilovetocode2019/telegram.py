@@ -39,12 +39,6 @@ Message
 .. autoclass:: Message
     :members:
 
-Context
-~~~~~~~
-
-.. autoclass:: Context
-    :members:
-
 User
 ~~~~
 
