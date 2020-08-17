@@ -4,6 +4,8 @@
 
 # telegram.py
 
+[![PyPI](https://img.shields.io/pypi/v/telegram.py)](https://pypi.org/project/telegram.py)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/telegram.py)](https://pypi.org/project/telegram.py)
 [![Documentation Status](https://readthedocs.org/projects/telegrampy/badge/?version=latest)](https://telegrampy.readthedocs.io/en/latest/?badge=latest)
 [![GitHub - License](https://img.shields.io/github/license/ilovetocode2019/telegram.py)](LICENSE)
 [![Telegram Channel](https://img.shields.io/badge/telegram-t.me%2Ftpy__updates-0088cc)](https://t.me/tpy_updates)
@@ -16,10 +18,10 @@ Python 3.6+ is **required** to install and use telegram.py.
 
 ```bash
 # Mac/Linux
-python3 -m pip install git+https://github.com/ilovetocode2019/telegram.py
+python3 -m pip install telegram.py
 
 # Windows
-py -3 -m pip install git+https://github.com/ilovetocode2019/telegram.py
+py -3 -m pip install telegram.py
 ```
 
 ## Quick Example
