@@ -28,7 +28,7 @@ import types
 import importlib
 import sys
 
-import pygram
+import telegrampy
 from .core import Command
 from .cog import Cog
 from .context import Context
@@ -39,7 +39,7 @@ from .help import HelpCommand, DefaultHelpCommand
 _default_help = DefaultHelpCommand()
 
 
-class Bot(pygram.Client):
+class Bot(telegrampy.Client):
     """
     Represents a Telegram bot.
 
@@ -53,9 +53,9 @@ class Bot(pygram.Client):
         The owner's ID.
     owner_ids: Optional[List[:class:`int`]]
         The owner IDs.
-    help_command: Optional[:class:`pygram.ext.commands.HelpCommand`]
+    help_command: Optional[:class:`telegrampy.ext.commands.HelpCommand`]
         The bot's help command.
-        Defaults to :class:`pygram.ext.commands.DefaultHelpCommand`
+        Defaults to :class:`telegrampy.ext.commands.DefaultHelpCommand`
 
     Attributes
     ----------
@@ -65,7 +65,7 @@ class Bot(pygram.Client):
         The owner's ID.
     owner_ids: Optional[List[:class:`int`]]
         The owner IDs.
-    cogs: Mapping[:class:`str`: :class:`pygram.Cog`]
+    cogs: Mapping[:class:`str`: :class:`telegrampy.ext.commands.Cog`]
         A dictonary of cogs that are loaded.
     extensions: Mapping[:class:`str`: :class:`types.ModuleType`]
         A dictonary of extensions that are loaded.
@@ -88,7 +88,7 @@ class Bot(pygram.Client):
 
     @property
     def help_command(self):
-        """:class:`pygram.ext.commands.HelpCommand`:
+        """:class:`telegrampy.ext.commands.HelpCommand`:
             The bot's help command.
         """
         return self._help_command
@@ -129,7 +129,7 @@ class Bot(pygram.Client):
 
         Returns
         --------
-        :class:`pygram.Command`
+        :class:`telegrampy.ext.commands.Command`
             The command with the name.
         """
 
@@ -137,18 +137,18 @@ class Bot(pygram.Client):
             if name in command.aliases or command.name == name:
                 return command
 
-    def get_context(self, message: pygram.Message):
+    def get_context(self, message: telegrampy.Message):
         """
         Gets context for a given message.
 
         Parameters
         ----------
-        message: :class:`pygram.Message`
+        message: :class:`telegrampy.Message`
             The message to get context from.
 
         Returns
         -------
-        :class:`pygram.Context`
+        :class:`telegrampy.ext.commands.Context`
             The context created.
         """
 
@@ -196,7 +196,7 @@ class Bot(pygram.Client):
 
         Raises
         ------
-        :exc:`pygram.ExtensionAlreadyLoaded`
+        :exc:`telegrampy.ExtensionAlreadyLoaded`
             The extension is already loaded.
         :exc:`AttributeError`
             The extension has no setup function.
@@ -257,13 +257,13 @@ class Bot(pygram.Client):
 
         Parameters
         ----------
-        cog: :class:`pygram.Cog`
+        cog: :class:`telegrampy.ext.commands.Cog`
             The cog to add.
 
         Raises
         ------
         :exc:`TypeError`
-            The cog is not a subclass of :class:`pygram.Cog` or the cog check is not a method.
+            The cog is not a subclass of :class:`telegrampy.ext.commands.Cog` or the cog check is not a method.
         """
 
         if not isinstance(cog, Cog):
@@ -348,20 +348,20 @@ class Bot(pygram.Client):
 
         Parameters
         ----------
-        command: :class:`pygram.Command`
+        command: :class:`telegrampy.ext.commands.Command`
             The command to add.
 
         Returns
         -------
-        :class:`pygram.Command`
+        :class:`telegrampy.ext.commands.Command`
             The command added.
 
         Raises
         ------
-        :exc:`pygram.CommandRegistrationError`
+        :exc:`telegrampy.ext.commands.CommandRegistrationError`
             The command name or one if its aliases is already registered by a different command.
         :exc:`TypeError`
-            The command is not an instance of :class:`pygram.Command`.
+            The command is not an instance of :class:`telegrampy.ext.commands.Command`.
         """
 
         if not isinstance(command, Command):
@@ -384,7 +384,7 @@ class Bot(pygram.Client):
 
         Returns
         -------
-        :class:`pygram.Command`:
+        :class:`telegrampy.ext.commands.Command`:
             The command removed.
         """
 

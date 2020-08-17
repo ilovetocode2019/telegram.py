@@ -7,7 +7,7 @@ A simple API wrapper for the Telegram Bot API.
 :license: MIT, see LICENSE for more details.
 """
 
-__title__ = "pygram"
+__title__ = "telegrampy"
 __author__ = "ilovetocode"
 __license__ = "MIT"
 __copyright__ = "Copyright 2020 ilovetocode"

@@ -9,7 +9,7 @@ with open("requirements.txt") as f:
     requirements = f.read().splitlines()
 
 version = ""
-with open("pygram/__init__.py") as f:
+with open("telegrampy/__init__.py") as f:
     version = re.search(
         r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', f.read(), re.MULTILINE
     ).group(1)
@@ -26,7 +26,7 @@ setuptools.setup(
         "Issue tracker": "https://github.com/ilovetocode2019/telegram.py/issues",
     },
     version=version,
-    packages=["pygram", "pygram/ext/commands"],
+    packages=["telegrampy", "telegrampy/ext/commands"],
     install_requires=requirements,
     extras_require={
         "docs": [

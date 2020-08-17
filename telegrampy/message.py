@@ -53,9 +53,9 @@ class Message(TelegramObject):
         The time the message was edited.
     content: :class:`str`
         The content of the message.
-    chat: :class:`pygram.Chat`
+    chat: :class:`telegrampy.Chat`
         The chat the message is in.
-    author: :class:`pygram.User`
+    author: :class:`telegrampy.User`
         The author of the message.
     """
 
@@ -97,12 +97,12 @@ class Message(TelegramObject):
 
         Returns
         -------
-        :class:`pygram.Message`
+        :class:`telegrampy.Message`
             The message sent.
 
         Raises
         ------
-        :exc:`pygram.HTTPException`
+        :exc:`telegrampy.HTTPException`
             Sending the message failed.
         """
 
@@ -114,17 +114,17 @@ class Message(TelegramObject):
 
         Parameters
         ----------
-        destination: :class:pygram.Chat`
+        destination: :class:telegrampy.Chat`
             The chat forward the message to.
         
         Returns
         -------
-        :class:`pygram.Message`
+        :class:`telegrampy.Message`
             The message sent.
         
         Raises
         ------
-        :exc:`pygram.HTTPException`
+        :exc:`telegrampy.HTTPException`
             Forwarding the message failed.
         """
 
