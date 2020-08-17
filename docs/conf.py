@@ -71,6 +71,9 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
+html_theme_options = {
+    "collapse_navigation": False,
+}
 html_logo = 'icon.png'
 html_favicon = 'icon.png'
 
