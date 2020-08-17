@@ -22,22 +22,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-class Cog:
-    """Base cog class"""
+class TelegramObject:
+    """Base telegram object."""
 
-    @classmethod
-    def listener(cls, name: str=None):
-        """
-        Makes a method in a cog a listener
+    def __init__(self, http, data):
+        self._http = http
+        self._data = data
 
-        Parameters
-        ----------
-        name: Optional[:class:`str`]
-            The name of the event to register the function as
-        """
+        self.id = data.get("id")
 
-        def deco(func):
-            func._cog_listener = name or func.__name__
-            return func
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.id  == other.id
 
-        return deco
+    def __ne__(self, other):
+        if isinstance(other, self.__class__):
+            return other.id != self.id
+        return True

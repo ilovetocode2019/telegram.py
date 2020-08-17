@@ -1,11 +1,13 @@
-import pygram
 import logging
+
+import pygram
+from pygram.ext import commands
 
 logging.basicConfig(level=logging.INFO, format="(%(asctime)s) %(levelname)s %(message)s", datefmt="%m/%d/%y - %H:%M:%S %Z")
 logger = logging.getLogger("pygram")
 
 # Make sure never to share your token
-bot = pygram.Bot("token here")
+bot = commands.Bot("token here")
 
 # Create and register a command called "image".
 # Note that you can specify the command name

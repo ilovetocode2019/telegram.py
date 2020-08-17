@@ -26,11 +26,12 @@ import datetime
 
 from .chat import Chat
 from .user import User
+from .abc import TelegramObject
 
 
-class Message:
+class Message(TelegramObject):
     """
-    Reprsents a message in Telegram
+    Reprsents a message in Telegram.
 
     .. container:: operations
 
@@ -45,23 +46,21 @@ class Message:
     Attributes
     ----------
     id: :class:`int`
-        The ID of the message
+        The ID of the message.
     created_at: :class:`datetime.datetime`
-        The time the message was created
+        The time the message was created.
     edited_at: Optional[:class:`datetime.datetime`]
-        The time the message was edited
+        The time the message was edited.
     content: :class:`str`
-        The content of the message
+        The content of the message.
     chat: :class:`pygram.Chat`
-        The chat the message is in
+        The chat the message is in.
     author: :class:`pygram.User`
-        The author of the message
+        The author of the message.
     """
 
     def __init__(self, http, data: dict):
-        self._data = data
-        self._http = http
-
+        super().__init__(http, data)
         self.id = data.get("message_id")
 
         self.created_at = data.get("date")
@@ -84,34 +83,49 @@ class Message:
         else:
             self.author = None
 
-    def __eq__(self, other):
-        return isinstance(other, Message) and self.id == other.id
-
-    def __ne__(self, other):
-        if isinstance(other, Message):
-            return other.id != self.id
-        return True
-
     async def reply(self, content: str, parse_mode: str = None):
-        """
-        Replys to the message
+        """|coro|
+        
+        Replys to the message.
 
         Parameters
         ----------
         content: :class:`str`
-            The content of the message to send
+            The content of the message to send.
         parse_mode: :class:`str`
-            The parse mode of the message to send
+            The parse mode of the message to send.
 
         Returns
         -------
         :class:`pygram.Message`
-            The message sent
+            The message sent.
 
         Raises
         ------
         :exc:`pygram.HTTPException`
-            Sending the message failed
+            Sending the message failed.
         """
 
         return await self._http.send_message(chat_id=self.chat.id, content=content, parse_mode=parse_mode, reply_message_id=self.id)
+
+    async def forward(self, destination):
+        """
+        Forwards the message to a destination.
+
+        Parameters
+        ----------
+        destination: :class:pygram.Chat`
+            The chat forward the message to.
+        
+        Returns
+        -------
+        :class:`pygram.Message`
+            The message sent.
+        
+        Raises
+        ------
+        :exc:`pygram.HTTPException`
+            Forwarding the message failed.
+        """
+
+        return await self._http.forward_message(chat_id=destination.id, from_chat_id=self.chat.id, message_id=self.id)

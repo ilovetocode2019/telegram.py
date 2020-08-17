@@ -22,36 +22,36 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-class Poll:
-    """A telegram poll.
+import re
 
-    Attributes
+
+def escape_markdown(text: str, *, version: int = 2):
+    """Tool that escapes markdown from a given string.
+
+    Parameters
     ----------
-    question: :class:`str`
-        The question of the poll.
-    options: :class:`list`
-        The options of the poll.
-    total_voter_count: :class:`int`
-        The total voter count of the poll.
-    is_closed: :class:`bool`
-        If the poll is closed.
-    is_anonymous: :class:`bool`
-        If the poll is anonymous.
-    type: :class:`str`
-        The type of the poll.
-    allow_multiple_answers: :class:`bool`
-        If the poll allows multiple answers.
+    text: :class:`str`
+        The text to escape markdown from.
+    version: Optional[:class:`int`]
+        The Telegram markdown version to use. Only 1 and 2 are supported.
+
+    Returns
+    -------
+    :class:`str`
+        The escaped text.
+
+    Raises
+    ------
+    :exc:`ValueError`
+        An unsupported version was provided.
     """
+    if version == 1:
+        characters = r"_*`["
 
-    def __init__(self, data):
-        self._data = data
+    elif version == 2:
+        characters = r"_*[]()~`>#+-=|{}.!"
 
-        self.id = data.get("id")
+    else:
+        raise ValueError(f"Version '{version}' unsupported. Only version 1 and 2 are supported.")
 
-        self.question = data.get("question")
-        self.options = data.get("options")
-        self.total_voter_count = data.get("total_voter_count")
-        self.is_closed = data.get("is_closed")
-        self.is_anonymous = data.get("is_anoymous")
-        self.type = data.get("type")
-        self.allow_multiple_answers = data.get("allow_multiple_answers")
+    return re.sub(f"([{re.escape(characters)}])", r"\\\1", text)

@@ -15,16 +15,14 @@ __version__ = "0.1.0a"
 
 from collections import namedtuple
 
-from .bot import Bot
+from . import utils
+from .client import Client
 from .errors import *
 from .chat import Chat
 from .user import User
 from .message import Message
-from .context import Context
 from .file import *
 from .poll import Poll
-from .core import *
-from .cog import Cog
 
 VersionInfo = namedtuple("VersionInfo", "major minor micro releaselevel serial")
 

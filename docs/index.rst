@@ -26,6 +26,17 @@ Extensions
 telegram.py offers extra features that may assist in
 the development of Telegram bots.
 
+Commands Extension
+~~~~~~~~~~~~~~~~~~
+
+The commands extension allows you to easily create
+and organize commands for your bot.
+
+.. toctree::
+    :maxdepth: 3
+
+    ext/commands/index
+
 Conversations Extension
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -33,8 +44,6 @@ The conversations extension helps with building
 conversations with another user.
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 3
 
     ext/conversations/index
-    ext/conversations/api
-    ext/conversations/examples

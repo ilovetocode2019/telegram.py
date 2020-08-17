@@ -37,13 +37,21 @@ release = version
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
+    'sphinxcontrib_trio',
 ]
 
 intersphinx_mapping = {
   'py': ('https://docs.python.org/3', None),
   'aiohttp': ('https://aiohttp.readthedocs.io/en/stable/', None)
 }
+
+rst_prolog = """
+.. |coro| replace:: This function is a |coroutine_link|_.
+.. |coroutine_link| replace:: *coroutine*
+.. _coroutine_link: https://docs.python.org/3/library/asyncio-task.html#coroutine
+"""
+
 
 # The master toctree document.
 master_doc = "index"
