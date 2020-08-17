@@ -1,6 +1,13 @@
 import setuptools
 import re
 
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
+requirements = []
+with open("requirements.txt") as f:
+    requirements = f.read().splitlines()
+
 version = ""
 with open("pygram/__init__.py") as f:
     version = re.search(
@@ -9,11 +16,18 @@ with open("pygram/__init__.py") as f:
 
 setuptools.setup(
     name="telegram.py",
-    description="An async API wrapper for telegram in python",
-    author="Ilovetocode",
+    description="An async API wrapper for telegram in Python",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    author="ilovetocode",
     url="https://github.com/ilovetocode2019/telegram.py",
+    project_urls={
+        "Documentation": "https://telegrampy.readthedocs.io",
+        "Issue tracker": "https://github.com/ilovetocode2019/telegram.py/issues",
+    },
     version=version,
     packages=["pygram"],
+    install_requires=requirements,
     extras_require={
         "docs": [
             "sphinx==2.4.3",

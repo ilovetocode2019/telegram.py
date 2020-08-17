@@ -23,33 +23,33 @@ SOFTWARE.
 """
 
 class TelegramException(Exception):
-    """Base exception for all errors"""
+    """Base exception for all errors."""
 
     pass
 
 class CommandError(TelegramException):
-    """Base exception for all command errors"""
+    """Base exception for all command errors."""
 
     pass
 
 class CommandNotFound(CommandError):
-    """Raised when a command is not found"""
+    """Raised when a command is not found."""
 
     pass
 
 class CommandRegistrationError(CommandError):
-    """Raised when a command cannot be registered"""
+    """Raised when a command cannot be registered."""
 
     pass
 
 class ExtensionNotLoaded(CommandError):
     """
-    Raised when an extension is not loaded
+    Raised when an extension is not loaded due to an error while loading.
 
     Attributes
     ----------
     name: :class:`str`
-        The name of the extension that is not loaded
+        The name of the extension that is not loaded.
     """
 
     def __init__(self, name):
@@ -58,12 +58,12 @@ class ExtensionNotLoaded(CommandError):
 
 class ExtensionAlreadyLoaded(CommandError):
     """
-    Raised when an extension is already loaded
+    Raised when an extension is already loaded.
 
     Attributes
     ----------
     name: :class:`str`
-        The name of the extension that is already loaded
+        The name of the extension that is already loaded.
     """
 
     def __init__(self, name):
@@ -72,12 +72,12 @@ class ExtensionAlreadyLoaded(CommandError):
 
 class MissingRequiredArgument(CommandError):
     """
-    Raised when a required argument is missing
+    Raised when a required argument is missing.
 
     Attributes
     ----------
     param: :class:`str`
-        The argument that is missing
+        The argument that is missing.
     """
 
     def __init__(self, param):
@@ -86,14 +86,14 @@ class MissingRequiredArgument(CommandError):
 
 class BadArgument(CommandError):
     """
-    Raised when a bad argument is given
+    Raised when a bad argument is given.
 
     Attributes
     ----------
     arg: :class:`str`
-        The bad argument
+        The bad argument.
     converter: :class:`str`
-        The name of the converter that failed
+        The name of the converter that failed.
     """
 
     def __init__(self, arg, converter, message=None):
@@ -102,23 +102,23 @@ class BadArgument(CommandError):
         super().__init__(message or f"Failed to convert '{arg}' to '{converter}'")
 
 class CheckFailure(CommandError):
-    """Raised when a check fails"""
+    """Raised when a check fails."""
 
     pass
 
 class NotOwner(CheckFailure):
-    """Raised when a user is not the owner of the bot"""
+    """Raised when a user is not the owner of the bot."""
 
     pass
 
 class PrivateChatOnly(CheckFailure):
-    """Raised when a command can only be used in private chats"""
+    """Raised when a command can only be used in private chats."""
 
     def __init__(self, message=None):
         super().__init__(message or "This command can only be used in private messages")
 
 class GroupOnly(CheckFailure):
-    """Raised when a command can only be used in groups"""
+    """Raised when a command can only be used in groups."""
 
     def __init__(self, message=None):
         super().__init__(message or "This command can only be used in groups")

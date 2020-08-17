@@ -15,6 +15,7 @@ __version__ = "0.1.0a"
 
 from collections import namedtuple
 
+from . import utils
 from .bot import Bot
 from .errors import *
 from .chat import Chat

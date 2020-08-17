@@ -26,7 +26,7 @@ from io import BytesIO
 
 
 class File:
-    """A file to send"""
+    """A file to send."""
 
     def __init__(self, file: BytesIO, filename: str = None):
         self.file = file
@@ -35,45 +35,45 @@ class File:
 
 class Document(File):
     """
-    A document to send
+    A document to send.
 
     Attributes
     ----------
     file: :class:`io.BytesIO`
-        The document
+        The document.
     filename: Optional[:class:`str`]
-        The filename of the document
+        The filename of the document.
 
     Parameters
     ----------
     file: :class:`io.BytesIO`
-        The document
+        The document.
     filename: :class:`str`
-        The filename of the document
+        The filename of the document.
     """
 
 
 class Photo(File):
     """
-    A photo to send
+    A photo to send.
 
     Attributes
     ----------
     file: :class:`io.BytesIO`
-        The photo
+        The photo.
     filename: Optional[:class:`str`]
-        The filename of the photo
+        The filename of the photo.
     caption: Optional[:class:`str`]
-        The caption of the photo
+        The caption of the photo.
 
     Parameters
     ----------
     file: :class:`io.BytesIO`
-        The photo
+        The photo.
     filename: :class:`str`
-        The filename of the photo
+        The filename of the photo.
     caption: :class:`str`
-        The caption of the photo
+        The caption of the photo.
     """
 
     def __init__(self, file: BytesIO, filename: str = None, caption: str = None):
