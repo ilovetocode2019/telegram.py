@@ -22,9 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-# TODO: move command registration from Bot.add_cog to CogMeta
-# TODO: add properties like Cog.commands to Cog
-
 import types
 import inspect
 
