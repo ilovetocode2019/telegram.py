@@ -1,5 +1,5 @@
 <p align="center">
-<img src="docs/icon.png" alt="Logo" title="telegram.py" height="200" width="200"/>
+<img src="https://raw.githubusercontent.com/ilovetocode2019/telegram.py/master/docs/icon.png" alt="Logo" title="telegram.py" height="200" width="200"/>
 </p>
 
 # telegram.py
@@ -16,7 +16,7 @@ An async API wrapper for Telegram in Python
 
 Python 3.6+ is **required** to install and use telegram.py.
 
-Install the latest release from PyPi:
+Install the latest release from PyPI:
 
 ```bash
 # Mac/Linux
