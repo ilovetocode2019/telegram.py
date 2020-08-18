@@ -39,7 +39,7 @@ class HTTPException(TelegramException):
        The message for the request that failed
     """
 
-    def __init__(self, response, message=None):
+    def __init__(self, response, message=""):
         self.response = response
         self.message = message
-        super().__init__(f"{response.status} {message or ''}")
+        super().__init__(f"{response.status} {message}")

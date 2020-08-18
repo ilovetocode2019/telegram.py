@@ -26,6 +26,7 @@ import asyncio
 import datetime
 import json
 import sys
+import logging
 
 import aiohttp
 
@@ -37,10 +38,26 @@ from .message import Message
 from .file import *
 from .poll import *
 
-user_agent = 'TelegramBot (https://github.com/ilovetocode2019/telegram.py {0}) Python/{1[0]}.{1[1]} aiohttp/{2}'
+log = logging.getLogger("telegrampy.http")
+
+user_agent = "TelegramBot (https://github.com/ilovetocode2019/telegram.py {0}) Python/{1[0]}.{1[1]} aiohttp/{2}"
+
+
+class Route:
+    """Represents a Telegram route"""
+
+    BASE_URL = ""
+
+    def __init__(self, method, url):
+        self.method = method
+        self.url = url
+
+    def __str__(self):
+        return f"{self.method}: {self.url}"
+
 
 class HTTPClient:
-    """An HTTP client making requests to Telegram."""
+    """Represents an HTTP client making requests to Telegram."""
 
     def __init__(self, token: str, loop: asyncio.BaseEventLoop):
         self._token = token
@@ -57,7 +74,58 @@ class HTTPClient:
 
         return list(self.messages_dict.values())
 
-    async def send_message(self, chat_id: int, content: str, parse_mode: str=None, reply_message_id: int=None):
+    async def request(self, route: Route, **kwargs):
+        """Make a request to a route
+
+        All kwargs will be forwarded to
+        :meth:`aiohttp.ClientSession.request`.
+
+        Parameters
+        ----------
+        route: :class:`telegrampy.http.Route`
+            The route to make a request to
+        """
+        url = route.url
+        method = route.method
+
+        # Try a request 5 times before dropping it
+        for tries in range(5):
+            async with self.session.request(method, url, **kwargs) as resp:
+                # Telegram docs say all responses will have json
+                data = await resp.json()
+
+                if 300 > resp.status >= 200:
+                    return data
+
+                # We are getting ratelimited
+                if resp.status == 429:
+                    params = data.get("parameters")
+
+                    if not params:
+                        raise HTTPException(resp, data.get("description"))
+
+                    retry_after = params.get("retry_after")
+
+                    # We didn't get a retry after,
+                    # so raise an HTTPException
+                    if not retry_after:
+                        raise HTTPException(resp, data.get("description"))
+
+                    log.warning(f"We are being ratelimited. Retrying in {retry_after} seconds.")
+
+                    await asyncio.sleep(retry_after)
+                    continue
+
+                # Some sort of internal Telegram error.
+                # Retry with an increasing sleep gap between.
+                if resp.status in [500, 502, 503, 504]:
+                    await asyncio.sleep(1 + tries * 2)
+                    continue
+
+                else:
+                    raise HTTPException(resp, (data).get("description"))
+
+    async def send_message(self, chat_id: int, content: str, parse_mode: str = None, reply_message_id: int = None):
         """Sends a message to a chat."""
 
         url = self._base_url + "sendMessage"
@@ -68,12 +136,7 @@ class HTTPClient:
         if reply_message_id:
             data["reply_to_message_id"] = reply_message_id
 
-        resp = await self.session.post(url, data=data)
-
-        if resp.status != 200:
-            raise HTTPException(resp, (await resp.json()).get("description") or "Failed to send message")
-
-        message_data = await resp.json()
+        message_data = await self.request(Route("POST", url), data=data)
 
         if "result" in message_data:
             msg = Message(self, message_data["result"])
@@ -85,20 +148,15 @@ class HTTPClient:
 
         url = self._base_url + "forwardMessage"
         data = {"chat_id": chat_id, "from_chat_id": from_chat_id, "message_id": message_id}
-        
-        resp = await self.session.post(url, data=data)
 
-        if resp.status != 200:
-            raise HTTPException(resp, (await resp.json()).get("description") or "Failed to forward message")
-
-        message_data = await resp.json()
+        message_data = await self.request(Route("POST", url), data=data)
 
         if "result" in message_data:
             msg = Message(self, message_data["result"])
             self.messages_dict[msg.id] = msg
             return msg
 
-    async def send_document(self, chat_id: int, document: Document, filename: str=None):
+    async def send_document(self, chat_id: int, document: Document, filename: str = None):
         """Sends a document to a chat."""
 
         url = self._base_url + "sendDocument"
@@ -106,19 +164,14 @@ class HTTPClient:
         writer = aiohttp.FormData()
         writer.add_field("document", document, filename=filename)
         writer.add_field("chat_id", str(chat_id))
-        resp = await self.session.post(url, data=writer)
-
-        if resp.status != 200:
-            raise HTTPException(resp, (await resp.json()).get("description") or "Failed to send document")
-
-        message_data = await resp.json()
+        message_data = await self.request(Route("POST", url), data=writer)
 
         if "result" in message_data:
             msg = Message(self, message_data["result"])
             self.messages_dict[msg.id] = msg
             return msg
 
-    async def send_photo(self, chat_id: int, photo: Photo, filename: str=None, caption: str=None):
+    async def send_photo(self, chat_id: int, photo: Photo, filename: str = None, caption: str = None):
         """Sends a photo to a chat."""
 
         url = self._base_url + "sendPhoto"
@@ -129,12 +182,7 @@ class HTTPClient:
         if caption:
             writer.add_field("caption", caption)
 
-        resp = await self.session.post(url, data=writer)
-
-        if resp.status != 200:
-            raise HTTPException(resp, (await resp.json()).get("description") or "Failed to send photo")
-
-        message_data = await resp.json()
+        message_data = await self.request(Route("POST", url), data=writer)
 
         if "result" in message_data:
             msg = Message(self, message_data["result"])
@@ -147,12 +195,7 @@ class HTTPClient:
         url = self._base_url + "sendPoll"
         data = {"chat_id": chat_id, "question": question, "options": json.dumps(options)}
 
-        resp = await self.session.post(url, data=data)
-
-        if resp.status != 200:
-            raise HTTPException(resp, (await resp.json()).get("description") or "Failed to send poll")
-
-        poll_data = await resp.json()
+        poll_data = await self.request(Route("POST", url), data=data)
 
         if "result" in poll_data:
             msg = Poll(poll_data["result"])
@@ -163,24 +206,15 @@ class HTTPClient:
         url = self._base_url + "sendChatAction"
         data = {"chat_id": chat_id, "action": action}
 
-        resp = await self.session.post(url, data=data)
-
-        if resp.status != 200:
-            raise HTTPException(resp, (await resp.json()).get("description") or "Failed to send action")
-
-        chat_action_data = await resp.json()
+        chat_action_data = await self.request(Route("POST", url), data=data)
 
     async def get_chat(self, chat_id: int):
         """Fetches a chat."""
 
         url = self._base_url + "getChat"
 
-        resp = await self.session.post(url, data={"chat_id": chat_id})
+        chat_data = await self.request(Route("GET", url))
 
-        if resp.status != 200:
-            raise HTTPException(resp, (await resp.json()).get("description") or "Failed to fetch chat")
-
-        chat_data = await resp.json()
         if "result" in chat_data:
             return Chat(self, chat_data["result"])
 
@@ -189,24 +223,16 @@ class HTTPClient:
 
         url = self._base_url + "getChatMember"
 
-        resp = await self.session.post(url, data={"chat_id": chat_id, "user_id": user_id})
+        user_data = await self.request(Route("GET", url))
 
-        if resp.status != 200:
-            raise HTTPException(resp, (await resp.json()).get("description") or "Failed to fetch member")
-
-        user_data = await resp.json()
         if "result" in user_data:
             return User(self, user_data["result"].get("user"))
 
     async def get_me(self):
         url = self._base_url + "getMe"
 
-        resp = await self.session.get(url)
+        me_data = await self.request(Route("GET", url))
 
-        if resp.status != 200:
-            raise HTTPException(resp, (await resp.json()).get("descrption") or "Failed to get info")
-
-        me_data = await resp.json()
         if "result" in me_data:
             return User(self, me_data["result"])
 
@@ -216,19 +242,15 @@ class HTTPClient:
         """
 
         url = self._base_url + "getUpdates"
-        session = self.session
 
         if not offset:
-            resp = await session.get(url=url)
+            data = await self.request(Route("GET", url))
 
         else:
-            resp = await session.post(url=url, data={"offset":offset})
-
-        if resp.status != 200:
-            raise HTTPException(resp, message=(await resp.json()).get("result"))
+            data = await self.request(Route("POST", url), data={"offset": offset})
 
         self._last_update_time = datetime.datetime.now()
-        return (await resp.json())["result"]
+        return data["result"]
 
     async def close(self):
         """Closes the connection."""
