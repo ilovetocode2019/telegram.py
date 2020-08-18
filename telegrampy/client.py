@@ -32,6 +32,7 @@ from .http import HTTPClient
 from .errors import *
 from .message import Message
 from .poll import Poll
+from .inline import InlineQuery
 
 logger = logging.getLogger("telegrampy")
 
@@ -132,11 +133,16 @@ class Client:
                         elif "poll" in update:
                             key = "poll"
                             event = "poll"
+                        elif "inline_query" in update:
+                            key = "inline_query"
+                            event = "inline_query"
 
                     data = update[key]
 
                     if event == "poll":
                         await self._dispatch(event, Poll(data))
+                    elif event == "inline_query":
+                        await self._dispatch(event, InlineQuery(self.http, data))
                     elif event == "edit":
                         await self._dispatch(event, self.http.messages_dict.get(data["message_id"]), Message(self.http, data))
                     else:
