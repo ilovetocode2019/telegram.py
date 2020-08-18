@@ -11,7 +11,7 @@ __title__ = "telegrampy"
 __author__ = "ilovetocode"
 __license__ = "MIT"
 __copyright__ = "Copyright 2020 ilovetocode"
-__version__ = "0.1.0a"
+__version__ = "0.1.0"
 
 from collections import namedtuple
 
@@ -26,4 +26,4 @@ from .poll import Poll
 
 VersionInfo = namedtuple("VersionInfo", "major minor micro releaselevel serial")
 
-version_info = VersionInfo(major=0, minor=1, micro=0, releaselevel="alpha", serial=0)
+version_info = VersionInfo(major=0, minor=1, micro=0, releaselevel="final", serial=0)
