@@ -25,9 +25,11 @@ SOFTWARE.
 import asyncio
 import datetime
 import json
+import sys
 
 import aiohttp
 
+from . import __version__
 from .errors import HTTPException
 from .user import User
 from .chat import Chat
@@ -35,6 +37,7 @@ from .message import Message
 from .file import *
 from .poll import *
 
+user_agent = 'TelegramBot (https://github.com/ilovetocode2019/telegram.py {0}) Python/{1[0]}.{1[1]} aiohttp/{2}'
 
 class HTTPClient:
     """An HTTP client making requests to Telegram."""
@@ -45,7 +48,8 @@ class HTTPClient:
         self.messages_dict = {}
 
         self.loop = loop or asyncio.get_event_loop()
-        self.session = aiohttp.ClientSession(loop=self.loop)
+        self.user_agent = user_agent.format(__version__, sys.version_info, aiohttp.__version__)
+        self.session = aiohttp.ClientSession(loop=self.loop, headers={"User-Agent": self.user_agent})
 
     @property
     def messages(self):
