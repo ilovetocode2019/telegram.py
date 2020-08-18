@@ -134,13 +134,14 @@ class Conversation(metaclass=_ConversationMeta):
 
         self.started = False  # when start() is run
         self.stopped = False  # when stop() is run
+        self._event = asyncio.Event()
 
         self.message = None
         self.chat = None
         self.user = None
         self.client = None
 
-    async def start(self, message: telegrampy.Message, *, client: telegrampy.Client):
+    async def start(self, message: telegrampy.Message, *, client: telegrampy.Client, wait=False):
         """
         Start the conversation
 
@@ -150,6 +151,9 @@ class Conversation(metaclass=_ConversationMeta):
             The message that invoked the conversation
         client: :class:`telegrampy.Client`
             The :class:`telegrampy.Client` instance to use
+        wait: Optional[:class:`bool`]
+            Whether to wait until the conversation is completed
+            before returning.
         """
         self.message = message
         self.chat = message.chat
@@ -157,7 +161,10 @@ class Conversation(metaclass=_ConversationMeta):
         self.client = client
         self.started = True
 
-        await self.ask(self.__starting_question__)
+        client.loop.create_task(self.ask(self.__starting_question__))
+
+        if wait:
+            await self._event.wait()
 
     async def ask(self, question: Question, *, send_question: bool = True):
         """|coro|
@@ -210,6 +217,7 @@ class Conversation(metaclass=_ConversationMeta):
 
         Stop the conversation.
         """
+        self._event.set()
         self.stopped = True
 
     async def abort(self, message):
