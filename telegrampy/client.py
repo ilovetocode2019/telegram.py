@@ -38,12 +38,12 @@ logger = logging.getLogger("telegrampy")
 
 class Client:
     """
-    Represents a client connection to Telegram
+    Represents a client connection to Telegram.
 
     Parameters
     ----------
     token: :class:`str`
-        The API token
+        The API token.
     """
 
     def __init__(self, token: str):
@@ -59,7 +59,7 @@ class Client:
     async def user(self):
         """|coro|
 
-        The user of the bot
+        The user of the bot.
         """
 
         return await self.http.get_me()
@@ -67,22 +67,22 @@ class Client:
     async def get_chat(self, chat_id: int):
         """|coro|
 
-        Fetches a chat by ID
+        Fetches a chat by ID.
 
         Parameters
         ----------
         chat_id: :class:`int`
-            The ID of the chat to fetch
+            The ID of the chat to fetch.
 
         Returns
         -------
         :class:`telegrampy.Chat`
-            The chat that was fetched
+            The chat that was fetched.
 
         Raises
         ------
         :exc:`telegrampy.HTTPException`
-            Fetching the chat failed
+            Fetching the chat failed.
         """
 
         return await self.http.get_chat(chat_id=chat_id)
@@ -227,12 +227,12 @@ class Client:
     async def wait_for(self, event: str, check=None, timeout=None):
         """|coro|
 
-        Waits for an event
+        Waits for an event.
 
         Parameters
         ----------
         event: :class:`str`
-            The name of the event to wait for
+            The name of the event to wait for.
         """
         ev = event.lower()
 
@@ -254,12 +254,12 @@ class Client:
 
     def event(self, func):
         """
-        Turns a function into an event handler
+        Turns a function into an event handler.
 
         Parameters
         ----------
         func:
-            The function to make an event handler
+            The function to make an event handler.
         """
 
         setattr(self, func.__name__, func)
@@ -268,7 +268,7 @@ class Client:
     async def on_error(self, error):
         """|coro|
 
-        Default error handler
+        Default error handler.
         """
 
         if "on_error" in self._listeners:
@@ -278,14 +278,14 @@ class Client:
 
     def add_listener(self, func, name: str = None):
         """
-        Registers a function as a listener
+        Registers a function as a listener.
 
         Parameters
         ----------
         func:
-            The function to register
+            The function to register.
         name: Optional[:class:`str`]
-            The name of the event to register the function as
+            The name of the event to register the function as.
         """
 
         name = name or func.__name__
@@ -297,12 +297,12 @@ class Client:
 
     def remove_listener(self, func):
         """
-        Removes a listener
+        Removes a listener.
 
         Parameters
         ----------
         func:
-            The function that is registered as a listener
+            The function that is registered as a listener.
         """
 
         for event in self._listeners:
@@ -311,12 +311,12 @@ class Client:
 
     def listen(self, name=None):
         """
-        A decorator that registers a function as a listener
+        A decorator that registers a function as a listener.
 
         Parameters
         ---------
         name: Optional[:class:`str`]
-             The name of the event to register the function as
+             The name of the event to register the function as.
         """
 
         def deco(func):
@@ -326,7 +326,10 @@ class Client:
         return deco
 
     async def stop(self):
-        """Stops the bot"""
+        """|coro|
+
+        Stops the bot
+        """
 
         if not self._running:
             raise RuntimeError("Bot is not running")

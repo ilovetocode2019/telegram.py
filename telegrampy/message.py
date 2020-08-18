@@ -109,7 +109,8 @@ class Message(TelegramObject):
         return await self._http.send_message(chat_id=self.chat.id, content=content, parse_mode=parse_mode, reply_message_id=self.id)
 
     async def forward(self, destination):
-        """
+        """|coro|
+        
         Forwards the message to a destination.
 
         Parameters

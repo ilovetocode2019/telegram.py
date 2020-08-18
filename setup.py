@@ -16,7 +16,7 @@ with open("telegrampy/__init__.py") as f:
 
 setuptools.setup(
     name="telegram.py",
-    description="An async API wrapper for telegram in Python",
+    description="An async API wrapper for Telegram in Python",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="ilovetocode",
@@ -37,8 +37,12 @@ setuptools.setup(
         ]
     },
     classifiers=[
-        "Programming Language :: Python :: 3",
+        "Development Status :: 3 - Alpha",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "License :: OSI Approved :: MIT License",
+        "Intended Audience :: Developers",
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.6",

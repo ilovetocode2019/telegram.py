@@ -169,6 +169,8 @@ class Command:
 
     async def invoke(self, ctx: Context):
         """
+        |coro|
+        
         Invokes the command with given context.
 
         Parameters

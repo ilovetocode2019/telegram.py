@@ -56,7 +56,8 @@ class Context:
         self.kwargs = kwargs.get("kwargs") or {}
 
     async def send(self, content: str = None, file: File = None, parse_mode=None):
-        """
+        """|coro|
+        
         Sends a message in the chat.
 
         Parameters
@@ -82,7 +83,8 @@ class Context:
         return await self.chat.send(content=content, file=file, parse_mode=parse_mode)
 
     async def send_poll(self, question: str, options: list):
-        """
+        """|coro|
+
         Sends a poll to the chat.
 
         Parameters
@@ -106,7 +108,8 @@ class Context:
         return await self.chat.send_poll(question, options)
 
     async def send_action(self, action: str):
-        """
+        """|coro|
+
         Sends an action to the chat.
 
         Parameters
@@ -124,6 +127,8 @@ class Context:
 
     async def reply(self, content: str, parse_mode: str = None):
         """
+        |coro|
+
         Replys to the message.
 
         Parameters
