@@ -151,6 +151,25 @@ class HTTPClient:
             self.messages_dict[msg.id] = msg
             return msg
 
+    async def edit_message_content(self, chat_id: int, message_id: int, content: str, parse_mode: str = None):
+        """Edits a message."""
+
+        url = self._base_url + "editMessageText"
+        data = {"chat_id": chat_id, "message_id": message_id, "text": content}
+
+        if parse_mode:
+            data["parse_mode"] = parse_mode
+
+        await self.request(Route("POST", url), data=data)
+
+    async def delete_message(self, chat_id: int, message_id: int):
+        """Deletes a message."""
+
+        url = self._base_url + "deleteMessage"
+        data = {"chat_id": chat_id, "message_id": message_id}
+
+        await self.request(Route("POST", url), data=data)
+
     async def forward_message(self, chat_id: int, from_chat_id: int, message_id: int):
         """Forwards a message."""
 
