@@ -117,9 +117,9 @@ class HTTPClient:
                     continue
 
                 # Token is invalid
-                if resp.status in (401, 403):
+                if resp.status == 403:
                     raise Forbidden(resp, data.get("description"))
-                if resp.status == 404:
+                if resp.status in (401, 404):
                     raise InvalidToken(resp, data.get("description"))
 
                 # Some sort of internal Telegram error.
