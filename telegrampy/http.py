@@ -121,6 +121,8 @@ class HTTPClient:
                     raise Forbidden(resp, data.get("description"))
                 if resp.status in (401, 404):
                     raise InvalidToken(resp, data.get("description"))
+                if resp.status == 409:
+                    raise Conflict(resp, data.get("description"))
 
                 # Some sort of internal Telegram error.
                 # Retry with an increasing sleep gap between.

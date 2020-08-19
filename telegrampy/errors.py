@@ -55,3 +55,9 @@ class Forbidden(HTTPException):
 
     def __init__(self, response, message=""):
         super().__init__(response, message)
+
+class Conflict(HTTPException):
+    """Raised when another instance of the bot is running."""
+
+    def __init__(self, response, message=""):
+        super().__init__(response, message)
