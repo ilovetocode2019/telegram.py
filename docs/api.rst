@@ -78,3 +78,12 @@ Exceptions
 
 .. autoclass:: HTTPException
     :members:
+
+.. autoclass:: InvalidToken
+    :members:
+
+.. autoclass:: Forbidden
+    :members:
+
+.. autoclass:: Conflict
+    :members:
