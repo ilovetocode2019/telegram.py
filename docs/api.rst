@@ -26,7 +26,7 @@ Events
 
 .. function:: on_error(error)
 
-    Called when an error occurs
+    Called when an error occurs.
 
 Utilities
 ---------

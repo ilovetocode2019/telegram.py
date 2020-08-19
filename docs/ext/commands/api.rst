@@ -17,7 +17,7 @@ Events
 
 .. function:: on_command_error(ctx, error)
 
-    Called when an error occurs in a command
+    Called when an error occurs in a command.
 
 Command
 -------
