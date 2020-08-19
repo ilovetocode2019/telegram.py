@@ -10,7 +10,7 @@ Client
     :members:
 
 Events
-------
+~~~~~~
 
 .. function:: on_message(message: telegrampy.Message)
 
@@ -23,6 +23,10 @@ Events
 .. function:: on_poll(poll: telegrampy.Poll)
 
     Called when poll is created or updated.
+
+.. function:: on_error(error)
+
+    Called when an error occurs
 
 Utilities
 ---------
