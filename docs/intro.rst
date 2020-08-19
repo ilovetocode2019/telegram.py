@@ -14,7 +14,7 @@ Installation
 .. note::
     telegram.py requires Python 3.6+
 
-Install via git and pip:
+Install via pip:
 
 .. code-block:: shell
 
