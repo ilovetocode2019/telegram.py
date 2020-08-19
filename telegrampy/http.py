@@ -31,7 +31,7 @@ import logging
 import aiohttp
 
 from . import __version__
-from .errors import HTTPException
+from .errors import *
 from .user import User
 from .chat import Chat
 from .message import Message
@@ -75,7 +75,7 @@ class HTTPClient:
         return list(self.messages_dict.values())
 
     async def request(self, route: Route, **kwargs):
-        """Make a request to a route
+        """Make a request to a route.
 
         All kwargs will be forwarded to
         :meth:`aiohttp.ClientSession.request`.
@@ -83,7 +83,7 @@ class HTTPClient:
         Parameters
         ----------
         route: :class:`telegrampy.http.Route`
-            The route to make a request to
+            The route to make a request to.
         """
         url = route.url
         method = route.method
@@ -115,6 +115,12 @@ class HTTPClient:
 
                     await asyncio.sleep(retry_after)
                     continue
+
+                # Token is invalid
+                if resp.status in (401, 403):
+                    raise Forbidden(resp, data.get("description"))
+                if resp.status == 404:
+                    raise InvalidToken(resp, data.get("description"))
 
                 # Some sort of internal Telegram error.
                 # Retry with an increasing sleep gap between.

@@ -105,11 +105,12 @@ class Client:
                     self._last_update_id = max(update_ids) + 1
                 break
 
+            except InvalidToken as exc:
+                traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
+                await self.stop()
+                return
             except HTTPException as exc:
                 traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
-                if exc.response.status in (401, 403, 404):
-                    await self.stop()
-                    return
                 await asyncio.sleep(10)
             except Exception as exc:
                 traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
@@ -152,11 +153,12 @@ class Client:
                 for x in [x for x in updates if "edited_message" in x]:
                     self.http.messages_dict[x["edited_message"]["message_id"]] = Message(self.http, x["edited_message"])
 
+            except InvalidToken as exc:
+                traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
+                await self.stop()
+                return
             except HTTPException as exc:
                 traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
-                if exc.response.status in (401, 403, 404):
-                    await self.stop()
-                    return
                 await asyncio.sleep(10)
             except Exception as exc:
                 traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
