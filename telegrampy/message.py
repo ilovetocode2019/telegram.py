@@ -130,3 +130,36 @@ class Message(TelegramObject):
         """
 
         return await self._http.forward_message(chat_id=destination.id, from_chat_id=self.chat.id, message_id=self.id)
+
+    async def edit(self, content: str, parse_mode: str = None):
+        """|coro|
+
+        Edits the message.
+
+        Parameters
+        ----------
+        content: :class:`str`
+            The content of the new message.
+        parse_mode: :class:`str`
+            The parse mode of the new message.
+
+        Raises
+        ------
+        :exc:`telegrampy.HTTException`
+            Editing the message failed.
+        """
+
+        await self._http.edit_message_content(chat_id=self.chat.id, message_id=self.id, content=content, parse_mode=parse_mode)
+
+    async def delete(self):
+        """|coro|
+
+        Deletes the message.
+
+        Raises
+        ------
+        :exc:`telegrampy.HTTPException`
+            Deleting the message failed.
+        """
+
+        await self._http.delete_message(chat_id=self.chat.id, message_id=self.id)
