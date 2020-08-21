@@ -18,6 +18,7 @@ Contents
    
    intro
    quickstart
+   changelog.rst
    api
 
 Extensions
