@@ -16,7 +16,7 @@ Events
 
     Called when a message is sent.
 
-.. function:: on_edit(before: telegrampy.Message, after: telegrampy.Message)
+.. function:: on_message_edit(before: telegrampy.Message, after: telegrampy.Message)
 
     Called when a message is edited.
 
