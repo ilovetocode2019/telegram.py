@@ -68,6 +68,16 @@ class HelpCommand:
         bot.remove_command(self._implementation.name)
         self._implementation = None
 
+    async def get_command_signature(self, command):
+        """The method that gets a formatted command signature
+
+        Example:
+        /help [command]
+        """
+        name = html.escape(command.name)
+        sig = html.escape(command.signature)
+        return f"/{name} {sig}"
+
     async def send_bot_help(self):
         """The method that sends help for the bot.
 
@@ -151,10 +161,10 @@ class HelpCommand:
         # If neither, send the not found message
         await self.send_not_found(query)
 
-    async def __call__(self, ctx, *, query=None):
+    async def __call__(self, ctx, *, command=None):
         self.ctx = ctx
         self.bot = ctx.bot
-        await self.help_callback(query)
+        await self.help_callback(command)
 
 
 class DefaultHelpCommand(HelpCommand):
@@ -185,7 +195,7 @@ class DefaultHelpCommand(HelpCommand):
             f"You can also type /{name} [category] for more info on a category."
         )
 
-    def format_commands(self, commands: typing.List[Command], *, heading: str):
+    async def format_commands(self, commands: typing.List[Command], *, heading: str):
         """The method that formats a given list of commands.
 
         Parameters
@@ -200,27 +210,27 @@ class DefaultHelpCommand(HelpCommand):
 
         formatted = []
 
-        formatted.append("<b>{}:</b>".format(html.escape(heading)))
+        formatted.append(f"<b>{html.escape(heading)}:</b>")
 
-        def make_entry(name, doc, *, alias_for=None):
-            alias = "[Alias for {}] ".format(alias_for) if alias_for else ""
+        def make_entry(sig, doc, *, alias_for=None):
+            alias = f"[Alias for {alias_for}] " if alias_for else ""
 
             if doc:
-                return "/{0} - {1}{2}".format(name, alias, html.escape(doc))
+                return f"{sig} - {alias}{html.escape(doc)}"
             else:
-                entry = "/{}".format(name)
+                entry = f"{sig}"
                 if alias:
-                    entry += " {}".format(alias)
+                    entry += f" {alias}"
                 return entry
 
         for command in commands:
-            name = command.name
+            sig = await self.get_command_signature(command)
             doc = command.description
-            formatted.append(make_entry(name, doc))
+            formatted.append(make_entry(sig, doc))
 
         return formatted
 
-    def format_command(self, command):
+    async def format_command(self, command):
         """The method that formats an indivitual command.
 
         Parameters
@@ -229,15 +239,10 @@ class DefaultHelpCommand(HelpCommand):
             The command to format.
         """
 
-        help_text = []
+        help_text = [await self.get_command_signature(command)]
 
         if command.description:
             help_text.append(html.escape(command.description))
-
-        else:
-            # We'll fix this later when we implement command help and
-            # docstrings and signatures
-            help_text.append("I've got nothing, sorry.")
 
         return help_text
 
@@ -270,7 +275,7 @@ class DefaultHelpCommand(HelpCommand):
                 if self.sort_commands
                 else list(commands)
             )
-            added = self.format_commands(commands, heading=category)
+            added = await self.format_commands(commands, heading=category)
             if added:
                 help_text.extend(added)
                 help_text.append("")  # blank line
@@ -291,7 +296,7 @@ class DefaultHelpCommand(HelpCommand):
             help_text.append(html.escape(cog.description))
             help_text.append("")  # blank line
 
-        help_text.extend(self.format_commands(bot.commands, heading=self.commands_heading))
+        help_text.extend(await self.format_commands(bot.commands, heading=self.commands_heading))
 
         note = self.get_ending_note()
         if note:
@@ -301,4 +306,4 @@ class DefaultHelpCommand(HelpCommand):
         await self.send_help_text(help_text)
 
     async def send_command_help(self, command: Command):
-        await self.send_help_text(self.format_command(command))
+        await self.send_help_text(await self.format_command(command))

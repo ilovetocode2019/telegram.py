@@ -58,6 +58,9 @@ class Command:
     def __init__(self, func, **kwargs):
         self.callback = func
 
+        signature = inspect.signature(func)
+        self.params = signature.parameters.copy()
+
         self._data = kwargs
         self.name = kwargs.get("name") or func.__name__
         self.description = kwargs.get("description")
@@ -70,6 +73,60 @@ class Command:
 
     def __str__(self):
         return self.name
+
+    @property
+    def clean_params(self):
+        """OrderedDict[:class:`str`, :class:`inspect.Parameter`]:
+        Returns a mapping similar to :attr:`inspect.Signature.parameters`,
+        but without self or context.
+        """
+        params = self.params.copy()
+
+        # if in a cog, the first parameter is self
+        if self.cog is not None:
+            params.popitem(last=False)
+
+        # the context parameter is always first/next
+        try:
+            params.popitem(last=False)
+        except Exception:
+            raise ValueError("Missing context parameter") from None
+
+        return params
+
+    @property
+    def signature(self):
+        """:class:`str`: Returns a signature for a command that can be used in help commands
+
+        <required> required param
+        [optional] optional param
+        [params...] optional list of params
+        [optional=0] optional param defaults to 0
+        """
+        if self.usage:
+            return self.usage
+
+        params = self.clean_params
+
+        if not params:
+            return ""
+
+        final = []
+        for name, param in params.items():
+            if param.default is not param.empty:
+                if param.default is None or (isinstance(param.default, str) and not param.default):
+                    final.append(f"[{name}]")
+
+                else:
+                    final.append(f"[{name}={param.default}]")
+
+            elif param.kind == param.VAR_POSITIONAL:
+                final.append(f"[{name}...]")
+
+            else:
+                final.append(f"<{name}>")
+
+        return " ".join(final)
 
     def add_check(self, func):
         """
@@ -114,7 +171,12 @@ class Command:
         given_args.pop(0)
 
         if ctx.command:
-            takes_args = [x[1] for x in list(inspect.signature(ctx.command.callback).parameters.items())]
+            takes_args = [
+                x[1]
+                for x in list(
+                    inspect.signature(ctx.command.callback).parameters.items()
+                )
+            ]
             if ctx.command.cog:
                 takes_args.pop(0)
             takes_args.pop(0)
@@ -123,7 +185,10 @@ class Command:
             for counter, argument in enumerate(takes_args):
                 try:
                     # If argument can be positional, give one arg
-                    if argument.kind in (inspect._ParameterKind.POSITIONAL_OR_KEYWORD, inspect._ParameterKind.POSITIONAL_ONLY):
+                    if argument.kind in (
+                        inspect._ParameterKind.POSITIONAL_OR_KEYWORD,
+                        inspect._ParameterKind.POSITIONAL_ONLY,
+                    ):
                         give = given_args[0]
                         converter = argument.annotation
                         # If the argument as a converter, try and convert
@@ -164,7 +229,10 @@ class Command:
                     if argument.default == inspect._empty:
                         raise MissingRequiredArgument(argument.name)
                     # Otherwise set the argument to the default
-                    if argument.kind in (inspect._ParameterKind.POSITIONAL_OR_KEYWORD, inspect._ParameterKind.POSITIONAL_ONLY):
+                    if argument.kind in (
+                        inspect._ParameterKind.POSITIONAL_OR_KEYWORD,
+                        inspect._ParameterKind.POSITIONAL_ONLY,
+                    ):
                         ctx.args.append(argument.default)
 
     async def invoke(self, ctx: Context):
