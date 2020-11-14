@@ -271,8 +271,10 @@ class Command:
 
         await self._parse_args(ctx)
 
-        return await self.callback(*other_args, *ctx.args, **ctx.kwargs)
-
+        try:
+            return await self.callback(*other_args, *ctx.args, **ctx.kwargs)
+        except Exception as exc:
+            await self.bot._dispatch("command_error", ctx, CommandInvokeError(exc))
 
 def command(*args, **kwargs):
     """Turns a function into a command.

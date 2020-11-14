@@ -109,6 +109,13 @@ class NotOwner(CheckFailure):
 
     pass
 
+class CommandInvokeError(CommandError):
+    """Raised when a command fails."""
+
+    def __init__(self, error):
+        self.error = error
+        super().__init__(f"Command raised an exception: {error.__class__.__name__}: {error}")
+
 class PrivateChatOnly(CheckFailure):
     """Raised when a command can only be used in private chats."""
 
