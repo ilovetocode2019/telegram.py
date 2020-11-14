@@ -46,11 +46,12 @@ class CogMeta(type):
                     commands.append(command)
 
                 # If object is a method and it has _cog_listener attribute, add the listener
-                elif isinstance(command, types.MethodType):
-                    try:
-                        listeners.append(command)
-                    except AttributeError:
-                        pass
+                elif isinstance(command, types.FunctionType):
+                    if hasattr(command, "_cog_listener"):
+                        try:
+                            listeners.append(command)
+                        except AttributeError:
+                            pass
 
         new_cls._commands = commands
         new_cls._listeners = listeners
@@ -93,7 +94,7 @@ class Cog(metaclass=CogMeta):
             command.cog = self
             bot.add_command(command)
         for listener in self.__class__._listeners:
-            bot.add_listener(listener, listener._cog_listener)
+            bot.add_listener(getattr(self, listener.__name__), listener._cog_listener)
 
         self.commands = self.__class__._commands
         self.listeners = self.__class__._listeners
