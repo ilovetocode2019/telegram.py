@@ -65,6 +65,11 @@ class Cog(metaclass=CogMeta):
         """:class:`str`: The cog's name."""
         return self.__cog_name__
 
+    @property
+    def description(self):
+        """:class:`str`: The cog's description."""
+        return self.__doc__
+
     @classmethod
     def listener(cls, name: str = None):
         """
