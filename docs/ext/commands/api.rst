@@ -27,8 +27,8 @@ Command
 .. autoclass:: telegrampy.ext.commands.Command
     :members:
 
-Check
------
+Checks
+------
 
 .. autofunction:: telegrampy.ext.commands.check
 
@@ -57,6 +57,13 @@ Context
 -------
 
 .. autoclass:: telegrampy.ext.commands.Context
+    :members:
+
+Converters
+~~~~~~~~~~
+.. autoclass:: telegrampy.ext.commands.UserConverter
+    :members:
+.. autoclass:: telegrampy.ext.commands.ChatConverter
     :members:
 
 Exceptions
