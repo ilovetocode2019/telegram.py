@@ -3,7 +3,11 @@
 Introduction to Cogs
 ====================
 
-At some point you may want to sepearate commands into categories. That's what cogs are for. They allow you to seperate commands into different classes.
+At some point you may want to separate commands into categories.
+That's what cogs are for. They allow you to group commands into categories using classes.
+
+Usually, cogs are used with `extensions <extensions.html>`__.
+
 
 Example Cog
 ~~~~~~~~~~~
