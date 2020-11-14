@@ -28,8 +28,8 @@ import telegrampy
 from telegrampy import User, Chat
 
 from .errors import *
+from .converter import *
 from .context import Context
-
 
 class Command:
     """
@@ -155,15 +155,20 @@ class Command:
 
         self.checks.remove(func)
 
-    async def _convert_arg(self, ctx, converter, arg):
+    async def _convert_arg(self, ctx, typehint, arg):
+        if typehint == User:
+            converter = UserConverter()
+        elif typehint == Chat:
+            converter = ChatConverter()
+        else:
+            converter = typehint
+
         try:
-            if converter == User:
-                return ctx.chat.get_member(arg)
-            elif converter == Chat:
-                return ctx.bot.get_chat(arg)
+            if isinstance(converter, Converter):
+                return await converter.convert(ctx, arg)
             else:
                 return converter(arg)
-        except:
+        except BadArgument:
             return None
 
     async def _parse_args(self, ctx: Context):
@@ -193,10 +198,10 @@ class Command:
                         converter = argument.annotation
                         # If the argument as a converter, try and convert
                         if converter != inspect._empty:
-                            give = await self._convert_arg(ctx, converter, give)
-                            if not give:
+                            value = await self._convert_arg(ctx, converter, give)
+                            if not value:
                                 raise BadArgument(give, converter.__name__)
-                        ctx.args.append(give)
+                        ctx.args.append(value)
                         given_args.pop(0)
 
                     # If argument is a keyword argument, give the rest of the arguments
@@ -208,10 +213,10 @@ class Command:
                         converter = argument.annotation
                         # If the argument has a converter, try and convert
                         if converter != inspect._empty:
-                            give = await self._convert_arg(ctx, converter, give)
-                            if not give:
-                                raise BadArgument(give, converter.__name__)
-                        ctx.kwargs[argument.name] = give
+                            value = await self._convert_arg(ctx, converter, give)
+                            if not value:
+                                raise BadArgument(valuve, converter.__name__)
+                        ctx.kwargs[argument.name] = value
 
                     elif argument.kind == inspect._ParameterKind.VAR_POSITIONAL:
                         if len(given_args) == 0:
@@ -219,10 +224,10 @@ class Command:
                         for give in given_args:
                             converter = argument.annotation
                             if converter != inspect._empty:
-                                give = await self._convert_arg(ctx, converter, give)
-                                if not give:
-                                    raise BadArgument(give, converter.__name__)
-                            ctx.args.append(give)
+                                value = await self._convert_arg(ctx, converter, give)
+                                if not value:
+                                    raise BadArgument(value, converter.__name__)
+                            ctx.args.append(value)
 
                 except IndexError:
                     # If no argument does not have a default, raise MissingRequiredArgument
