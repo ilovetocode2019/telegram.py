@@ -49,7 +49,6 @@ class UserConverter(Converter):
         except ValueError:
             raise BadArgument(arg, Chat, "Argument is not an ID")
         try:
-            print(type(arg), arg)
             return await ctx.chat.get_member(arg)
         except HTTPException as e:
             raise BadArgument(arg, Chat, "Failed to fetch user")
