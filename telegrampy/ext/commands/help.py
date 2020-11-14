@@ -224,6 +224,9 @@ class DefaultHelpCommand(HelpCommand):
                 return entry
 
         for command in commands:
+            if command.hidden:
+                continue
+
             sig = await self.get_command_signature(command)
             doc = command.description
             formatted.append(make_entry(sig, doc))
