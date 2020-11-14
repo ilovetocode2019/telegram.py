@@ -156,20 +156,29 @@ class Command:
         self.checks.remove(func)
 
     async def _convert_arg(self, ctx, typehint, arg):
+        # Go through the possible telegram objects and try to find the needed converter
         if typehint == User:
             converter = UserConverter()
         elif typehint == Chat:
             converter = ChatConverter()
+
+        # Otherwise just set the converter to the typehing
         else:
             converter = typehint
 
+        # Attempt to convert the arg
         try:
             if isinstance(converter, Converter):
                 return await converter.convert(ctx, arg)
             else:
                 return converter(arg)
-        except BadArgument:
-            return None
+        except Exception as exc:
+            # If the error is already BadArgument just re-raise the error
+            if isinstance(exc, BadArgument):
+                raise
+            # Otherwise take the converter and given argument and raise a generic BadArgument error
+            raise BadArgument(arg, typehint.__name__)
+
 
     async def _parse_args(self, ctx: Context):
         given_args = ctx.message.content.split(" ")
@@ -199,8 +208,6 @@ class Command:
                         # If the argument as a converter, try and convert
                         if converter != inspect._empty:
                             value = await self._convert_arg(ctx, converter, give)
-                            if not value:
-                                raise BadArgument(give, converter.__name__)
                         ctx.args.append(value)
                         given_args.pop(0)
 
@@ -214,8 +221,6 @@ class Command:
                         # If the argument has a converter, try and convert
                         if converter != inspect._empty:
                             value = await self._convert_arg(ctx, converter, give)
-                            if not value:
-                                raise BadArgument(valuve, converter.__name__)
                         ctx.kwargs[argument.name] = value
 
                     elif argument.kind == inspect._ParameterKind.VAR_POSITIONAL:
@@ -225,8 +230,6 @@ class Command:
                             converter = argument.annotation
                             if converter != inspect._empty:
                                 value = await self._convert_arg(ctx, converter, give)
-                                if not value:
-                                    raise BadArgument(value, converter.__name__)
                             ctx.args.append(value)
 
                 except IndexError:
