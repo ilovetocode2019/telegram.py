@@ -11,7 +11,7 @@ __title__ = "telegrampy"
 __author__ = "ilovetocode"
 __license__ = "MIT"
 __copyright__ = "Copyright 2020 ilovetocode"
-__version__ = "0.2.1a"
+__version__ = "0.3.0"
 
 from collections import namedtuple
 
