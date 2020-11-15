@@ -299,7 +299,7 @@ class DefaultHelpCommand(HelpCommand):
             help_text.append(html.escape(cog.description))
             help_text.append("")  # blank line
 
-        help_text.extend(await self.format_commands(bot.commands, heading=self.commands_heading))
+        help_text.extend(await self.format_commands(cog.commands, heading="Commands"))
 
         note = self.get_ending_note()
         if note:
