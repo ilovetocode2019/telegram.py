@@ -12,6 +12,13 @@ Bot
     :members:
     :inherited-members:
 
+Events
+------
+
+.. function:: on_command_error(ctx, error)
+
+    Called when an error occurs in a command.
+
 Command
 -------
 
@@ -20,8 +27,8 @@ Command
 .. autoclass:: telegrampy.ext.commands.Command
     :members:
 
-Check
------
+Checks
+------
 
 .. autofunction:: telegrampy.ext.commands.check
 
@@ -52,6 +59,13 @@ Context
 .. autoclass:: telegrampy.ext.commands.Context
     :members:
 
+Converters
+----------
+.. autoclass:: telegrampy.ext.commands.UserConverter
+    :members:
+.. autoclass:: telegrampy.ext.commands.ChatConverter
+    :members:
+
 Exceptions
 ----------
 
@@ -80,6 +94,9 @@ Exceptions
     :members:
 
 .. autoclass:: telegrampy.ext.commands.NotOwner
+    :members:
+
+.. autoclass:: telegrampy.ext.commands.CommandInvokeError
     :members:
 
 .. autoclass:: telegrampy.ext.commands.PrivateChatOnly

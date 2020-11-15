@@ -46,24 +46,39 @@ class CogMeta(type):
                     commands.append(command)
 
                 # If object is a method and it has _cog_listener attribute, add the listener
-                elif isinstance(command, types.MethodType):
-                    try:
-                        listeners.append(command)
-                    except AttributeError:
-                        pass
+                elif isinstance(command, types.FunctionType):
+                    if hasattr(command, "_cog_listener"):
+                        try:
+                            listeners.append(command)
+                        except AttributeError:
+                            pass
 
-        new_cls._commands = commands
-        new_cls._listeners = listeners
+        new_cls.commands = commands
+        new_cls.listeners = listeners
         return new_cls
 
 
 class Cog(metaclass=CogMeta):
-    """Base cog class."""
+    """
+    Base cog class.
+
+    Attributes
+    ----------
+    commands: List[:class:`telegrampy.Command`]
+        The cog's commands.
+    listeners: :class:`list`
+        The cog's listeners.
+    """
 
     @property
     def qualified_name(self):
         """:class:`str`: The cog's name."""
         return self.__cog_name__
+
+    @property
+    def description(self):
+        """:class:`str`: The cog's description."""
+        return inspect.getdoc(self)
 
     @classmethod
     def listener(cls, name: str = None):
@@ -83,21 +98,18 @@ class Cog(metaclass=CogMeta):
         return deco
     
     def _add(self, bot):
-        for command in self.__class__._commands:
+        for command in self.commands:
             command.bot = bot
             command.cog = self
             bot.add_command(command)
-        for listener in self.__class__._listeners:
-            bot.add_listener(listener, listener._cog_listener)
-
-        self.commands = self.__class__._commands
-        self.listeners = self.__class__._listeners
+        for listener in self.listeners:
+            bot.add_listener(getattr(self, listener.__name__), listener._cog_listener)
 
     def _remove(self, bot):
         for command in self.commands:
             bot.remove_command(command.name)
         for listener in self.listeners:
-            bot.remove_listener(listener)
+            bot.remove_listener(getattr(self, listener.__name__))
 
     def cog_check(self, ctx):
         return True

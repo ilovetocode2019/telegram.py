@@ -28,8 +28,8 @@ import telegrampy
 from telegrampy import User, Chat
 
 from .errors import *
+from .converter import *
 from .context import Context
-
 
 class Command:
     """
@@ -58,6 +58,9 @@ class Command:
     def __init__(self, func, **kwargs):
         self.callback = func
 
+        signature = inspect.signature(func)
+        self.params = signature.parameters.copy()
+
         self._data = kwargs
         self.name = kwargs.get("name") or func.__name__
         self.description = kwargs.get("description")
@@ -70,6 +73,60 @@ class Command:
 
     def __str__(self):
         return self.name
+
+    @property
+    def clean_params(self):
+        """OrderedDict[:class:`str`, :class:`inspect.Parameter`]:
+        Returns a mapping similar to :attr:`inspect.Signature.parameters`,
+        but without self or context.
+        """
+        params = self.params.copy()
+
+        # if in a cog, the first parameter is self
+        if self.cog is not None:
+            params.popitem(last=False)
+
+        # the context parameter is always first/next
+        try:
+            params.popitem(last=False)
+        except Exception:
+            raise ValueError("Missing context parameter") from None
+
+        return params
+
+    @property
+    def signature(self):
+        """:class:`str`: Returns a signature for a command that can be used in help commands
+
+        <required> required param
+        [optional] optional param
+        [params...] optional list of params
+        [optional=0] optional param defaults to 0
+        """
+        if self.usage:
+            return self.usage
+
+        params = self.clean_params
+
+        if not params:
+            return ""
+
+        final = []
+        for name, param in params.items():
+            if param.default is not param.empty:
+                if param.default is None or (isinstance(param.default, str) and not param.default):
+                    final.append(f"[{name}]")
+
+                else:
+                    final.append(f"[{name}={param.default}]")
+
+            elif param.kind == param.VAR_POSITIONAL:
+                final.append(f"[{name}...]")
+
+            else:
+                final.append(f"<{name}>")
+
+        return " ".join(final)
 
     def add_check(self, func):
         """
@@ -98,23 +155,42 @@ class Command:
 
         self.checks.remove(func)
 
-    async def _convert_arg(self, ctx, converter, arg):
+    async def _convert_arg(self, ctx, typehint, arg):
+        # Go through the possible telegram objects and try to find the needed converter
+        if typehint == User:
+            converter = UserConverter()
+        elif typehint == Chat:
+            converter = ChatConverter()
+
+        # Otherwise just set the converter to the typehing
+        else:
+            converter = typehint
+
+        # Attempt to convert the arg
         try:
-            if converter == User:
-                return ctx.chat.get_member(arg)
-            elif converter == Chat:
-                return ctx.bot.get_chat(arg)
+            if isinstance(converter, Converter):
+                return await converter.convert(ctx, arg)
             else:
                 return converter(arg)
-        except:
-            return None
+        except Exception as exc:
+            # If the error is already BadArgument just re-raise the error
+            if isinstance(exc, BadArgument):
+                raise
+            # Otherwise take the converter and given argument and raise a generic BadArgument error
+            raise BadArgument(arg, typehint.__name__)
+
 
     async def _parse_args(self, ctx: Context):
         given_args = ctx.message.content.split(" ")
         given_args.pop(0)
 
         if ctx.command:
-            takes_args = [x[1] for x in list(inspect.signature(ctx.command.callback).parameters.items())]
+            takes_args = [
+                x[1]
+                for x in list(
+                    inspect.signature(ctx.command.callback).parameters.items()
+                )
+            ]
             if ctx.command.cog:
                 takes_args.pop(0)
             takes_args.pop(0)
@@ -123,15 +199,18 @@ class Command:
             for counter, argument in enumerate(takes_args):
                 try:
                     # If argument can be positional, give one arg
-                    if argument.kind in (inspect._ParameterKind.POSITIONAL_OR_KEYWORD, inspect._ParameterKind.POSITIONAL_ONLY):
+                    if argument.kind in (
+                        inspect._ParameterKind.POSITIONAL_OR_KEYWORD,
+                        inspect._ParameterKind.POSITIONAL_ONLY,
+                    ):
                         give = given_args[0]
                         converter = argument.annotation
                         # If the argument as a converter, try and convert
                         if converter != inspect._empty:
-                            give = await self._convert_arg(ctx, converter, give)
-                            if not give:
-                                raise BadArgument(give, converter.__name__)
-                        ctx.args.append(give)
+                            value = await self._convert_arg(ctx, converter, give)
+                        else:
+                            value = give
+                        ctx.args.append(value)
                         given_args.pop(0)
 
                     # If argument is a keyword argument, give the rest of the arguments
@@ -143,10 +222,10 @@ class Command:
                         converter = argument.annotation
                         # If the argument has a converter, try and convert
                         if converter != inspect._empty:
-                            give = await self._convert_arg(ctx, converter, give)
-                            if not give:
-                                raise BadArgument(give, converter.__name__)
-                        ctx.kwargs[argument.name] = give
+                            value = await self._convert_arg(ctx, converter, give)
+                        else:
+                            value = give
+                        ctx.kwargs[argument.name] = value
 
                     elif argument.kind == inspect._ParameterKind.VAR_POSITIONAL:
                         if len(given_args) == 0:
@@ -154,17 +233,20 @@ class Command:
                         for give in given_args:
                             converter = argument.annotation
                             if converter != inspect._empty:
-                                give = await self._convert_arg(ctx, converter, give)
-                                if not give:
-                                    raise BadArgument(give, converter.__name__)
-                            ctx.args.append(give)
+                                value = await self._convert_arg(ctx, converter, give)
+                            else:
+                                value = give
+                            ctx.args.append(value)
 
                 except IndexError:
                     # If no argument does not have a default, raise MissingRequiredArgument
                     if argument.default == inspect._empty:
                         raise MissingRequiredArgument(argument.name)
                     # Otherwise set the argument to the default
-                    if argument.kind in (inspect._ParameterKind.POSITIONAL_OR_KEYWORD, inspect._ParameterKind.POSITIONAL_ONLY):
+                    if argument.kind in (
+                        inspect._ParameterKind.POSITIONAL_OR_KEYWORD,
+                        inspect._ParameterKind.POSITIONAL_ONLY,
+                    ):
                         ctx.args.append(argument.default)
 
     async def invoke(self, ctx: Context):
@@ -195,8 +277,10 @@ class Command:
 
         await self._parse_args(ctx)
 
-        return await self.callback(*other_args, *ctx.args, **ctx.kwargs)
-
+        try:
+            return await self.callback(*other_args, *ctx.args, **ctx.kwargs)
+        except Exception as exc:
+            await self.bot._dispatch("command_error", ctx, CommandInvokeError(exc))
 
 def command(*args, **kwargs):
     """Turns a function into a command.

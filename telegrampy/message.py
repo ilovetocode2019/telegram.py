@@ -162,4 +162,4 @@ class Message(TelegramObject):
             Deleting the message failed.
         """
 
-        await self._http.delete_message(chat_id=self.chat.id, message_id=self.id)
+        return await self._http.delete_message(chat_id=self.chat.id, message_id=self.id)

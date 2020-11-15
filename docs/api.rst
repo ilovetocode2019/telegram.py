@@ -10,19 +10,23 @@ Client
     :members:
 
 Events
-------
+~~~~~~
 
 .. function:: on_message(message: telegrampy.Message)
 
     Called when a message is sent.
 
-.. function:: on_edit(before: telegrampy.Message, after: telegrampy.Message)
+.. function:: on_message_edit(before: telegrampy.Message, after: telegrampy.Message)
 
     Called when a message is edited.
 
 .. function:: on_poll(poll: telegrampy.Poll)
 
     Called when poll is created or updated.
+
+.. function:: on_error(error)
+
+    Called when an error occurs.
 
 Utilities
 ---------
@@ -73,4 +77,13 @@ Exceptions
     :members:
 
 .. autoclass:: HTTPException
+    :members:
+
+.. autoclass:: InvalidToken
+    :members:
+
+.. autoclass:: Forbidden
+    :members:
+
+.. autoclass:: Conflict
     :members:

@@ -239,8 +239,8 @@ class HTTPClient:
         """Fetches a chat."""
 
         url = self._base_url + "getChat"
-
-        chat_data = await self.request(Route("GET", url))
+        data = {"chat_id": chat_id}
+        chat_data = await self.request(Route("GET", url), data=data)
 
         if "result" in chat_data:
             return Chat(self, chat_data["result"])
@@ -249,8 +249,8 @@ class HTTPClient:
         """Fetches a member from a chat."""
 
         url = self._base_url + "getChatMember"
-
-        user_data = await self.request(Route("GET", url))
+        data = {"chat_id": chat_id, "user_id": user_id}
+        user_data = await self.request(Route("GET", url), data=data)
 
         if "result" in user_data:
             return User(self, user_data["result"].get("user"))

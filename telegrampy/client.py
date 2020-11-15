@@ -129,7 +129,7 @@ class Client:
                             event = "message"
                         elif "edited_message" in update:
                             key = "edited_message"
-                            event = "edit"
+                            event = "message_edit"
                         elif "poll" in update:
                             key = "poll"
                             event = "poll"
@@ -138,7 +138,7 @@ class Client:
 
                     if event == "poll":
                         await self._dispatch(event, Poll(data))
-                    elif event == "edit":
+                    elif event == "message_edit":
                         await self._dispatch(event, self.http.messages_dict.get(data["message_id"]), Message(self.http, data))
                     else:
                         await self._dispatch(event, Message(self.http, data))

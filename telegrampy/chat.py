@@ -61,6 +61,7 @@ class Chat(TelegramObject):
     def __init__(self, http, data: dict):
         super().__init__(http, data)
         self.title = data.get("title")
+        self.username = data.get("username")
         self.description = data.get("description")
         self.type = data.get("type")
 

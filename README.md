@@ -14,7 +14,7 @@ An async API wrapper for Telegram in Python
 
 ## Installation
 
-Python 3.6+ is **required** to install and use telegram.py.
+Python 3.7+ is **required** to install and use telegram.py.
 
 Install the latest release from PyPI:
 
