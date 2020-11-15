@@ -3,10 +3,10 @@
 Introduction to Extensions
 ==========================
 
+Extensions are good for organizing your bot into files and quickly reloading stuff while your bot is running.
+
 Using Extensions
 ~~~~~~~~~~~~~~~~
-
-Extensions are good for organizing your bot into files and quickly reloading stuff while your bot is running.
 
 An extension at is basicly just a file with a setup function. The setup function cannot be a coroutine and must have a bot parameter.
 
