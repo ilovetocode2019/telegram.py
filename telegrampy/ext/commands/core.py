@@ -280,6 +280,7 @@ class Command:
         try:
             return await self.callback(*other_args, *ctx.args, **ctx.kwargs)
         except Exception as exc:
+            ctx.command_failed = True
             await self.bot._dispatch("command_error", ctx, CommandInvokeError(exc))
 
 def command(*args, **kwargs):

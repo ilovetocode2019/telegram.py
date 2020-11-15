@@ -39,6 +39,8 @@ class Context:
         The chat the context is for.
     author: :class:`telegrampy.User`
         The author of the message.
+    command_failed: :class:`bool`
+        Whether the command failed or not.
     args: :class:`list`
         The arguments passed into the command.
     kwargs: :class:`dict`
@@ -52,6 +54,7 @@ class Context:
         self.message = kwargs.get("message")
         self.chat = kwargs.get("chat")
         self.author = kwargs.get("author")
+        self.command_failed = None
         self.args = kwargs.get("args") or []
         self.kwargs = kwargs.get("kwargs") or {}
 

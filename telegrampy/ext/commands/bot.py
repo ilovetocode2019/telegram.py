@@ -293,10 +293,16 @@ class Bot(telegrampy.Client):
         self.cogs.pop(cog.qualified_name)
 
     async def _use_command(self, ctx):
+        await self._dispatch("command", ctx)
+
         try:
             await ctx.command.invoke(ctx)
         except Exception as exc:
+            ctx.command_failed = True
             await self._dispatch("command_error", ctx, exc)
+
+        if not ctx.command_failed:
+            await self._dispatch("command_completion", ctx)
 
     async def _dispatch(self, event, *args):
         await super()._dispatch(event, *args)
