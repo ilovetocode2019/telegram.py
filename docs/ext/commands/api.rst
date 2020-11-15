@@ -13,7 +13,7 @@ Bot
     :inherited-members:
 
 Events
-~~~~~~
+------
 
 .. function:: on_command_error(ctx, error)
 
@@ -60,7 +60,7 @@ Context
     :members:
 
 Converters
-~~~~~~~~~~
+----------
 .. autoclass:: telegrampy.ext.commands.UserConverter
     :members:
 .. autoclass:: telegrampy.ext.commands.ChatConverter

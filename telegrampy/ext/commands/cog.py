@@ -59,7 +59,16 @@ class CogMeta(type):
 
 
 class Cog(metaclass=CogMeta):
-    """Base cog class."""
+    """
+    Base cog class.
+
+    Attributes
+    ----------
+    commands: List[:class:`telegrampy.Command`]
+        The cog's commands.
+    listeners: :class:`list`
+        The cog's listeners.
+    """
 
     @property
     def qualified_name(self):
