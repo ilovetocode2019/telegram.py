@@ -110,7 +110,14 @@ class NotOwner(CheckFailure):
     pass
 
 class CommandInvokeError(CommandError):
-    """Raised when a command fails."""
+    """
+    Raised when a command fails.
+
+    Attributes
+    ---------
+    error: :class:`Exception`
+         The original error that was raised.
+    """
 
     def __init__(self, error):
         self.error = error

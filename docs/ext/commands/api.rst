@@ -96,6 +96,9 @@ Exceptions
 .. autoclass:: telegrampy.ext.commands.NotOwner
     :members:
 
+.. autoclass:: telegrampy.ext.commands.CommandInvokeError
+    :members:
+
 .. autoclass:: telegrampy.ext.commands.PrivateChatOnly
     :members:
 
