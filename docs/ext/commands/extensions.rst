@@ -24,11 +24,11 @@ This is a basic extension.
     def setup(bot):
         bot.add_command(hello)
 
-To load an extension you can use ``bot.load_extension("extension.py")``
+To load an extension you can use ``bot.load_extension("extension")``
 
-To reload an extension you can use ``bot.reload_extension("extension.py")``
+To reload an extension you can use ``bot.reload_extension("extension")``
 
-To remove an extension you can use ``bot.unload_extension("extension.py")``
+To remove an extension you can use ``bot.unload_extension("extension")``
 
 Extensions are normally used for cog like this.
 
