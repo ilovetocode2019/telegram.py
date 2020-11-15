@@ -33,7 +33,7 @@ from .cog import Cog
 
 
 class _HelpCommandImplementation(Command):
-    """Class that interfaces with :class:`telegrampy.ext.commands.Command`"""
+    """Class that interfaces with :class:`telegrampy.ext.commands.Command`."""
 
     def __init__(self, help_cmd, command_attrs):
         self.help_cmd = help_cmd
@@ -42,7 +42,7 @@ class _HelpCommandImplementation(Command):
 
 
 class HelpCommand:
-    """Help command template
+    """Help command template.
 
     Attributes
     ----------

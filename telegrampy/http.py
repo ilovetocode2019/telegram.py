@@ -240,7 +240,6 @@ class HTTPClient:
 
         url = self._base_url + "getChat"
         data = {"chat_id": chat_id}
-
         chat_data = await self.request(Route("GET", url), data=data)
 
         if "result" in chat_data:
@@ -251,7 +250,6 @@ class HTTPClient:
 
         url = self._base_url + "getChatMember"
         data = {"chat_id": chat_id, "user_id": user_id}
-
         user_data = await self.request(Route("GET", url), data=data)
 
         if "result" in user_data:
