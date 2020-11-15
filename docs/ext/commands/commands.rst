@@ -97,10 +97,58 @@ Extras will include a list of args, like ``*args``.
 Using Converters
 ~~~~~~~~~~~~~~~~
 
-Description on what a converter is and why they're useful
+Converters can be usefull if you need to convert an argument to an object.
+For example you may have a command that needs to take an argument as a :class:`telegrampy.User`.
 
 Basic Converters
 ----------------
 
+A basic converterer is a callable that takes an argument and returns an object or variable.
+For example, if you wanted to make a command that added two numbers you could use the integer converter.
+
+
+.. code-block:: python
+
+    @bot.command()
+    async def add(ctx, a: int, b: int):
+        await ctx.send(a+b)
+
+Since any callable can be used as a converter, you can make your own converter with a function.
+
+.. code-block:: python
+
+    def codeblock(arg):
+        return f"`{arg}`"
+
+    @bot.command(name="codeblock")
+    async def codeblock_command(ctx, code: codeblock):
+        await ctx.send(code)
+
 Advanced and Custom Converters
 ------------------------------
+
+Sometimes basic converters may not work for our needs. For example, We may need to get more context on the command invocation or do something async.
+That's what a :class:`telegrampy.ext.commands.Converter` is for.
+
+We can use a builtin :class:`telegrampy.ext.commands.Converter` like this. Telegram.py will see that user should be passed in as a user object and then use the :class:`telegrampy.ext.commands.UserConverter` to convert it.
+
+.. code-block:: python
+
+    @bot.command()
+    async def dm(ctx, user: telegrampy.User):
+        await user.send("Hello!")
+
+If we want to make a custom converter we can do this.
+
+.. code-block:: python
+
+    class CommandConverter(commands.Converter):
+        async def convert(self, ctx, arg):
+            command = ctx.get_command(arg)
+            if not command:
+                raise commands.BadArgument(arg, commands.Command, f"Could not find a command named '{arg}'")
+            return command
+
+    @bot.command(name="info", description="Get info on a command")
+    async def info(ctx, command: CommandConverter):
+        await ctx.send(f"{command.name}: {command.description}")
