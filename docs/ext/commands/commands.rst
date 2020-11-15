@@ -82,17 +82,42 @@ For example:
     async def test(ctx, arg1, arg2):
         await ctx.send(f"Arg1 is {arg1} and arg2 is {arg2}.")
 
-The following is a layout of sections we have yet to write.
-
 Keyword Arguments
 -----------------
 
 Description and an example for keyword arguments, or "consume rest".
 
+.. code-block:: python
+
+    @bot.command()
+    async def test(ctx, *, arg):
+        await ctx.send(arg)
+
+In Telegram:
+
+.. code-block:: none
+
+    User: /test hello there
+    Bot: hello there
+
 Extras
 ------
 
 Extras will include a list of args, like ``*args``.
+
+.. code-block:: python
+
+    @bot.command()
+    async def test(ctx, *args):
+        await ctx.send(str(args))
+
+In Telegram:
+
+.. code-block:: none
+
+    User: /test hello there
+    Bot: ('hello', 'there')
+
 
 Using Converters
 ~~~~~~~~~~~~~~~~
