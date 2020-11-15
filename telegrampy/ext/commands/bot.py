@@ -399,6 +399,10 @@ class Bot(telegrampy.Client):
 
     async def on_command_error(self, ctx, error):
         """The default command error handler."""
+
+        if self._listeners.get("on_command_error"):
+            return
+
         print(f"Ignoring exception in command {ctx.command}:", file=sys.stderr)
         traceback.print_exception(
             type(error), error, error.__traceback__, file=sys.stderr
