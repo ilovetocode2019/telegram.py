@@ -208,6 +208,8 @@ class Command:
                         # If the argument as a converter, try and convert
                         if converter != inspect._empty:
                             value = await self._convert_arg(ctx, converter, give)
+                        else:
+                            value = give
                         ctx.args.append(value)
                         given_args.pop(0)
 
@@ -221,6 +223,8 @@ class Command:
                         # If the argument has a converter, try and convert
                         if converter != inspect._empty:
                             value = await self._convert_arg(ctx, converter, give)
+                        else:
+                            value = give
                         ctx.kwargs[argument.name] = value
 
                     elif argument.kind == inspect._ParameterKind.VAR_POSITIONAL:
@@ -230,6 +234,8 @@ class Command:
                             converter = argument.annotation
                             if converter != inspect._empty:
                                 value = await self._convert_arg(ctx, converter, give)
+                            else:
+                                value = give
                             ctx.args.append(value)
 
                 except IndexError:
