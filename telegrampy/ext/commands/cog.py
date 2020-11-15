@@ -78,7 +78,7 @@ class Cog(metaclass=CogMeta):
     @property
     def description(self):
         """:class:`str`: The cog's description."""
-        return self.__doc__
+        return inspect.getdoc(self)
 
     @classmethod
     def listener(cls, name: str = None):
