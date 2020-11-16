@@ -16,7 +16,7 @@ with open("telegrampy/__init__.py") as f:
 
 setuptools.setup(
     name="telegram.py",
-    description="An async API wrapper for Telegram in Python",
+    description="An async API wrapper for Telegram bot API in Python",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="ilovetocode",

@@ -10,7 +10,7 @@
 [![GitHub - License](https://img.shields.io/github/license/ilovetocode2019/telegram.py)](LICENSE)
 [![Telegram Channel](https://img.shields.io/badge/telegram-t.me%2Ftpy__updates-0088cc)](https://t.me/tpy_updates)
 
-An async API wrapper for Telegram in Python
+An async API wrapper for Telegram bot API in Python
 
 ## Installation
 

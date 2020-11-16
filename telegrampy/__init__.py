@@ -1,7 +1,7 @@
 """
 telegram.py: Telegram Bot API Wrapper
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-A simple API wrapper for the Telegram Bot API.
+An async API wrapper for Telegram bot API in Python.
 
 :copyright: (c) 2020 ilovetocode
 :license: MIT, see LICENSE for more details.
