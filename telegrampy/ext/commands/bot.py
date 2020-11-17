@@ -154,7 +154,7 @@ class Bot(telegrampy.Client):
         Raises
         ------
         :class:`telegrampy.ext.commands.CommandNotFound`
-            The command specified was not found
+            The command specified was not found.
         """
 
         content = message.content
