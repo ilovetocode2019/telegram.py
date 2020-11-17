@@ -328,6 +328,17 @@ class Client:
 
         return deco
 
+    async def start(self):
+        """|coro|
+        Starts the bot.
+        """
+
+        if self._running:
+            raise RuntimeError("Bot is already running")
+
+        self._running = True
+        self.loop.create_task(await self._poll())
+
     async def stop(self):
         """|coro|
         Stops the bot.
