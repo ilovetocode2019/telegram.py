@@ -157,7 +157,7 @@ class Bot(telegrampy.Client):
             The command specified was not found.
         """
 
-        content = message.content
+        content = message.content.split(" ")[0]
         command = None
         if content.startswith("/"):
             splited = content.split("@")
