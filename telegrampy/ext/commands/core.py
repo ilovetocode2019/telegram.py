@@ -177,7 +177,7 @@ class Command:
             if isinstance(exc, BadArgument):
                 raise
             # Otherwise take the converter and given argument and raise a generic BadArgument error
-            raise BadArgument(arg, typehint.__name__)
+            raise BadArgument(arg, typehint.__name__) from None
 
 
     async def _parse_args(self, ctx: Context):
@@ -241,7 +241,7 @@ class Command:
                 except IndexError:
                     # If no argument does not have a default, raise MissingRequiredArgument
                     if argument.default == inspect._empty:
-                        raise MissingRequiredArgument(argument.name)
+                        raise MissingRequiredArgument(argument.name) from None
                     # Otherwise set the argument to the default
                     if argument.kind in (
                         inspect._ParameterKind.POSITIONAL_OR_KEYWORD,
