@@ -137,7 +137,7 @@ class Bot(telegrampy.Client):
             if name in command.aliases or command.name == name:
                 return command
 
-    def get_context(self, message: telegrampy.Message):
+    async def get_context(self, message: telegrampy.Message):
         """
         Gets context for a given message.
 
@@ -150,31 +150,22 @@ class Bot(telegrampy.Client):
         -------
         :class:`telegrampy.ext.commands.Context`
             The context created.
+
+        Raises
+        ------
+        :class:`telegrampy.ext.commands.CommandNotFound`
+            The command specified was not found
         """
 
-        # Split the message
-        splited = message.content.split(" ")
-
-        if len(splited) != 0:
-            command_text = splited[0]
-
-            command_text = command_text[1:]
-            command = command_text
-
-            # If the command has a bot mention after the command, remove the mention from command_text
-            if "@" in command_text:
-                finished_command_text = ""
-                past_mention = False
-                for x in command_text[::-1]:
-                    if past_mention:
-                        finished_command_text += x
-                    elif x == "@":
-                        past_mention = True
-                command = finished_command_text[::-1]
-
-            command = self.get_command(command)
-        else:
-            command = None
+        content = message.content
+        command = None
+        if content.startswith("/"):
+            splited = content.split("@")
+            if len(splited) == 1 or (len(splited) != 1 and splited[1] == (await self.user()).username):
+                command_name = splited[0][1:]
+                command = self.get_command(command_name)
+                if not command:
+                    raise CommandNotFound(command_name)
 
         kwargs = {"command": command}
         kwargs["args"] = []
@@ -314,7 +305,7 @@ class Bot(telegrampy.Client):
             if not message.content:
                 return
 
-            ctx = self.get_context(message)
+            ctx = await self.get_context(message)
 
             if not ctx.command:
                 return
