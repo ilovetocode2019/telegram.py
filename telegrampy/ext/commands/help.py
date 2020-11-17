@@ -35,11 +35,11 @@ from .cog import Cog
 class _HelpCommandImplementation(Command):
     """Class that interfaces with :class:`telegrampy.ext.commands.Command`."""
 
-    def __init__(self, help_cmd, command_attrs):
+    def __init__(self, help_cmd, bot, command_attrs):
         self.help_cmd = help_cmd
 
         super().__init__(help_cmd, **command_attrs)
-
+        self.bot = bot
 
 class HelpCommand:
     """Help command template.
@@ -56,11 +56,12 @@ class HelpCommand:
         self.command_attrs = options.pop('command_attrs', {})
         self.command_attrs.setdefault("name", "help")
         self.command_attrs.setdefault("description", "The help command")
+        self.command_attrs.setdefault("aliases", ["start"])
 
         self._implementation = None
 
     def _add_to_bot(self, bot):
-        implementation = _HelpCommandImplementation(self, self.command_attrs)
+        implementation = _HelpCommandImplementation(self, bot, self.command_attrs)
         bot.add_command(implementation)
         self._implementation = implementation
 
@@ -150,11 +151,8 @@ class HelpCommand:
             return
 
         # If not, check if the query matches a command
-        commands = bot.commands
-        command_mapping = {c.name: c for c in commands}
-
-        if query in command_mapping.keys():
-            command = command_mapping[query]
+        command = bot.get_command(query)
+        if command:
             await self.send_command_help(command)
             return
 
@@ -246,6 +244,8 @@ class DefaultHelpCommand(HelpCommand):
 
         if command.description:
             help_text.append(html.escape(command.description))
+        if command.aliases:
+            help_text.append(f"Aliases: {', '.join(command.aliases)}")
 
         return help_text
 
