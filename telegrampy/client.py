@@ -33,7 +33,7 @@ from .errors import *
 from .message import Message
 from .poll import Poll
 
-logger = logging.getLogger("telegrampy")
+log = logging.getLogger("telegrampy")
 
 
 class Client:
@@ -88,8 +88,6 @@ class Client:
         return await self.http.get_chat(chat_id=chat_id)
 
     async def _poll(self):
-        logger.info("Bot is started")
-
         # Create some variables
         self._last_update_id = None
         self._last_update_time = datetime.datetime.now()
@@ -99,6 +97,7 @@ class Client:
 
         while True:
             try:
+                log.info("Fetching unread updates")
                 updates = await self.http.get_updates(self._last_update_id)
                 if len(updates) != 0:
                     update_ids = [int(update["update_id"]) for update in updates]
@@ -121,8 +120,10 @@ class Client:
             self._last_looped = datetime.datetime.now()
 
             try:
+                log.debug("Fetching updates")
                 updates = await self.http.get_updates(self._last_update_id)
                 if len(updates) != 0:
+                    log.debug(f"Handling update(s): {[update['update_id'] for update in updates]} ({len(updates)} update(s))")
                     for update in updates:
                         if "message" in update:
                             key = "message"
@@ -164,9 +165,8 @@ class Client:
                 traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
                 await asyncio.sleep(10)
 
+            log.debug(f"Waiting for {self._wait_time} seconds")
             await asyncio.sleep(self._wait_time)
-
-        logger.info("Bot is finished")
 
     async def _use_event_handler(self, func, *args, **kwargs):
         try:
@@ -175,6 +175,7 @@ class Client:
             await self._dispatch("error", exc)
 
     async def _dispatch(self, event, *args):
+        log.debug(f"Dispatchng {event} with {args}")
         # Handle the active wait_fors
         waiting_for = self._waiting_for.get(event)
         if waiting_for:
@@ -329,13 +330,13 @@ class Client:
 
     async def stop(self):
         """|coro|
-
-        Stops the bot
+        Stops the bot.
         """
 
         if not self._running:
             raise RuntimeError("Bot is not running")
 
+        log.info("Stopping the bot")
         await self.http.close()
         self._running = False
 
@@ -344,20 +345,22 @@ class Client:
         if not pending:
             return
 
-        logger.info(f"Cleaning up {len(pending)} task(s)")
         for task in pending:
             task.cancel()
         self.loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
 
     def run(self):
-        """Runs the bot"""
+        """
+        Runs the bot.
+        """
 
         self._running = True
 
         try:
+            log.info("Running the bot")
             self.loop.run_until_complete(self._poll())
         except KeyboardInterrupt:
-            logger.info("KeyboardInterrupt, Finishing bot")
+            log.info("Received KeyboardInterrupt, Stopping bot")
             self.loop.run_until_complete(self.stop())
         finally:
             self._clean_tasks()
