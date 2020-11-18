@@ -12,13 +12,13 @@ New
 
 Bug Fixes
 ~~~~~~~~~
-- Ignore commands directed at other bots
+- Ignore commands directed at other bots (/command@OtherBot will not invoke @YourBot)
 
 Other
 ~~~~~
 - Better logging
 - get_context is now async
-- Improvments with error messages
+- Improvements with error messages
 
 v0.3.0
 ------
