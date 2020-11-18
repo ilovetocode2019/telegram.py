@@ -1,6 +1,25 @@
 Changelog
 ==========
 
+v0.3.1
+------
+
+New
+~~~
+- Add command and command_completion events
+- Add a start method to Client
+- Add start alias for help command
+
+Bug Fixes
+~~~~~~~~~
+- Ignore commands directed at other bots
+
+Other
+~~~~~
+- Better logging
+- get_context is now async
+- Improvments with error messages
+
 v0.3.0
 ------
 
