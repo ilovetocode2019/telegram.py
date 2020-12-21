@@ -8,7 +8,7 @@ Welcome to telegram.py!
 
 .. image:: /icon.png
 
-An async API wrapper for Telegram bot API in Python.
+An async API wrapper for the Telegram bot API in Python.
 
 Contents
 --------
