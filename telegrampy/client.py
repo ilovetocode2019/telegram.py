@@ -117,7 +117,7 @@ class Client:
                     update_ids = [int(update["update_id"]) for update in updates]
                     self._last_update_id = max(update_ids) + 1
                     if self._read_unread_updates:
-                        log.debug(f"Handling update(s): {[update['update_id'] for update in updates]} ({len(updates)} update(s))")
+                        log.debug(f"Handling updates: {[update['update_id'] for update in updates]} ({len(updates)}")
                         for update in updates:
                             await self._handle_update(update)
                 break
@@ -138,7 +138,7 @@ class Client:
             try:
                 updates = await self.http.get_updates(self._last_update_id)
                 if updates:
-                    log.debug(f"Handling update(s): {[update['update_id'] for update in updates]} ({len(updates)} update(s))")
+                    log.debug(f"Handling updates: {[update['update_id'] for update in updates]}")
                     for update in updates:
                         await self._handle_update(update)
 
@@ -156,7 +156,7 @@ class Client:
                 traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
                 await asyncio.sleep(10)
 
-            log.debug(f"Waiting for {self._wait} second(s)")
+            log.debug(f"Waiting for {self._wait}s")
             await asyncio.sleep(self._wait)
 
         log.info("The bot succesfully completed")
