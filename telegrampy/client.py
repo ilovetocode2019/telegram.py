@@ -94,7 +94,7 @@ class Client:
             try:
                 log.info("Fetching unread updates")
                 updates = await self.http.get_updates(self._last_update_id)
-                if len(updates) != 0:
+                if updates:
                     update_ids = [int(update["update_id"]) for update in updates]
                     self._last_update_id = max(update_ids) + 1
                 break
@@ -115,13 +115,13 @@ class Client:
             try:
                 log.debug("Fetching updates")
                 updates = await self.http.get_updates(self._last_update_id)
-                if len(updates) != 0:
+                if updates:
                     log.debug(f"Handling update(s): {[update['update_id'] for update in updates]} ({len(updates)} update(s))")
                     for update in updates:
                         await self._handle_update(update)
 
-                update_ids = [int(update["update_id"]) for update in updates]
-                self._last_update_id = max(update_ids) + 1
+                    update_ids = [int(update["update_id"]) for update in updates]
+                    self._last_update_id = max(update_ids) + 1
 
             except InvalidToken as exc:
                 traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
@@ -134,11 +134,13 @@ class Client:
                 traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
                 await asyncio.sleep(10)
 
-            log.debug(f"Waiting for {self._wait_time} seconds")
-            await asyncio.sleep(self._wait_time)
+            log.debug(f"Waiting for 1 second")
+            await asyncio.sleep(1)
 
     async def _handle_update(self, update):
         update_id = update["update_id"]
+
+        await self._dispatch("raw_update", update)
 
         if "message" in update:
             message = Message(self.http, update["message"])
