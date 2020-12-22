@@ -257,7 +257,7 @@ class HTTPClient:
         if "result" in me_data:
             return User(self, me_data["result"])
 
-    async def get_updates(self, offset=None):
+    async def get_updates(self, offset=None, timeout=0):
         """
         Fetches the new updates for the bot.
         """
@@ -268,7 +268,7 @@ class HTTPClient:
             data = await self.request(Route("GET", url))
 
         else:
-            data = await self.request(Route("POST", url), data={"offset": offset})
+            data = await self.request(Route("POST", url), data={"offset": offset, "timeout": timeout})
 
         self._last_update_time = datetime.datetime.now()
         return data["result"]

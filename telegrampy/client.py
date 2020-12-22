@@ -49,7 +49,7 @@ class Client:
     read_unread_updates: :class:`bool`
         If the bot should read unread updates on startup. Defaults to False.
     wait: :class:`int`
-        The time to wait before fetching new updates. Defaults to 1.
+        The timeout in seconds for long polling.
 
     Attributes
     ----------
@@ -64,7 +64,7 @@ class Client:
         self.loop = options.get("loop") or asyncio.get_event_loop()
         self.http = HTTPClient(token=token, loop=self.loop)
 
-        wait = options.get("wait") or 1
+        wait = options.get("wait") or 5
         if wait < 1 or wait > 10:
             raise ValueError("Wait time must be between 1 and 10")
 
@@ -136,7 +136,7 @@ class Client:
         # After fetching unread updates, start the loop
         while self._running:
             try:
-                updates = await self.http.get_updates(self._last_update_id)
+                updates = await self.http.get_updates(self._last_update_id, timeout=self._wait)
                 if updates:
                     log.debug(f"Handling updates: {[update['update_id'] for update in updates]}")
                     for update in updates:
@@ -156,8 +156,7 @@ class Client:
                 traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
                 await asyncio.sleep(10)
 
-            log.debug(f"Waiting for {self._wait}s")
-            await asyncio.sleep(self._wait)
+            await asyncio.sleep(1)
 
         log.info("The bot succesfully completed")
 
