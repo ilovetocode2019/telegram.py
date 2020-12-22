@@ -17,11 +17,11 @@ Events
 
 .. function:: on_command(ctx)
 
-    Called when a command is invoked
+    Called when a command is invoked.
 
 .. function:: on_command_completion(ctx)
 
-    Called when a command is completed
+    Called when a command is completed.
 
 .. function:: on_command_error(ctx, error)
 
