@@ -16,13 +16,9 @@ Events
 
     Called when a message is sent.
 
-.. function:: on_message_edit(before: telegrampy.Message, after: telegrampy.Message)
+.. function:: on_message_edit(message: telegrampy.Message)
 
     Called when a message is edited.
-
-.. function:: on_poll(poll: telegrampy.Poll)
-
-    Called when poll is created or updated.
 
 .. function:: on_error(error)
 

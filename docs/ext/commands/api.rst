@@ -15,6 +15,14 @@ Bot
 Events
 ------
 
+.. function:: on_command(ctx)
+
+    Called when a command is invoked
+
+.. function:: on_command_completion(ctx)
+
+    Called when a command is completed
+
 .. function:: on_command_error(ctx, error)
 
     Called when an error occurs in a command.
