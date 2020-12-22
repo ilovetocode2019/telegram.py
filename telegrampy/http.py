@@ -62,17 +62,10 @@ class HTTPClient:
     def __init__(self, token: str, loop: asyncio.BaseEventLoop):
         self._token = token
         self._base_url = f"https://api.telegram.org/bot{self._token}/"
-        self.messages_dict = {}
 
         self.loop = loop or asyncio.get_event_loop()
         self.user_agent = user_agent.format(__version__, sys.version_info, aiohttp.__version__)
         self.session = aiohttp.ClientSession(loop=self.loop, headers={"User-Agent": self.user_agent})
-
-    @property
-    def messages(self):
-        """A cache of messages the bot can see."""
-
-        return list(self.messages_dict.values())
 
     async def request(self, route: Route, **kwargs):
         """Make a request to a route.
@@ -148,7 +141,6 @@ class HTTPClient:
 
         if "result" in message_data:
             msg = Message(self, message_data["result"])
-            self.messages_dict[msg.id] = msg
             return msg
 
     async def edit_message_content(self, chat_id: int, message_id: int, content: str, parse_mode: str = None):
@@ -180,7 +172,6 @@ class HTTPClient:
 
         if "result" in message_data:
             msg = Message(self, message_data["result"])
-            self.messages_dict[msg.id] = msg
             return msg
 
     async def send_document(self, chat_id: int, document: Document, filename: str = None):
@@ -195,7 +186,6 @@ class HTTPClient:
 
         if "result" in message_data:
             msg = Message(self, message_data["result"])
-            self.messages_dict[msg.id] = msg
             return msg
 
     async def send_photo(self, chat_id: int, photo: Photo, filename: str = None, caption: str = None):
@@ -213,7 +203,6 @@ class HTTPClient:
 
         if "result" in message_data:
             msg = Message(self, message_data["result"])
-            self.messages_dict[msg.id] = msg
             return msg
 
     async def send_poll(self, chat_id: int, question: str, options: list):

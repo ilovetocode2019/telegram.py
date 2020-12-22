@@ -94,7 +94,6 @@ class Client:
         self._wait_time = 1
 
         # Get last update id
-
         while True:
             try:
                 log.info("Fetching unread updates")
@@ -140,7 +139,7 @@ class Client:
                     if event == "poll":
                         await self._dispatch(event, Poll(data))
                     elif event == "message_edit":
-                        await self._dispatch(event, self.http.messages_dict.get(data["message_id"]), Message(self.http, data))
+                        await self._dispatch(event, Message(self.http, data))
                     else:
                         await self._dispatch(event, Message(self.http, data))
 
@@ -148,11 +147,6 @@ class Client:
                     self._last_update_id = max(update_ids) + 1
                     key = None
                     event = None
-
-                for x in [x for x in updates if "message" in x]:
-                    self.http.messages_dict[x["message"]["message_id"]] = Message(self.http, x["message"])
-                for x in [x for x in updates if "edited_message" in x]:
-                    self.http.messages_dict[x["edited_message"]["message_id"]] = Message(self.http, x["edited_message"])
 
             except InvalidToken as exc:
                 traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)

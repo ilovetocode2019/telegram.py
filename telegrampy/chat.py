@@ -167,31 +167,3 @@ class Chat(TelegramObject):
         """
 
         return await self._http.get_chat_member(chat_id=self.id, user_id=user_id)
-
-    @property
-    def history(self):
-        """
-        :class:`list`:
-            The cached messages in the chat.
-        """
-
-        return [x for x in self._http.messages if x.chat.id == self.id]
-
-    def fetch_message(self, message_id: int):
-        """
-        Fetches a message from the cache.
-
-        Parameters
-        ----------
-        message_id: :class:`int`
-            The ID of the message to fetch.
-
-        Returns
-        -------
-        :class:`chat.Message`
-            The message fetched.
-        """
-
-        for x in self.history:
-            if x.id == message_id:
-                return x
