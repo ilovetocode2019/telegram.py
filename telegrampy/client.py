@@ -44,15 +44,34 @@ class Client:
     ----------
     token: :class:`str`
         The API token.
+    loop: Optional[:class:`asyncio.BaseEventLoop`]
+        The event loop to use for the bot.
+    read_unread_updates: :class:`bool`
+        If the bot should read unread updates on startup. Defaults to False.
+    wait: :class:`int`
+        The time to wait before fetching new updates. Defaults to 1.
+
+    Attributes
+    ----------
+    token: :class:`str`
+        The API token.
+    loop: :class:`asyncio.BaseEventLoop`
+        The event loop that the bot is running on.
     """
 
-    def __init__(self, token: str):
+    def __init__(self, token: str, **options):
         self.token = token
-        self.loop = asyncio.get_event_loop()
+        self.loop = options.get("loop") or asyncio.get_event_loop()
         self.http = HTTPClient(token=token, loop=self.loop)
+
+        wait = options.get("wait") or 1
+        if wait <= 0 or wait > 10:
+            raise ValueError("Wait time must be between 1 and 10")
 
         self._running = False
         self._last_update_id = None
+        self._read_unread_updates = options.get("read_unread_updates") or False
+        self._wait = wait
 
         self._listeners = {}
         self._waiting_for = {}
@@ -97,6 +116,9 @@ class Client:
                 if updates:
                     update_ids = [int(update["update_id"]) for update in updates]
                     self._last_update_id = max(update_ids) + 1
+                    if self._read_unread_updates:
+                        for update in updates:
+                            await self._handle_update(update)
                 break
 
             except InvalidToken as exc:
@@ -134,8 +156,8 @@ class Client:
                 traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
                 await asyncio.sleep(10)
 
-            log.debug(f"Waiting for 1 second")
-            await asyncio.sleep(1)
+            log.debug(f"Waiting for {self._wait} second")
+            await asyncio.sleep(self._wait)
 
     async def _handle_update(self, update):
         update_id = update["update_id"]

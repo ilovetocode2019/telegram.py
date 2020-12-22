@@ -37,18 +37,18 @@ class Document(File):
     """
     A document to send.
 
-    Attributes
-    ----------
-    file: :class:`io.BytesIO`
-        The document.
-    filename: Optional[:class:`str`]
-        The filename of the document.
-
     Parameters
     ----------
     file: :class:`io.BytesIO`
         The document.
     filename: :class:`str`
+        The filename of the document.
+
+    Attributes
+    ----------
+    file: :class:`io.BytesIO`
+        The document.
+    filename: Optional[:class:`str`]
         The filename of the document.
     """
 
@@ -56,6 +56,15 @@ class Document(File):
 class Photo(File):
     """
     A photo to send.
+
+    Parameters
+    ----------
+    file: :class:`io.BytesIO`
+        The photo.
+    filename: :class:`str`
+        The filename of the photo.
+    caption: :class:`str`
+        The caption of the photo.
 
     Attributes
     ----------
@@ -66,14 +75,6 @@ class Photo(File):
     caption: Optional[:class:`str`]
         The caption of the photo.
 
-    Parameters
-    ----------
-    file: :class:`io.BytesIO`
-        The photo.
-    filename: :class:`str`
-        The filename of the photo.
-    caption: :class:`str`
-        The caption of the photo.
     """
 
     def __init__(self, file: BytesIO, filename: str = None, caption: str = None):

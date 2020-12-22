@@ -46,6 +46,8 @@ class Bot(telegrampy.Client):
     ----------
     token: :class:`str`
         The API token.
+    options: :class:`str`
+        Options to pass into :class:`telegrampy.Client`.
     description: Optional[:class:`str`]
         The bot's description.
     owner_id: Optional[:class:`int`]
@@ -70,8 +72,8 @@ class Bot(telegrampy.Client):
         A dictonary of extensions that are loaded.
     """
 
-    def __init__(self, token: str,  *, description: str = None, owner_id: int = None, owner_ids: list = None, help_command: HelpCommand = _default_help):
-        super().__init__(token)
+    def __init__(self, token: str, *, description: str = None, owner_id: int = None, owner_ids: list = None, help_command: HelpCommand = _default_help, **options):
+        super().__init__(token, **options)
         self.owner_id = owner_id
         self.owner_ids = owner_ids
         self.description = description
