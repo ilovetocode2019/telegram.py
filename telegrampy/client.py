@@ -31,7 +31,7 @@ import sys
 from .http import HTTPClient
 from .errors import *
 from .message import Message
-from .poll import Poll
+from .poll import *
 
 log = logging.getLogger("telegrampy")
 
@@ -169,9 +169,21 @@ class Client:
         if "message" in update:
             message = Message(self.http, update["message"])
             await self._dispatch("message", message)
-        elif "message_edit" in update:
-            message = Message(self.http, update["message"])
-            await self._dispatch("message_edit", Message(self.http, data))
+        elif "edited_message" in update:
+            message = Message(self.http, update["edited_message"])
+            await self._dispatch("message_edit", message)
+        elif "channel_post" in update:
+            message = Message(self.http, update["channel_post"])
+            await self._dispatch("post", message)
+        elif "edited_channel_post" in update:
+            message = Message(self.http, update["edited_channel_post"])
+            await self._dispatch("post_edit", message)
+        elif "poll" in update:
+            poll = Poll(update["poll"])
+            await self._dispatch("poll", poll)
+        elif "poll_answer" in update:
+            answer = PollAnswer(update["poll_answer"])
+            await self._dispatch("poll_answer", answer)
         else:
             log.warning(f"Received an unknown update ({update_id}): {update}")
 

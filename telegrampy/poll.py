@@ -22,8 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from .user import User
+
 class Poll:
-    """A telegram poll.
+    """A Telegram poll.
 
     Attributes
     ----------
@@ -55,3 +57,18 @@ class Poll:
         self.is_anonymous = data.get("is_anoymous")
         self.type = data.get("type")
         self.allow_multiple_answers = data.get("allow_multiple_answers")
+
+class PollAnswer:
+    """An answer to a non-anonymous poll.
+
+    Attributes
+    ----------
+
+    """
+
+    def __init__(self, data):
+        self.data = data
+
+        self.poll_id = data.get("poll_id")
+        self.user = User(data.get("user"))
+        self.option_ids = data.get("option_ids")
