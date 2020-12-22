@@ -47,11 +47,12 @@ class Client:
     """
 
     def __init__(self, token: str):
-        self._running = False
-        self._last_looped = datetime.datetime.now()
-
+        self.token = token
         self.loop = asyncio.get_event_loop()
         self.http = HTTPClient(token=token, loop=self.loop)
+
+        self._running = False
+        self._last_update_id = None
 
         self._listeners = {}
         self._waiting_for = {}
@@ -88,11 +89,6 @@ class Client:
         return await self.http.get_chat(chat_id=chat_id)
 
     async def _poll(self):
-        # Create some variables
-        self._last_update_id = None
-        self._last_update_time = datetime.datetime.now()
-        self._wait_time = 1
-
         # Get last update id
         while True:
             try:
@@ -116,37 +112,16 @@ class Client:
 
         # After fetching unread updates, start the loop
         while self._running:
-            self._last_looped = datetime.datetime.now()
-
             try:
                 log.debug("Fetching updates")
                 updates = await self.http.get_updates(self._last_update_id)
                 if len(updates) != 0:
                     log.debug(f"Handling update(s): {[update['update_id'] for update in updates]} ({len(updates)} update(s))")
                     for update in updates:
-                        if "message" in update:
-                            key = "message"
-                            event = "message"
-                        elif "edited_message" in update:
-                            key = "edited_message"
-                            event = "message_edit"
-                        elif "poll" in update:
-                            key = "poll"
-                            event = "poll"
+                        await self._handle_update(update)
 
-                    data = update[key]
-
-                    if event == "poll":
-                        await self._dispatch(event, Poll(data))
-                    elif event == "message_edit":
-                        await self._dispatch(event, Message(self.http, data))
-                    else:
-                        await self._dispatch(event, Message(self.http, data))
-
-                    update_ids = [int(update["update_id"]) for update in updates]
-                    self._last_update_id = max(update_ids) + 1
-                    key = None
-                    event = None
+                update_ids = [int(update["update_id"]) for update in updates]
+                self._last_update_id = max(update_ids) + 1
 
             except InvalidToken as exc:
                 traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
@@ -161,6 +136,18 @@ class Client:
 
             log.debug(f"Waiting for {self._wait_time} seconds")
             await asyncio.sleep(self._wait_time)
+
+    async def _handle_update(self, update):
+        update_id = update["update_id"]
+
+        if "message" in update:
+            message = Message(self.http, update["message"])
+            await self._dispatch("message", message)
+        elif "message_edit" in update:
+            message = Message(self.http, update["message"])
+            await self._dispatch("message_edit", Message(self.http, data))
+        else:
+            log.warning(f"Received an unknown update ({update_id}): {update}")
 
     async def _use_event_handler(self, func, *args, **kwargs):
         try:
