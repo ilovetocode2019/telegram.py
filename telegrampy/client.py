@@ -156,8 +156,6 @@ class Client:
                 traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
                 await asyncio.sleep(10)
 
-            await asyncio.sleep(1)
-
         log.info("The bot succesfully completed")
 
     async def _handle_update(self, update):

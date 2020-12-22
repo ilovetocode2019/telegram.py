@@ -266,7 +266,6 @@ class HTTPClient:
 
         if not offset:
             data = await self.request(Route("GET", url))
-
         else:
             data = await self.request(Route("POST", url), data={"offset": offset, "timeout": timeout})
 
