@@ -46,8 +46,6 @@ class Bot(telegrampy.Client):
     ----------
     token: :class:`str`
         The API token.
-    options: :class:`str`
-        Options to pass into :class:`telegrampy.Client`.
     description: Optional[:class:`str`]
         The bot's description.
     owner_id: Optional[:class:`int`]
@@ -57,6 +55,8 @@ class Bot(telegrampy.Client):
     help_command: Optional[:class:`telegrampy.ext.commands.HelpCommand`]
         The bot's help command.
         Defaults to :class:`telegrampy.ext.commands.DefaultHelpCommand`
+    \*\*options:
+        Options to pass into :class:`telegrampy.Client`.
 
     Attributes
     ----------
