@@ -38,7 +38,6 @@ from .help import HelpCommand, DefaultHelpCommand
 
 _default_help = DefaultHelpCommand()
 
-
 class Bot(telegrampy.Client):
     """
     Represents a Telegram bot.
@@ -65,9 +64,9 @@ class Bot(telegrampy.Client):
         The owner's ID.
     owner_ids: Optional[List[:class:`int`]]
         The owner IDs.
-    cogs: Mapping[:class:`str`: :class:`telegrampy.ext.commands.Cog`]
+    cogs: Mapping[:class:`str`, :class:`telegrampy.ext.commands.Cog`]
         A dictonary of cogs that are loaded.
-    extensions: Mapping[:class:`str`: :class:`types.ModuleType`]
+    extensions: Mapping[:class:`str`, :class:`types.ModuleType`]
         A dictonary of extensions that are loaded.
     """
 
@@ -80,7 +79,6 @@ class Bot(telegrampy.Client):
         self.commands_dict = {}
 
         self.cogs = {}
-        self.extension_cogs = {}
         self.extensions = {}
 
         if help_command:
@@ -176,7 +174,7 @@ class Bot(telegrampy.Client):
         kwargs["bot"] = self
         return Context(**kwargs)
 
-    def load_extension(self, location: str):
+    def load_extension(self, extension: str):
         """
         Loads an extension.
 
@@ -193,18 +191,18 @@ class Bot(telegrampy.Client):
             The extension has no setup function.
         """
 
-        if location in self.extensions:
-            raise ExtensionAlreadyLoaded(location)
+        if extension in self.extensions:
+            raise ExtensionAlreadyLoaded(extension)
 
-        cog = importlib.import_module(location)
-        self.extensions[cog.__name__] = cog
+        lib = importlib.import_module(extension)
+        self.extensions[lib.__name__] = lib
 
-        if not hasattr(cog, "setup"):
+        if not hasattr(lib, "setup"):
             raise AttributeError("Extension has no setup function")
 
-        cog.setup(self)
+        lib.setup(self)
 
-    def unload_extension(self, location: str):
+    def unload_extension(self, extension: str):
         """
         Unloads an extension.
 
@@ -214,16 +212,15 @@ class Bot(telegrampy.Client):
              The location of the extension.
         """
 
-        cog_name = self.extension_cogs.get(location)
-        if not cog_name:
-            raise ExtensionNotLoaded(location)
+        if extension not in self.extensions:
+            raise ExtensionNotLoaded(extension)
 
-        self.remove_cog(cog_name)
+        lib = sys.modules[extension]
 
-        self.extension_cogs.pop(location)
-        self.extensions.pop(location)
+        self._cleanup_extension(lib)
+        self.extensions.pop(extension)
 
-    def reload_extension(self, location: str):
+    def reload_extension(self, extension: str):
         """
         Reloads an extension.
 
@@ -233,14 +230,47 @@ class Bot(telegrampy.Client):
             The location of the extension.
         """
 
-        if location not in self.extension_cogs:
-            raise ExtensionNotLoaded(location)
+        if extension not in self.extensions:
+            raise ExtensionNotLoaded(f"{extension} is not loaded")
 
-        lib = sys.modules[location]
-        importlib.reload(lib)
-        self.remove_cog(self.extension_cogs[location])
+        # Save the current state
+        lib = sys.modules[extension]
+        modules = {key: value for key, value in sys.modules.items() if key == extension or key.startswith(f"{extension}.")}
 
-        sys.modules[location].setup(self)
+        # Remove the extension
+        self.unload_extension(extension)
+
+        try:
+            # Attempt to load it back
+            self.load_extension(extension)
+        except Exception as exc:
+            # If this fails then revert the changes back
+            self.extensions[lib.__name__] = lib
+            lib.setup(self)
+            sys.modules.update(modules)
+
+            # Then re-raise the error
+            raise
+
+    def _cleanup_extension(self, extension):
+        # Remove cogs, commands, and listeners from the bot
+        for name, cog in self.cogs.copy().items():
+            if cog.__module__ and (cog.__module__ == extension.__name__ or cog.__module__.startswith(f"{extension.__name__}.")):
+                self.remove_cog(name)
+
+        for name, command in self.commands_dict.copy().items():
+            if command.__module__ and (command.__module__ == extension.__name__ or command.__module__.startswith(f"{extension.__name__}.")):
+                self.remove_command(name)
+
+        for name, listeners in self._listeners.copy().items():
+            for listener in listeners:
+                if listener.__module__ and (listener.__module__ == extension.__name__ or listener.__module__.startswith(f"{extension.__name__}.")):
+                    self.remove_listener(listener)
+
+        # Remove the module and any submodules
+        for name in sys.modules.copy().keys():
+            if name == extension.__name__ or name.startswith(f"{extension.__name__}."):
+                sys.modules.pop(name, None)
 
     def add_cog(self, cog: Cog):
         """
@@ -260,12 +290,9 @@ class Bot(telegrampy.Client):
         if not isinstance(cog, Cog):
             raise TypeError("Cog is not a subclass of Cog")
 
-        #Add the cog
+        # Add the cog
         cog._add(self)
         self.cogs[cog.qualified_name] = cog
-        # If cog is from an extension, add the extension to a dict with the cog name as the value
-        if str(cog.__module__) != "__main__":
-            self.extension_cogs[cog.__module__] = cog.qualified_name
 
     def remove_cog(self, cog: str):
         """
@@ -329,7 +356,7 @@ class Bot(telegrampy.Client):
 
             kwargs["name"] = name
             if name in self._get_all_command_names():
-                raise CommandRegistrationError(name)
+                raise CommandRegistrationError(f"{name} is already regeistered as a command name or alias")
 
             command = Command(func, **kwargs)
             command.checks = getattr(func, "_command_checks", [])
@@ -365,7 +392,7 @@ class Bot(telegrampy.Client):
             raise TypeError("Command must be a subclass of Command")
 
         if command.name in self._get_all_command_names():
-            raise CommandRegistrationError(command.name)
+            raise CommandRegistrationError(f"{name} is already regeistered as a command name or alias")
 
         self.commands_dict[command.name] = command
         return command
