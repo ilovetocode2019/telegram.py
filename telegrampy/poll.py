@@ -29,6 +29,8 @@ class Poll:
 
     Attributes
     ----------
+    id: :class:`int`
+        The ID of the poll.
     question: :class:`str`
         The question of the poll.
     options: :class:`list`
