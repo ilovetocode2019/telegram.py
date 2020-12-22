@@ -138,12 +138,12 @@ class Client:
             try:
                 updates = await self.http.get_updates(self._last_update_id, timeout=self._wait)
                 if updates:
+                    update_ids = [int(update["update_id"]) for update in updates]
+                    self._last_update_id = max(update_ids) + 1
+
                     log.debug(f"Handling updates: {[update['update_id'] for update in updates]}")
                     for update in updates:
                         await self._handle_update(update)
-
-                    update_ids = [int(update["update_id"]) for update in updates]
-                    self._last_update_id = max(update_ids) + 1
 
             except InvalidToken as exc:
                 traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
