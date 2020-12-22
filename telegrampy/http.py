@@ -83,6 +83,11 @@ class HTTPClient:
 
         # Try a request 5 times before dropping it
         for tries in range(5):
+            if not tries:
+                log.info(f"Requesting to {method}:{url} with {kwargs}")
+            else:
+                log.info(f"Requesting to {method}:{url} with {kwargs} (Retry {tries+1})")
+
             async with self.session.request(method, url, **kwargs) as resp:
                 # Telegram docs say all responses will have json
                 data = await resp.json()

@@ -65,7 +65,7 @@ class Client:
         self.http = HTTPClient(token=token, loop=self.loop)
 
         wait = options.get("wait") or 1
-        if wait <= 0 or wait > 10:
+        if wait < 1 or wait > 10:
             raise ValueError("Wait time must be between 1 and 10")
 
         self._running = False
@@ -117,6 +117,7 @@ class Client:
                     update_ids = [int(update["update_id"]) for update in updates]
                     self._last_update_id = max(update_ids) + 1
                     if self._read_unread_updates:
+                        log.debug(f"Handling update(s): {[update['update_id'] for update in updates]} ({len(updates)} update(s))")
                         for update in updates:
                             await self._handle_update(update)
                 break
@@ -135,7 +136,6 @@ class Client:
         # After fetching unread updates, start the loop
         while self._running:
             try:
-                log.debug("Fetching updates")
                 updates = await self.http.get_updates(self._last_update_id)
                 if updates:
                     log.debug(f"Handling update(s): {[update['update_id'] for update in updates]} ({len(updates)} update(s))")
@@ -156,8 +156,10 @@ class Client:
                 traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
                 await asyncio.sleep(10)
 
-            log.debug(f"Waiting for {self._wait} second")
+            log.debug(f"Waiting for {self._wait} second(s)")
             await asyncio.sleep(self._wait)
+
+        log.info("The bot succesfully completed")
 
     async def _handle_update(self, update):
         update_id = update["update_id"]
@@ -341,6 +343,8 @@ class Client:
         if self._running:
             raise RuntimeError("Bot is already running")
 
+        log.info("Starting the bot")
+
         self._running = True
         self.loop.create_task(await self._poll())
 
@@ -353,10 +357,12 @@ class Client:
             raise RuntimeError("Bot is not running")
 
         log.info("Stopping the bot")
-        await self.http.close()
+
         self._running = False
+        await self.http.close()
 
     def _clean_tasks(self):
+        log.info("Cleaning tasks")
         pending = asyncio.all_tasks(loop=self.loop)
         if not pending:
             return
@@ -364,6 +370,7 @@ class Client:
         for task in pending:
             task.cancel()
         self.loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+        self.loop.run_until_complete(self.loop.shutdown_asyncgens())
 
     def run(self):
         """
@@ -380,5 +387,4 @@ class Client:
             self.loop.run_until_complete(self.stop())
         finally:
             self._clean_tasks()
-            self.loop.run_until_complete(self.loop.shutdown_asyncgens())
             self.loop.close()

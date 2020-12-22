@@ -191,9 +191,10 @@ class Command:
                     inspect.signature(ctx.command.callback).parameters.items()
                 )
             ]
-            if ctx.command.cog:
+            if ctx.command.cog and takes_args:
                 takes_args.pop(0)
-            takes_args.pop(0)
+            if takes_args:
+                takes_args.pop(0)
 
             # Iter through the arguments
             for counter, argument in enumerate(takes_args):
