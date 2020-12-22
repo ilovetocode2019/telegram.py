@@ -63,6 +63,12 @@ class PollAnswer:
 
     Attributes
     ----------
+    poll_id: :class:`int`
+        The ID of the poll.
+    user: :class:`telegrampy.User`
+        The user that answered the poll.
+    option_ids: List[:class:`int`]
+        The options that the user selected.
 
     """
 

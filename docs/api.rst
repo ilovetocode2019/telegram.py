@@ -20,6 +20,22 @@ Events
 
     Called when a message is edited.
 
+.. function:: on_post(message: telegrampy.Message)
+
+    Called when a channel post is sent.
+
+.. function:: on_post_edit(message: telegrampy.Message)
+
+    Called when a channel post is edited.
+
+.. function:: on_poll(poll: telegrampy.Poll)
+
+    Called when a poll is created.
+
+.. function:: on_poll_answer(answer: telegrampy.PollAnswer)
+
+    Called when someone answers a non-anonymous poll.
+
 .. function:: on_error(error)
 
     Called when an error occurs.
@@ -65,6 +81,8 @@ Poll
 .. autoclass:: Poll
     :members:
 
+.. autoclass:: PollAnswer
+    :members:
 
 Exceptions
 ----------
