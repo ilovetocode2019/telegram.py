@@ -127,7 +127,6 @@ class HTTPClient:
                 if resp.status in [500, 502, 503, 504]:
                     await asyncio.sleep(1 + tries * 2)
                     continue
-
                 else:
                     raise HTTPException(resp, (data).get("description"))
 

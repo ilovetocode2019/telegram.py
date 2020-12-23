@@ -76,10 +76,20 @@ class Client:
         self._listeners = {}
         self._waiting_for = {}
 
-    async def user(self):
+    async def get_me(self):
         """|coro|
 
-        The user of the bot.
+        Fetches the bot user.
+
+        Returns
+        -------
+        :class:`telegrampy.User`:
+            The user that was fetched.
+
+        Raises
+        ------
+        :exc:`telegrampy.HTTPException`
+            Fetching the bot user failed.
         """
 
         return await self.http.get_me()

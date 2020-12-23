@@ -61,11 +61,11 @@ class User(TelegramObject):
     language_code: Optional[:class:`str`]
         The IETF language tag for the user's language.
     can_join_groups: Optional[:class:`bool`]
-        If the bot can join groups. Only returned in :class:`telegrampy.Client.users`
+        If the bot can join groups. Only returned in :class:`telegrampy.Client.get_me`.
     can_read_all_group_messages: Optional[:class:`bool`]
-        If privacy mode is disabled.
+        If privacy mode is disabled. Only returned in :class:`telegrampy.Client.get_me`.
     supports_inline_queries: Optional[:class:`bool`]
-        If the bot has inline queries enabled.
+        If the bot has inline queries enabled. Only returned in :class:`telegrampy.Client.get_me`.
     """
 
     def __init__(self, http, data):
