@@ -104,8 +104,7 @@ class HTTPClient:
 
                     retry_after = params.get("retry_after")
 
-                    # We didn't get a retry after,
-                    # so raise an HTTPException
+                    # We didn't get a retry after, so raise an HTTPException
                     if not retry_after:
                         raise HTTPException(resp, data.get("description"))
 

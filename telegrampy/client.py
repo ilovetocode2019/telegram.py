@@ -44,12 +44,12 @@ class Client:
     ----------
     token: :class:`str`
         The API token.
-    loop: Optional[:class:`asyncio.BaseEventLoop`]
-        The event loop to use for the bot.
+    loop: :class:`asyncio.BaseEventLoop`
+        The event loop to use for the bot. Uses :func:`asyncio.get_event_loop` is none is specified.
     read_unread_updates: :class:`bool`
         If the bot should read unread updates on startup. Defaults to False.
     wait: :class:`int`
-        The timeout in seconds for long polling.
+        The timeout in seconds for long polling. Defaults to 5.
 
     Attributes
     ----------
@@ -121,7 +121,7 @@ class Client:
         # Get last update id
         log.info("Fetching unread updates")
         try:
-            updates = await self.http.get_updates(self._last_update_id)
+            updates = await self.http.get_updates(offset=self._last_update_id)
         except Exception as exc:
             raise
         else:
@@ -139,7 +139,7 @@ class Client:
         while self._running:
             # Fetch updates
             try:
-                updates = await self.http.get_updates(self._last_update_id, timeout=self._wait)
+                updates = await self.http.get_updates(offset=self._last_update_id, timeout=self._wait)
             except (InvalidToken, Conflict) as exc:
                 raise
             except Exception as exc:
