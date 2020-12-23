@@ -88,7 +88,7 @@ class HTTPClient:
             else:
                 log.debug(f"Requesting to {method}:{url} with {kwargs} (Retry {tries+1})")
 
-            async with self.session.request(method, url, **kwargs) as resp:
+            async with self.session.request(method, url, timeout=30, **kwargs) as resp:
                 # Telegram docs say all responses will have json
                 data = await resp.json()
 
@@ -114,18 +114,18 @@ class HTTPClient:
                     await asyncio.sleep(retry_after)
                     continue
 
-                # Token is invalid
+                # Forbidden
                 if resp.status == 403:
                     raise Forbidden(resp, data.get("description"))
-                if resp.status in (401, 404):
+                # Bad token
+                elif resp.status in (401, 404):
                     raise InvalidToken(resp, data.get("description"))
-                if resp.status == 409:
+                # Conflict with other request
+                elif resp.status == 409:
                     raise Conflict(resp, data.get("description"))
-
-                # Some sort of internal Telegram error.
-                # Retry with an increasing sleep gap between.
+                # Some sort of internal Telegram error
                 if resp.status in [500, 502, 503, 504]:
-                    await asyncio.sleep(1 + tries * 2)
+                    await asyncio.sleep((1 + tries) * 2)
                     continue
                 else:
                     raise HTTPException(resp, (data).get("description"))
@@ -263,10 +263,8 @@ class HTTPClient:
 
         url = self._base_url + "getUpdates"
 
-        if not offset:
-            data = await self.request(Route("GET", url))
-        else:
-            data = await self.request(Route("POST", url), data={"offset": offset, "timeout": timeout})
+
+        data = await self.request(Route("POST", url), data={"offset": offset, "timeout": timeout})
 
         self._last_update_time = datetime.datetime.now()
         return data["result"]

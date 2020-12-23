@@ -119,52 +119,45 @@ class Client:
 
     async def _poll(self):
         # Get last update id
-        while True:
-            try:
-                log.info("Fetching unread updates")
-                updates = await self.http.get_updates(self._last_update_id)
-                if updates:
-                    update_ids = [int(update["update_id"]) for update in updates]
-                    self._last_update_id = max(update_ids) + 1
-                    if self._read_unread_updates:
-                        log.debug(f"Handling updates: {[update['update_id'] for update in updates]} ({len(updates)}")
-                        for update in updates:
-                            await self._handle_update(update)
-                break
+        log.info("Fetching unread updates")
+        try:
+            updates = await self.http.get_updates(self._last_update_id)
+        except Exception as exc:
+            raise
+        else:
+            if updates:
+                update_ids = [int(update["update_id"]) for update in updates]
+                self._last_update_id = max(update_ids) + 1
+                if self._read_unread_updates:
+                    log.debug(f"Handling updates: {[update['update_id'] for update in updates]} ({len(updates)}")
+                    for update in updates:
+                        await self._handle_update(update)
 
-            except InvalidToken as exc:
-                traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
-                await self.stop()
-                return
-            except HTTPException as exc:
-                traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
-                await asyncio.sleep(10)
-            except Exception as exc:
-                traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
-                await asyncio.sleep(10)
+        tries = 0
 
-        # After fetching unread updates, start the loop
+        # Main loop
         while self._running:
+            # Fetch updates
             try:
                 updates = await self.http.get_updates(self._last_update_id, timeout=self._wait)
+            except (InvalidToken, Conflict) as exc:
+                raise
+            except Exception as exc:
+                if self._running:
+                    if tries < 30:
+                        tries += 1
+                    log.warning(f"Couldn't connect to Telegram. Retrying in {tries*2} seconds.")
+                    await asyncio.sleep(tries*2)
+            else:
                 if updates:
+                    # Handle them
                     update_ids = [int(update["update_id"]) for update in updates]
                     self._last_update_id = max(update_ids) + 1
-
                     log.debug(f"Handling updates: {[update['update_id'] for update in updates]}")
                     for update in updates:
                         await self._handle_update(update)
 
-            except InvalidToken as exc:
-                traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
-                await self.stop()
-                return
-            except HTTPException as exc:
-                traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
-                await asyncio.sleep(10)
-            except Exception as exc:
-                traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
-                await asyncio.sleep(10)
+                tries = 0
 
         log.info("The bot succesfully completed")
 
@@ -381,14 +374,15 @@ class Client:
         await self.http.close()
 
     def _clean_tasks(self):
-        log.info("Cleaning tasks")
-        pending = asyncio.all_tasks(loop=self.loop)
-        if not pending:
+        log.info("Cleaning up tasks")
+        tasks = asyncio.all_tasks(loop=self.loop)
+        if not tasks:
             return
 
-        for task in pending:
+        for task in tasks:
             task.cancel()
-        self.loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+
+        self.loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
         self.loop.run_until_complete(self.loop.shutdown_asyncgens())
 
     def run(self):
@@ -404,6 +398,6 @@ class Client:
         except KeyboardInterrupt:
             log.info("Received KeyboardInterrupt, Stopping bot")
             self.loop.run_until_complete(self.stop())
-        finally:
-            self._clean_tasks()
-            self.loop.close()
+
+        self._clean_tasks()
+        self.loop.close()
