@@ -22,9 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import html
+
 from .file import *
 from .abc import TelegramObject
-
+from .utils import escape_markdown
 
 class User(TelegramObject):
     """
@@ -50,12 +52,20 @@ class User(TelegramObject):
         The ID of the user.
     is_bot: :class:`bool`
         If the user is a bot.
-    username: Optional[:class:`str`]
-        The username of the user.
     first_name: :class:`str`
         The first name of the user.
     last_name: Optional[:class:`str`]
         The last name of the user.
+    username: Optional[:class:`str`]
+        The username of the user.
+    language_code: Optional[:class:`str`]
+        The IETF language tag for the user's language.
+    can_join_groups: Optional[:class:`bool`]
+        If the bot can join groups. Only returned in :class:`telegrampy.Client.users`
+    can_read_all_group_messages: Optional[:class:`bool`]
+        If privacy mode is disabled.
+    supports_inline_queries: Optional[:class:`bool`]
+        If the bot has inline queries enabled.
     """
 
     def __init__(self, http, data):
@@ -64,18 +74,13 @@ class User(TelegramObject):
         self.username = data.get("username")
         self.first_name = data.get("first_name")
         self.last_name = data.get("last_name")
+        self.language_code = data.get("language_code")
+        self.can_join_groups = data.get("can_join_groups")
+        self.can_read_all_group_messages = data.get("can_read_all_group_messages")
+        self.supports_inline_queries = data.get("supports_inline_queries")
 
     def __str__(self):
         return self.username
-
-    @property
-    def full_name(self):
-        """
-        :class:`str`:
-             The user's full name.
-        """
-
-        return f"{self.first_name or ''} {self.last_name or ''}"
 
     @property
     def name(self):
@@ -85,6 +90,51 @@ class User(TelegramObject):
         """
 
         return self.username or self.full_name
+
+    @property
+    def full_name(self):
+        """
+        :class:`str`:
+            The user's full name.
+        """
+
+        return f"{self.first_name} {self.last_name}" if self.last_name else self.first_name
+
+    @property
+    def link(self):
+        """
+        :class:`str`:
+            The t.me link for the user.
+        """
+
+        return f"http://t.me/{self.username}" if self.username else None
+
+    def mention(self, text = None, parse_mode = "HTML"):
+        """
+        Returns a mention for the user.
+
+        Parameters
+        ----------
+        text: :class:`str`
+            The mention text.
+        parse_mode: :class:`str`
+            The parse mode for the mention.
+
+        Returns
+        -------
+        :class:`str`:
+            The mention string.
+        """
+
+        if not text:
+            text = self.name
+
+        if parse_mode == "HTML":
+            return f'<a href="tg://user?id={self.id}">{html.escape(text)}</a>'
+        elif parse_mode == "Markdown":
+            return f"[{escape_markdown(text, version=1)}](tg://user?id={self.id})"
+        elif parse_mode == "MarkdownV2":
+            return f"[{escape_markdown(text, version=2)}](tg://user?id={self.id})"
 
     async def send(self, content: str = None, file: File = None, parse_mode: str = None):
         """|coro|
