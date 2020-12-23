@@ -75,7 +75,7 @@ class PollAnswer:
     """
 
     def __init__(self, data):
-        self.data = data
+        self._data = data
 
         self.poll_id = data.get("poll_id")
         self.user = User(data.get("user"))
