@@ -79,7 +79,6 @@ class Bot(telegrampy.Client):
         self.description = description
 
         self.commands_dict = {}
-
         self.cogs = {}
         self.extensions = {}
 
@@ -161,7 +160,7 @@ class Bot(telegrampy.Client):
         command = None
         if content.startswith("/"):
             splited = content.split("@")
-            if len(splited) == 1 or (len(splited) != 1 and splited[1] == (await self.user()).username):
+            if len(splited) == 1 or (len(splited) != 1 and splited[1] == (await self.get_me()).username):
                 command_name = splited[0][1:]
                 command = self.get_command(command_name)
                 if not command:
