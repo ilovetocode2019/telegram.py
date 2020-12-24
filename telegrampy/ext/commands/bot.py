@@ -315,19 +315,27 @@ class Bot(telegrampy.Client):
         cog._remove(self)
         self.cogs.pop(cog.qualified_name)
 
-    async def _dispatch(self, event, *args):
-        await super()._dispatch(event, *args)
+    async def on_message(self, message):
+        await self.process_commands(message)
 
-        # If event is on_message, check if the message if a command
-        # If it is a command, invoke the command
-        if event == "message":
-            message = args[0]
-            if not message.content:
-                return
+    async def process_commands(self, message):
+        """
+        |coro|
 
-            ctx = await self.get_context(message)
-            if ctx:
-                await self.invoke(ctx)
+        Process commands that have been registered.
+        By default this is called in on_message. If you override Bot.on_message you need to call this manually.
+
+        Parameters
+        ---------
+        message: :class:`telegrampy.Message`
+            The message to process.
+        """
+        if not message.content:
+            return
+
+        ctx = await self.get_context(message)
+        if ctx:
+            await self.invoke(ctx)
 
     async def invoke(self, ctx):
         if not ctx.command:
