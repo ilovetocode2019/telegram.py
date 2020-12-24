@@ -136,7 +136,7 @@ class User(TelegramObject):
         elif parse_mode == "MarkdownV2":
             return f"[{escape_markdown(text, version=2)}](tg://user?id={self.id})"
 
-    async def send(self, content: str = None, file: File = None, parse_mode: str = None):
+    async def send(self, content: str = None, file: Document = None, parse_mode: str = None):
         """|coro|
         
         Sends a message directly to the user.
@@ -145,7 +145,7 @@ class User(TelegramObject):
         ----------
         content: :class:`str`
             The content of the message to send.
-        file: :class:`telegrampy.File`
+        file: :class:`telegrampy.Document`
             The file to send
         parse_mode: :class:`str`
             The parse mode of the message to send.

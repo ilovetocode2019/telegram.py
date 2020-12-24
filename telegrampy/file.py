@@ -25,7 +25,7 @@ SOFTWARE.
 from io import BytesIO
 
 
-class File:
+class Document:
     """
     Any file to send.
 
@@ -48,28 +48,7 @@ class File:
         self.file = file
         self.filename = filename
 
-
-class Document(File):
-    """
-    A document to send.
-
-    Parameters
-    ----------
-    file: :class:`io.BytesIO`
-        The document.
-    filename: :class:`str`
-        The filename of the document.
-
-    Attributes
-    ----------
-    file: :class:`io.BytesIO`
-        The document.
-    filename: Optional[:class:`str`]
-        The filename of the document.
-    """
-
-
-class Photo(File):
+class Photo(Document):
     """
     A photo to send.
 

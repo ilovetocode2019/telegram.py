@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from telegrampy import File
+from telegrampy import Document
 
 
 class Context:
@@ -62,7 +62,7 @@ class Context:
         self.kwargs = kwargs.get("kwargs") or {}
         self.command_failed = None
 
-    async def send(self, content: str = None, file: File = None, parse_mode=None):
+    async def send(self, content: str = None, file: Document = None, parse_mode=None):
         """|coro|
         
         Sends a message in the chat.
@@ -71,7 +71,7 @@ class Context:
         ----------
         content: :class:`str`
             The content of the message to send.
-        file: :class:`telegrampy.File`
+        file: :class:`telegrampy.Document`
             The file to send.
         parse_mode: :class:`str`
             The parse mode of the message to send.
