@@ -58,7 +58,7 @@ class Client:
     loop: :class:`asyncio.BaseEventLoop`
         The event loop that the bot is running on.
     user: Optional[:class:`telegrampy.User`]
-        The bot user for the client. None if the bot hasn't started yet.
+        The state of the bot account upon startup. None if the bot hasn't started yet.
     """
 
     def __init__(self, token: str, **options):
