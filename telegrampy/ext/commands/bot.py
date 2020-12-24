@@ -161,7 +161,7 @@ class Bot(telegrampy.Client):
         invoked_with = None
         if content.startswith("/"):
             splited = content.split("@")
-            if len(splited) == 1 or (len(splited) != 1 and splited[1] == (await self.get_me()).username):
+            if len(splited) == 1 or (len(splited) != 1 and splited[1] == self.user.username):
                 invoked_with = splited[0][1:]
                 command = self.get_command(invoked_with)
 

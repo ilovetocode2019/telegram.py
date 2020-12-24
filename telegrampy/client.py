@@ -57,6 +57,8 @@ class Client:
         The API token.
     loop: :class:`asyncio.BaseEventLoop`
         The event loop that the bot is running on.
+    user: Optional[:class:`telegrampy.User`]
+        The bot user for the client. None if the bot hasn't started yet.
     """
 
     def __init__(self, token: str, **options):
@@ -118,6 +120,9 @@ class Client:
         return await self.http.get_chat(chat_id=chat_id)
 
     async def _poll(self):
+        log.info("Fetching bot user")
+        self.user = await self.get_me()
+
         # Get last update id
         log.info("Fetching unread updates")
         try:
@@ -133,6 +138,7 @@ class Client:
                     for update in updates:
                         await self._handle_update(update)
 
+        await self._dispatch("ready")
         tries = 0
 
         # Main loop
