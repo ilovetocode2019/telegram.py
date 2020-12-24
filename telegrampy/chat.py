@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import asyncio
+
 from .errors import *
 from .file import *
 from .abc import TelegramObject
@@ -145,6 +147,19 @@ class Chat(TelegramObject):
 
         await self._http.send_chat_action(chat_id=self.id, action=action)
 
+    def action(self, action: str):
+        """|coro|
+
+        Returns a context manager that sends a chat action until the with statment is completed.
+
+        Parameters
+        ----------
+        action: :class:`str`
+            The action to send.
+        """
+
+        return ChatActionSender(self.c, action)
+
     async def get_member(self, user_id: int):
         """|coro|
 
@@ -167,3 +182,26 @@ class Chat(TelegramObject):
         """
 
         return await self._http.get_chat_member(chat_id=self.id, user_id=user_id)
+
+class ChatActionSender:
+    def __init__(self, chat, action):
+        self.chat = chat
+        self.action = action
+
+    async def action_loop(self):
+        while True:
+            await self.chat.send_action(self.action)
+            await asyncio.sleep(5)
+
+    def __enter__(self):
+        self.task = self.chat._http.loop.create_task(self.action_loop())
+        return self
+
+    def __exit__(self, *args):
+        self.task.cancel()
+
+    async def __aenter__(self):
+        return self.__enter__()
+
+    async def __aexit__(self, *args):
+        return self.__exit__()

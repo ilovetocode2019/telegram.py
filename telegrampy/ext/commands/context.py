@@ -132,6 +132,19 @@ class Context:
 
         await self.chat.send_action(action)
 
+    def action(self, action: str):
+        """|coro|
+
+        Returns a context manager that sends a chat action until the with statment is completed.
+
+        Parameters
+        ----------
+        action: :class:`str`
+            The action to send.
+        """
+
+        return self.chat.action(action)
+
     async def reply(self, content: str, parse_mode: str = None):
         """
         |coro|
