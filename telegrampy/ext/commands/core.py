@@ -57,9 +57,7 @@ class Command:
 
     def __init__(self, func, **kwargs):
         self.callback = func
-
-        signature = inspect.signature(func)
-        self.params = signature.parameters.copy()
+        self.params = inspect.signature(func).parameters
 
         self._data = kwargs
         self.name = kwargs.get("name") or func.__name__
@@ -188,7 +186,7 @@ class Command:
             takes_args = [
                 x[1]
                 for x in list(
-                    inspect.signature(ctx.command.callback).parameters.items()
+                    self.params.copy().items()
                 )
             ]
             if ctx.command.cog and takes_args:
@@ -265,10 +263,12 @@ class Command:
         # Checks
         for check in self.checks:
             if not check(ctx):
+                ctx.command_failed = True
                 raise CheckFailure("A check for this command has failed")
 
         if self.cog:
             if not self.cog.cog_check(ctx):
+                ctx.command_failed = True
                 raise CheckFailure("A check for this command has failed")
 
         other_args = []
@@ -281,6 +281,7 @@ class Command:
         try:
             return await self.callback(*other_args, *ctx.args, **ctx.kwargs)
         except Exception as exc:
+            ctx.command_failed = True
             raise CommandInvokeError(exc) from exc
 
 def command(*args, **kwargs):

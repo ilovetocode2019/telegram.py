@@ -158,21 +158,25 @@ class Bot(telegrampy.Client):
 
         content = message.content.split(" ")[0]
         command = None
+        invoked_with = None
         if content.startswith("/"):
             splited = content.split("@")
             if len(splited) == 1 or (len(splited) != 1 and splited[1] == (await self.get_me()).username):
-                command_name = splited[0][1:]
-                command = self.get_command(command_name)
-                if not command:
-                    raise CommandNotFound(command_name)
+                invoked_with = splited[0][1:]
+                command = self.get_command(invoked_with)
 
-        kwargs = {"command": command}
-        kwargs["args"] = []
-        kwargs["kwargs"] = {}
+        if not invoked_with:
+            return None
+
+        kwargs = {}
+        kwargs["bot"] = self
         kwargs["message"] = message
+        kwargs["command"] = command
+        kwargs["invoked_with"] = invoked_with
         kwargs["chat"] = message.chat
         kwargs["author"] = message.author
-        kwargs["bot"] = self
+        kwargs["args"] = []
+        kwargs["kwargs"] = {}
         return Context(**kwargs)
 
     def load_extension(self, extension: str):
@@ -311,18 +315,6 @@ class Bot(telegrampy.Client):
         cog._remove(self)
         self.cogs.pop(cog.qualified_name)
 
-    async def _use_command(self, ctx):
-        await self._dispatch("command", ctx)
-
-        try:
-            await ctx.command.invoke(ctx)
-        except Exception as exc:
-            ctx.command_failed = True
-            await self._dispatch("command_error", ctx, exc)
-
-        if not ctx.command_failed:
-            await self._dispatch("command_completion", ctx)
-
     async def _dispatch(self, event, *args):
         await super()._dispatch(event, *args)
 
@@ -334,11 +326,21 @@ class Bot(telegrampy.Client):
                 return
 
             ctx = await self.get_context(message)
+            if ctx:
+                await self.invoke(ctx)
 
-            if not ctx.command:
-                return
+    async def invoke(self, ctx):
+        if not ctx.command:
+            exc = CommandNotFound(f"Command '{ctx.invoked_with}' is not found")
+            return await self._dispatch("command_error", ctx, exc)
 
-            self.loop.create_task(self._use_command(ctx))
+        await self._dispatch("command", ctx)
+        try:
+            await ctx.command.invoke(ctx)
+        except Exception as exc:
+            await self._dispatch("command_error", ctx, exc)
+        else:
+            await self._dispatch("command_completion", ctx)
 
     def command(self, *args, **kwargs):
         """

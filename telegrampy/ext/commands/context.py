@@ -34,29 +34,33 @@ class Context:
     bot: :class:`telegrampy.ext.commands.Bot`
         The bot that created the context.
     message: :class:`telegrampy.Message`
-        The message the context is for.
+        The message the invoked the command.
+    command: :class:`telegrampy.Command`
+        The command that is being invoked.
+    invoked_with: :class:`str`
+        The text that triggered the invocation.
     chat: :class:`telegrampy.Chat`
-        The chat the context is for.
+        The chat the command is being invoked in.
     author: :class:`telegrampy.User`
-        The author of the message.
+        The author invoking the command.
     command_failed: :class:`bool`
-        Whether the command failed or not.
+        If the command failed or not.
     args: :class:`list`
         The arguments passed into the command.
     kwargs: :class:`dict`
         The kwargs passed into the command.
     """
 
-    def __init__(self, command, **kwargs):
-        self.command = command
+    def __init__(self, **kwargs):
         self.bot = kwargs.get("bot")
-
         self.message = kwargs.get("message")
+        self.command = kwargs.get("command")
+        self.invoked_with = kwargs.get("invoked_with")
         self.chat = kwargs.get("chat")
         self.author = kwargs.get("author")
-        self.command_failed = None
         self.args = kwargs.get("args") or []
         self.kwargs = kwargs.get("kwargs") or {}
+        self.command_failed = None
 
     async def send(self, content: str = None, file: File = None, parse_mode=None):
         """|coro|
