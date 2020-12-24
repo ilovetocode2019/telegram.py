@@ -70,7 +70,10 @@ class HelpCommand:
         self._implementation = None
 
     async def get_command_signature(self, command):
-        """The method that gets a formatted command signature
+        """
+        |coro|
+
+        The method that gets a formatted command signature
 
         Example:
         /help [command]
@@ -80,7 +83,10 @@ class HelpCommand:
         return f"/{name} {sig}"
 
     async def send_bot_help(self):
-        """The method that sends help for the bot.
+        """
+        |coro|
+
+        The method that sends help for the bot.
 
         This is called when no query is provided.
         This method should handle the sending of the help message.
@@ -88,7 +94,10 @@ class HelpCommand:
         raise NotImplementedError("Subclasses must implement this.")
 
     async def send_cog_help(self, cog: Cog):
-        """The method that sends help for a cog.
+        """
+        |coro|
+
+        The method that sends help for a cog.
 
         This is called when a cog matches the query.
         This method should handle the sending of the help message.
@@ -114,7 +123,10 @@ class HelpCommand:
         raise NotImplementedError("Subclasses must implement this.")
 
     async def send_not_found(self, query: str):
-        """The method that sends a 'not found' message or similar.
+        """
+        |coro|
+
+        The method that sends a 'not found' message or similar.
 
         This method is called when no match is found for the query.
 
@@ -126,7 +138,10 @@ class HelpCommand:
         await self.ctx.send(f"A command or cog named '{query}' was not found.")
 
     async def help_callback(self, query: typing.Optional[str]):
-        """The callback that searches for a matching commmand or cog.
+        """
+        |coro|
+
+        The callback that searches for a matching commmand or cog.
 
         This should not be overridden unless it is necessary.
 
@@ -194,7 +209,9 @@ class DefaultHelpCommand(HelpCommand):
         )
 
     async def format_commands(self, commands: typing.List[Command], *, heading: str):
-        """The method that formats a given list of commands.
+        """|coro|
+
+        The method that formats a given list of commands.
 
         Parameters
         ----------
@@ -232,7 +249,10 @@ class DefaultHelpCommand(HelpCommand):
         return formatted
 
     async def format_command(self, command):
-        """The method that formats an indivitual command.
+        """
+        |coro|
+
+        The method that formats an indivitual command.
 
         Parameters
         ------------

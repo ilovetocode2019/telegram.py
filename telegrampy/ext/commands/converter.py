@@ -34,6 +34,8 @@ class Converter:
 
     async def convert(self, ctx, arg):
         """
+        |coro|
+
         Does the converting.
         """
         raise NotImplementedError

@@ -293,17 +293,6 @@ class Client:
         setattr(self, func.__name__, func)
         return func
 
-    async def on_error(self, error):
-        """|coro|
-
-        Default error handler.
-        """
-
-        if "on_error" in self._listeners:
-            return
-
-        traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
-
     def add_listener(self, func, name: str = None):
         """
         Registers a function as a listener.
@@ -352,6 +341,12 @@ class Client:
             return func
 
         return deco
+
+    async def on_error(self, error):
+        if "on_error" in self._listeners:
+            return
+
+        traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
     async def start(self):
         """|coro|

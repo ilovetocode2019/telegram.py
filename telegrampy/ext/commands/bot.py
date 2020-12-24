@@ -138,6 +138,8 @@ class Bot(telegrampy.Client):
 
     async def get_context(self, message: telegrampy.Message):
         """
+        |coro|
+    
         Gets context for a given message.
 
         Parameters
@@ -433,8 +435,6 @@ class Bot(telegrampy.Client):
         return command
 
     async def on_command_error(self, ctx, error):
-        """The default command error handler."""
-
         if self._listeners.get("on_command_error"):
             return
 
