@@ -77,7 +77,7 @@ class Chat(TelegramObject):
         ----------
         content: :class:`str`
             The content of the message to send.
-        file: :class:`telegrampy.Document`
+        file: :class:`telegrampy.File`
             The file to send.
         parse_mode: :class:`str`
             The parse mode of the message to send.

@@ -26,7 +26,23 @@ from io import BytesIO
 
 
 class File:
-    """A file to send."""
+    """
+    Any file to send.
+
+    Parameters
+    ----------
+    file: :class:`io.BytesIO`
+        The document.
+    filename: :class:`str`
+        The filename of the document.
+
+    Attributes
+    ----------
+    file: :class:`io.BytesIO`
+        The document.
+    filename: Optional[:class:`str`]
+        The filename of the document.
+    """
 
     def __init__(self, file: BytesIO, filename: str = None):
         self.file = file
