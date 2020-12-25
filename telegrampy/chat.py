@@ -148,8 +148,7 @@ class Chat(TelegramObject):
         await self._http.send_chat_action(chat_id=self.id, action=action)
 
     def action(self, action: str):
-        """|coro|
-
+        """
         Returns a context manager that sends a chat action until the with statment is completed.
 
         Parameters

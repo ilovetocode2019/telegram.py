@@ -133,8 +133,7 @@ class Context:
         await self.chat.send_action(action)
 
     def action(self, action: str):
-        """|coro|
-
+        """
         Returns a context manager that sends a chat action until the with statment is completed.
 
         Parameters
