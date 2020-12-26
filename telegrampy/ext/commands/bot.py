@@ -29,10 +29,10 @@ import importlib
 import sys
 
 import telegrampy
+from .errors import *
 from .core import Command
 from .cog import Cog
 from .context import Context
-from .errors import *
 from .help import HelpCommand, DefaultHelpCommand
 
 
@@ -348,6 +348,7 @@ class Bot(telegrampy.Client):
         try:
             await ctx.command.invoke(ctx)
         except Exception as exc:
+            self.command_failed = True
             await self._dispatch("command_error", ctx, exc)
         else:
             await self._dispatch("command_completion", ctx)

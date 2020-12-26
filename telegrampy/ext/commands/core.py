@@ -248,28 +248,62 @@ class Command:
                     ):
                         ctx.args.append(argument.default)
 
+    async def can_run(self, ctx):
+        """
+        |coro|
+
+        Checks if the command can run.
+
+        Parameters
+        ----------
+        ctx: :class:`telegrampy.ext.commands.Context`
+            The context invoking the command.
+
+        Returns
+        -------
+        :class:`bool`
+            A boolean indicating if the command can be invoked or not.
+
+        Raises
+        ------
+        :exc:`telegrampy.ext.commands.CheckFailure`
+            A check failed.
+        """
+
+        for check in self.checks:
+            if not check(ctx):
+                return False
+
+        if self.cog:
+            if not self.cog.cog_check(ctx):
+                return False
+
+        return True
+
     async def invoke(self, ctx: Context):
         """
         |coro|
-        
+
         Invokes the command with given context.
 
         Parameters
         ----------
         ctx: :class:`telegrampy.ext.commands.Context`
-            The context to invoke the command with.
+            The context invoking the command.
+
+        Returns
+        -------
+        :class:`bool`
+            A boolean that indicates if the command can be invoked or not.
+
+        Raises
+        ------
+        :exc:`telegrampy.ext.commands.CommandError`
+            The command failed.
         """
 
-        # Checks
-        for check in self.checks:
-            if not check(ctx):
-                ctx.command_failed = True
-                raise CheckFailure("A check for this command has failed")
-
-        if self.cog:
-            if not self.cog.cog_check(ctx):
-                ctx.command_failed = True
-                raise CheckFailure("A check for this command has failed")
+        if not await self.can_run(ctx):
+            raise CheckFailure("The checks for this command failed")
 
         other_args = []
         if self.cog:

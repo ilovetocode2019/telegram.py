@@ -28,9 +28,9 @@ import typing
 
 import telegrampy
 
+from .errors import *
 from .core import Command
 from .cog import Cog
-
 
 class _HelpCommandImplementation(Command):
     """Class that interfaces with :class:`telegrampy.ext.commands.Command`."""
@@ -269,6 +269,37 @@ class DefaultHelpCommand(HelpCommand):
 
         return help_text
 
+    async def filter_commands(self, commands):
+        """
+        |coro|
+
+        Takes a list of commands and filters them.
+
+        Paramters
+        ---------
+        commands: List[:class:`telegrampy.ext.commands.Command`]
+            The commands to filter.
+
+        Returns
+        -------
+        List[:class:`telegrmpy.ext.commands.Command]
+            The filtered commands.
+        """
+
+        filtered_commands = []
+
+        async def predicate(command):
+            try:
+                return await command.can_run(self.ctx)
+            except CommandError:
+                return False
+
+        for command in commands:
+            if not command.hidden and await predicate(command):
+                filtered_commands.append(command)
+
+        return filtered_commands
+
     async def send_help_text(self, help_text):
         message = "\n".join(help_text)
         await self.ctx.send(message, parse_mode="HTML")
@@ -293,11 +324,10 @@ class DefaultHelpCommand(HelpCommand):
 
         # Now we can add the commands to the page.
         for category, commands in to_iterate:
-            commands = (
-                sorted(commands, key=lambda c: c.name)
-                if self.sort_commands
-                else list(commands)
-            )
+            commands = await self.filter_commands(sorted(commands, key=lambda c: c.name) if self.sort_commands else list(commands))
+            if not commands:
+                continue
+
             added = await self.format_commands(commands, heading=category)
             if added:
                 help_text.extend(added)
@@ -319,7 +349,9 @@ class DefaultHelpCommand(HelpCommand):
             help_text.append(html.escape(cog.description))
             help_text.append("")  # blank line
 
-        help_text.extend(await self.format_commands(cog.commands, heading="Commands"))
+        commands = await self.filter_commands(cog.commands)
+
+        help_text.extend(await self.format_commands(commands, heading="Commands"))
 
         note = self.get_ending_note()
         if note:
