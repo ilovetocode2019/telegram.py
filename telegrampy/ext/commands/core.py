@@ -182,7 +182,7 @@ class Command:
 
         # Prepare input
         text, = ctx.message.content.split(" ", 1)[1:] or ("",)
-        parser = ArgumentIterator(text)
+        parser = ArgumentParser(text)
 
         # Eat cog parameter if any
         if self.cog:
@@ -291,7 +291,7 @@ class Command:
             ctx.command_failed = True
             raise CommandInvokeError(exc) from exc
 
-class ArgumentIterator:
+class ArgumentParser:
     def __init__(self, buffer):
         self.index = 0
         self.buffer = buffer
