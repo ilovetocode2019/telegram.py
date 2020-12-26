@@ -275,14 +275,14 @@ class DefaultHelpCommand(HelpCommand):
 
         Takes a list of commands and filters them.
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         commands: List[:class:`telegrampy.ext.commands.Command`]
             The commands to filter.
 
         Returns
         -------
-        List[:class:`telegrmpy.ext.commands.Command]
+        List[:class:`telegrmpy.ext.commands.Command`]
             The filtered commands.
         """
 
