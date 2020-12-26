@@ -102,6 +102,9 @@ Exceptions
 .. autoclass:: telegrampy.ext.commands.BadArgument
     :members:
 
+.. autoclass:: telegrampy.ext.commands.ExpectedClosingQuote
+    :members:
+
 .. autoclass:: telegrampy.ext.commands.CheckFailure
     :members:
 

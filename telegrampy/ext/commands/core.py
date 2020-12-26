@@ -153,100 +153,75 @@ class Command:
 
         self.checks.remove(func)
 
-    async def _convert_arg(self, ctx, typehint, arg):
-        # Go through the possible telegram objects and try to find the needed converter
-        if typehint == User:
+    async def _convert_argument(self, ctx, argument, param):
+        # Attempt to get converter
+        if param.annotation == User:
             converter = UserConverter()
-        elif typehint == Chat:
+        elif param.annotation == Chat:
             converter = ChatConverter()
-
-        # Otherwise just set the converter to the typehing
         else:
-            converter = typehint
+            converter = param.annotation
 
-        # Attempt to convert the arg
+        # Attempt to convert the argument
         try:
             if isinstance(converter, Converter):
-                return await converter.convert(ctx, arg)
+                return await converter.convert(ctx, argument)
             else:
-                return converter(arg)
+                return converter(argument)
         except Exception as exc:
             # If the error is already BadArgument just re-raise the error
             if isinstance(exc, BadArgument):
                 raise
             # Otherwise take the converter and given argument and raise a generic BadArgument error
-            raise BadArgument(arg, typehint.__name__) from None
+            raise BadArgument(arg, param.annotation.__name__) from None
 
+    async def _parse_arguments(self, ctx):
+        # Prepare parameters
+        ctx.args = [ctx] if not self.cog else [self.cog, ctx]
+        iterator = iter(self.params.items())
 
-    async def _parse_args(self, ctx: Context):
-        given_args = ctx.message.content.split(" ")
-        given_args.pop(0)
+        # Prepare input
+        text, = ctx.message.content.split(" ", 1)[1:] or ("",)
+        parser = ArgumentIterator(text)
 
-        if ctx.command:
-            takes_args = [
-                x[1]
-                for x in list(
-                    self.params.copy().items()
-                )
-            ]
-            if ctx.command.cog and takes_args:
-                takes_args.pop(0)
-            if takes_args:
-                takes_args.pop(0)
+        # Eat cog parameter if any
+        if self.cog:
+            try:
+               next(iterator)
+            except StopIteration:
+                raise CommandError(f"Callback for {self} command is missing 'self' parameter")
 
-            # Iter through the arguments
-            for counter, argument in enumerate(takes_args):
-                try:
-                    # If argument can be positional, give one arg
-                    if argument.kind in (
-                        inspect._ParameterKind.POSITIONAL_OR_KEYWORD,
-                        inspect._ParameterKind.POSITIONAL_ONLY,
-                    ):
-                        give = given_args[0]
-                        converter = argument.annotation
-                        # If the argument as a converter, try and convert
-                        if converter != inspect._empty:
-                            value = await self._convert_arg(ctx, converter, give)
-                        else:
-                            value = give
-                        ctx.args.append(value)
-                        given_args.pop(0)
+        # Eat ctx parameter        
+        try:
+            next(iterator)
+        except StopIteration:
+            raise CommandError(f"Callback for {self} command is missing 'ctx' parameter")
 
-                    # If argument is a keyword argument, give the rest of the arguments
-                    elif argument.kind == inspect._ParameterKind.KEYWORD_ONLY:
-                        give = " ".join(given_args)
-                        if give == "":
-                            raise IndexError()
+        # The remaining parameters in the iterator need to be filled with arguments
+        for name, param in iterator:
+            if param.kind == inspect._ParameterKind.POSITIONAL_OR_KEYWORD:
+                argument = parser.argument()
+                if argument and param.annotation != inspect._empty:
+                    argument = await self._convert_argument(ctx, argument, param)
+                elif not argument and param.default == inspect._empty:
+                    raise MissingRequiredArgument(param)
 
-                        converter = argument.annotation
-                        # If the argument has a converter, try and convert
-                        if converter != inspect._empty:
-                            value = await self._convert_arg(ctx, converter, give)
-                        else:
-                            value = give
-                        ctx.kwargs[argument.name] = value
+                ctx.args.append(argument or param.default)
 
-                    elif argument.kind == inspect._ParameterKind.VAR_POSITIONAL:
-                        if len(given_args) == 0:
-                            raise IndexError()
-                        for give in given_args:
-                            converter = argument.annotation
-                            if converter != inspect._empty:
-                                value = await self._convert_arg(ctx, converter, give)
-                            else:
-                                value = give
-                            ctx.args.append(value)
+            elif param.kind == inspect._ParameterKind.KEYWORD_ONLY:
+                argument = parser.keyword_argument()
+                if argument and param.annotation != inspect._empty:
+                    argument = await self._convert_argument(ctx, argument, param)
+                elif not argument and param.default == inspect._empty:
+                    raise MissingRequiredArgument(param)
 
-                except IndexError:
-                    # If no argument does not have a default, raise MissingRequiredArgument
-                    if argument.default == inspect._empty:
-                        raise MissingRequiredArgument(argument.name) from None
-                    # Otherwise set the argument to the default
-                    if argument.kind in (
-                        inspect._ParameterKind.POSITIONAL_OR_KEYWORD,
-                        inspect._ParameterKind.POSITIONAL_ONLY,
-                    ):
-                        ctx.args.append(argument.default)
+                ctx.kwargs[param.name] = argument or param.default
+
+            elif param.kind == inspect._ParameterKind.VAR_POSITIONAL:
+                arguments = parser.extras()
+                if param.annotation != inspect._empty:
+                    arguments = [await self._convert_argument(ctx, argument, param) for argument in arguments]
+                ctx.args.extend(arguments)
 
     async def can_run(self, ctx):
         """
@@ -270,14 +245,17 @@ class Command:
             A check failed.
         """
 
+        # Run command checks
         for check in self.checks:
             if not check(ctx):
                 return False
 
+        # Run cog check if any
         if self.cog:
             if not self.cog.cog_check(ctx):
                 return False
 
+        # When everything passes, return True
         return True
 
     async def invoke(self, ctx: Context):
@@ -305,18 +283,66 @@ class Command:
         if not await self.can_run(ctx):
             raise CheckFailure("The checks for this command failed")
 
-        other_args = []
-        if self.cog:
-            other_args.append(self.cog)
-        other_args.append(ctx)
-
-        await self._parse_args(ctx)
+        await self._parse_arguments(ctx)
 
         try:
-            return await self.callback(*other_args, *ctx.args, **ctx.kwargs)
+            return await self.callback(*ctx.args, **ctx.kwargs)
         except Exception as exc:
             ctx.command_failed = True
             raise CommandInvokeError(exc) from exc
+
+class ArgumentIterator:
+    def __init__(self, buffer):
+        self.index = 0
+        self.buffer = buffer
+        self.legnth = len(buffer)
+
+    def argument(self):
+        pos = 0
+        in_quotes = False
+        result = ""
+
+        while True:
+            try:
+                current = self.buffer[self.index + pos]
+                pos += 1
+                if current == " " and result.strip(" ") and not in_quotes:
+                    self.index += pos
+                    break
+                elif current == '"':
+                    in_quotes = True if not in_quotes else False
+                else:
+                    result += current
+
+            except IndexError:
+                self.index = self.legnth
+                if in_quotes:
+                    raise ExpectedClosingQuote("Expected a closing quote") from None
+
+                if not result.strip(" "):
+                    result = ""
+                break
+
+        return result
+
+    def keyword_argument(self):
+        result = self.buffer[self.index:]
+        self.index == self.legnth
+
+        if not result.strip(" "):
+            return ""
+        return result
+
+    def extras(self):
+        arguments = []
+        while True:
+            argument = self.argument()
+            if argument:
+                arguments.append(argument)
+            else:
+                break
+
+        return arguments
 
 def command(*args, **kwargs):
     """Turns a function into a command.

@@ -99,6 +99,13 @@ class BadArgument(CommandError):
         self.converter = converter
         super().__init__(message or f"Failed to convert '{arg}' to '{converter}'")
 
+class ExpectedClosingQuote(CommandError):
+    """
+    Raised when the argument parser expects a closing quote but can't find one.
+    """
+
+    pass
+
 class CheckFailure(CommandError):
     """Raised when a check fails."""
 
