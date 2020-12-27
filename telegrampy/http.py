@@ -229,7 +229,7 @@ class HTTPClient:
         poll_data = await self.request(Route("POST", url), data=data)
 
         if "result" in poll_data:
-            msg = Poll(poll_data["result"])
+            msg = Poll(self, poll_data["result"])
 
     async def send_chat_action(self, chat_id: int, action: str):
         """Sends a chat action to a chat."""

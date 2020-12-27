@@ -23,9 +23,24 @@ SOFTWARE.
 """
 
 from .user import User
+from .abc import TelegramObject
 
-class Poll:
+class Poll(TelegramObject):
     """A Telegram poll.
+
+    .. container:: operations
+
+        .. describe:: x == y
+
+            Checks if two polls are equal.
+
+        .. describe:: x != y
+
+            Checks if two polls are not equal.
+
+        .. describe:: str(x)
+
+            Returns the poll's title.
 
     Attributes
     ----------
@@ -47,11 +62,8 @@ class Poll:
         If the poll allows multiple answers.
     """
 
-    def __init__(self, data):
-        self._data = data
-
-        self.id = data.get("id")
-
+    def __init__(self, http, data):
+        super().__init__(http, data)
         self.question = data.get("question")
         self.options = data.get("options")
         self.total_voter_count = data.get("total_voter_count")
@@ -59,6 +71,9 @@ class Poll:
         self.is_anonymous = data.get("is_anoymous")
         self.type = data.get("type")
         self.allow_multiple_answers = data.get("allow_multiple_answers")
+
+    def __str__(self):
+        return self.question
 
 class PollAnswer:
     """An answer to a non-anonymous poll.

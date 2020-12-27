@@ -185,7 +185,7 @@ class Client:
             message = Message(self.http, update["edited_channel_post"])
             await self._dispatch("post_edit", message)
         elif "poll" in update:
-            poll = Poll(update["poll"])
+            poll = Poll(self.http, update["poll"])
             await self._dispatch("poll", poll)
         elif "poll_answer" in update:
             answer = PollAnswer(update["poll_answer"])
