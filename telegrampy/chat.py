@@ -157,7 +157,7 @@ class Chat(TelegramObject):
             The action to send.
         """
 
-        return ChatActionSender(self.c, action)
+        return ChatActionSender(self, action)
 
     async def get_member(self, user_id: int):
         """|coro|
