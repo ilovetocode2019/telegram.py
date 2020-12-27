@@ -201,13 +201,29 @@ class Bot(telegrampy.Client):
         if extension in self.extensions:
             raise ExtensionAlreadyLoaded(extension)
 
-        lib = importlib.import_module(extension)
+        # Attempt to import the extension
+        try:
+            lib = importlib.import_module(extension)
+        except ModuleNotFoundError:
+            raise ExtensionNotFound(extension) from None
+        except Exception as exc:
+            raise ExtensionFailed(extension, exc) from exc
+
+        # Attempt to get setup function
+        try:
+            setup = getattr(lib, "setup")
+        except AttributeError:
+            self._cleanup_extension(lib)
+            raise NoEntryPointError(extension) from None
+
+        # Attempt to setup extension
+        try:
+            setup(self)
+        except Exception as exc:
+            self._cleanup_extension(lib)
+            raise ExtensionFailed(extension, exc) from exc
+
         self.extensions[lib.__name__] = lib
-
-        if not hasattr(lib, "setup"):
-            raise AttributeError("Extension has no setup function")
-
-        lib.setup(self)
 
     def unload_extension(self, extension: str):
         """

@@ -49,11 +49,11 @@ class UserConverter(Converter):
         try:
             arg = int(arg)
         except ValueError:
-            raise BadArgument(arg, User, "Argument is not an ID")
+            raise BadArgument(f"User '{arg}' is not an ID")
         try:
             return await ctx.chat.get_member(arg)
         except HTTPException:
-            raise BadArgument(arg, User, "Failed to fetch user")
+            raise BadArgument(f"User '{arg}' not found")
 
 class ChatConverter(Converter):
     """
@@ -64,8 +64,8 @@ class ChatConverter(Converter):
         try:
             arg = int(arg)
         except ValueError:
-            raise BadArgument(arg, Chat, "Argument is not an ID")
+            raise BadArgument(f"Chat '{arg}' is not an ID")
         try:
             return await ctx.bot.get_chat(arg)
         except HTTPException:
-            raise BadArgument(arg, Chat, "Failed to fetch chat")
+            raise BadArgument(f"Chat '{arg}' is not found")

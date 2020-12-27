@@ -90,16 +90,34 @@ Exceptions
 .. autoclass:: telegrampy.ext.commands.CommandRegistrationError
     :members:
 
-.. autoclass:: telegrampy.ext.commands.ExtensionNotLoaded
+.. autoclass:: telegrampy.ext.commands.ExtensionError
     :members:
 
 .. autoclass:: telegrampy.ext.commands.ExtensionAlreadyLoaded
+    :members:
+
+.. autoclass:: telegrampy.ext.commands.ExtensionNotLoaded
+    :members:
+
+.. autoclass:: telegrampy.ext.commands.NoEntryPointError
+    :members:
+
+..autoclass:: telegrampy.ext.commands.ExtensionNotFound
+    :members:
+
+.. autoclass:: telegrampy.ext.commands.ExtensionFailed
+    :members:
+
+.. autoclass:: telegrampy.ext.commands.UserInputError
     :members:
 
 .. autoclass:: telegrampy.ext.commands.MissingRequiredArgument
     :members:
 
 .. autoclass:: telegrampy.ext.commands.BadArgument
+    :members:
+
+.. autoclass:: telegrampy.ext.commands.ArgumentParsingError
     :members:
 
 .. autoclass:: telegrampy.ext.commands.ExpectedClosingQuote
@@ -111,11 +129,11 @@ Exceptions
 .. autoclass:: telegrampy.ext.commands.NotOwner
     :members:
 
-.. autoclass:: telegrampy.ext.commands.CommandInvokeError
-    :members:
-
 .. autoclass:: telegrampy.ext.commands.PrivateChatOnly
     :members:
 
 .. autoclass:: telegrampy.ext.commands.GroupOnly
+    :members:
+
+.. autoclass:: telegrampy.ext.commands.CommandInvokeError
     :members:

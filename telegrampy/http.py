@@ -129,6 +129,11 @@ class HTTPClient:
                 else:
                     raise HTTPException(resp, (data).get("description"))
 
+        if resp.status >= 500:
+            raise ServerError(resp, data.get("description"))
+        else:
+            raise HTTPException(resp, data.get("description"))
+
     async def send_message(self, chat_id: int, content: str, parse_mode: str = None, reply_message_id: int = None):
         """Sends a message to a chat."""
 

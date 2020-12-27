@@ -106,3 +106,6 @@ Exceptions
 
 .. autoclass:: Conflict
     :members:
+
+.. autoclass:: ServerError
+    :members:

@@ -154,26 +154,40 @@ class Command:
         self.checks.remove(func)
 
     async def _convert_argument(self, ctx, argument, param):
-        # Attempt to get converter
-        if param.annotation == User:
-            converter = UserConverter()
-        elif param.annotation == Chat:
-            converter = ChatConverter()
+        # Get the converter for the argument
+        if param.annotation == inspect._empty:
+            converter = str if param.default == inspect._empty or param.default is None else type(param.default)
         else:
             converter = param.annotation
+            if converter == User:
+                converter = UserConverter()
+            elif converter == Chat:
+                converter = ChatConverter()
 
-        # Attempt to convert the argument
-        try:
-            if isinstance(converter, Converter):
+        # If the converter is a subclass of Converter, then create an instance
+        if inspect.isclass(converter) and issubclass(converter, Converter):
+            converter = converter()
+ 
+        # If the converter is a Converter instance, use the convert method to convert
+        if isinstance(converter, Converter):
+            try:
                 return await converter.convert(ctx, argument)
-            else:
-                return converter(argument)
-        except Exception as exc:
-            # If the error is already BadArgument just re-raise the error
-            if isinstance(exc, BadArgument):
+            except CommandError:
                 raise
-            # Otherwise take the converter and given argument and raise a generic BadArgument error
-            raise BadArgument(arg, param.annotation.__name__) from None
+            except Exception as exc:
+                raise ConversionError(converter, exc) from exc
+
+        # Otherwise just use the converter as a callable
+        try:
+            return converter(argument)
+        except CommandError:
+            raise
+        except Exception as exc:
+            try:
+                name = converter.__name__
+            except AttributeError:
+                name = converter.__class__.__name__
+            raise BadArgument(f"Converting to '{name}' failed for parameter '{param.name}'") from exc
 
     async def _parse_arguments(self, ctx):
         # Prepare parameters
@@ -201,7 +215,7 @@ class Command:
         for name, param in iterator:
             if param.kind == inspect._ParameterKind.POSITIONAL_OR_KEYWORD:
                 argument = parser.argument()
-                if argument and param.annotation != inspect._empty:
+                if argument:
                     argument = await self._convert_argument(ctx, argument, param)
                 elif not argument and param.default == inspect._empty:
                     raise MissingRequiredArgument(param)
@@ -210,7 +224,7 @@ class Command:
 
             elif param.kind == inspect._ParameterKind.KEYWORD_ONLY:
                 argument = parser.keyword_argument()
-                if argument and param.annotation != inspect._empty:
+                if argument:
                     argument = await self._convert_argument(ctx, argument, param)
                 elif not argument and param.default == inspect._empty:
                     raise MissingRequiredArgument(param)
@@ -219,8 +233,7 @@ class Command:
 
             elif param.kind == inspect._ParameterKind.VAR_POSITIONAL:
                 arguments = parser.extras()
-                if param.annotation != inspect._empty:
-                    arguments = [await self._convert_argument(ctx, argument, param) for argument in arguments]
+                arguments = [await self._convert_argument(ctx, argument, param) for argument in arguments]
                 ctx.args.extend(arguments)
 
     async def can_run(self, ctx):
@@ -317,7 +330,7 @@ class ArgumentParser:
             except IndexError:
                 self.index = self.legnth
                 if in_quotes:
-                    raise ExpectedClosingQuote("Expected a closing quote") from None
+                    raise ExpectedClosingQuote() from None
 
                 if not result.strip(" "):
                     result = ""

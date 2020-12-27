@@ -31,6 +31,8 @@ class HTTPException(TelegramException):
     """
     Raised when an HTTP request fails.
 
+    This inherits from :exc:`telegrampy.TelegramException`.
+
     Attributes
     ----------
     response: :class:`aiohttp.ClientResponse`
@@ -39,25 +41,44 @@ class HTTPException(TelegramException):
        The message for the request that failed.
     """
 
-    def __init__(self, response, message=""):
+    def __init__(self, response, message):
         self.response = response
         self.message = message
         super().__init__(f"{response.status} {message}")
 
 class InvalidToken(HTTPException):
-    """Raised when a token is invalid."""
+    """
+    Raised when a token is invalid.
 
-    def __init__(self, response, message=""):
-        super().__init__(response, message)
+    This inherits from :exc:`telegrampy.HTTPException`.
+    """
+
+    pass
 
 class Forbidden(HTTPException):
-    """Raised when something is forbidden."""
+    """
+    Raised when something is forbidden.
 
-    def __init__(self, response, message=""):
-        super().__init__(response, message)
+    This inherits from :exc:`telegrampy.HTTPException`.
+    """
+
+    pass
 
 class Conflict(HTTPException):
-    """Raised when another instance of the bot is running."""
+    """
+    Raised when another instance of the bot is running.
 
-    def __init__(self, response, message=""):
-        super().__init__(response, message)
+    This inherits from :exc:`telegrampy.HTTPException`.
+    """
+
+    pass
+
+class ServerError(HTTPException):
+    """
+    Raised when telegram returns a 500 error.
+
+    This inherits from :exc:`telegrampy.HTTPException`.
+    """
+
+    pass
+    
