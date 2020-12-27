@@ -69,7 +69,7 @@ Context
 
 Converters
 ----------
-..autoclass:: telegrampy.ext.commands.Converters
+..autoclass:: telegrampy.ext.commands.Converter
     :members:
 
 .. autoclass:: telegrampy.ext.commands.UserConverter
