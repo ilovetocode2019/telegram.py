@@ -98,11 +98,10 @@ class Chat(TelegramObject):
         if not file:
             return await self._http.send_message(chat_id=self.id, content=content, parse_mode=parse_mode)
         else:
-            if isinstance(file, Document):
-                return await self._http.send_document(chat_id=self.id, document=file.file, filename=file.filename)
-
-            elif isinstance(file, Photo):
+            if isinstance(file, Photo):
                 return await self._http.send_photo(chat_id=self.id, photo=file.file, filename=file.filename, caption=file.caption)
+            elif isinstance(file, Document):
+                return await self._http.send_document(chat_id=self.id, document=file.file, filename=file.filename)
 
     async def send_poll(self, question: str, options: list):
         """|coro|
