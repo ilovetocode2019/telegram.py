@@ -26,6 +26,7 @@ setuptools.setup(
         "Issue tracker": "https://github.com/ilovetocode2019/telegram.py/issues",
     },
     version=version,
+    lisence="MIT",
     packages=["telegrampy", "telegrampy/ext/commands"],
     install_requires=requirements,
     extras_require={
@@ -38,12 +39,17 @@ setuptools.setup(
     },
     classifiers=[
         "Development Status :: 3 - Alpha",
+        "License :: OSI Approved :: MIT License",
+        "Intended Audience :: Developers",
+        "Natural Language :: English",
+        "Operating System :: OS Independent",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
-        "License :: OSI Approved :: MIT License",
-        "Intended Audience :: Developers",
-        "Operating System :: OS Independent",
+        "Topic :: Internet",
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Topic :: Utilities"
     ],
     python_requires=">=3.7",
 )
