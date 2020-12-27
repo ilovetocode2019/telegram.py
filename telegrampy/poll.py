@@ -40,7 +40,7 @@ class Poll(TelegramObject):
 
         .. describe:: str(x)
 
-            Returns the poll's title.
+            Returns the poll's question.
 
     Attributes
     ----------
