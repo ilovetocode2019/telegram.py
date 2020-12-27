@@ -98,6 +98,9 @@ Exceptions
 .. autoclass:: HTTPException
     :members:
 
+.. autoclass:: BadRequest
+    :members:
+
 .. autoclass:: InvalidToken
     :members:
 

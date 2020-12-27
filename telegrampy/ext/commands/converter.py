@@ -25,7 +25,7 @@ SOFTWARE.
 from .errors import BadArgument
 from telegrampy.chat import Chat
 from telegrampy.user import User
-from telegrampy.errors import HTTPException
+from telegrampy.errors import HTTPException, BadRequest
 
 class Converter:
     """
@@ -52,8 +52,10 @@ class UserConverter(Converter):
             raise BadArgument(f"User '{arg}' is not an ID")
         try:
             return await ctx.chat.get_member(arg)
-        except HTTPException:
-            raise BadArgument(f"User '{arg}' not found")
+        except BadRequest as exc:
+            raise BadArgument(f"User '{arg}' not found") from exc
+        except HTTPException as exc:
+            raise BadArgument(f"Error while fetching user '{arg}'") from exc
 
 class ChatConverter(Converter):
     """
@@ -67,5 +69,7 @@ class ChatConverter(Converter):
             raise BadArgument(f"Chat '{arg}' is not an ID")
         try:
             return await ctx.bot.get_chat(arg)
-        except HTTPException:
-            raise BadArgument(f"Chat '{arg}' is not found")
+        except BadRequest as exc:
+            raise BadArgument(f"Chat '{arg}' is not found") from exc
+        except HTTPException as exc:
+            raise BadArgument(f"Error while fetching chat '{arg}'") from exc

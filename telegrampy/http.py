@@ -113,21 +113,28 @@ class HTTPClient:
                     await asyncio.sleep(retry_after)
                     continue
 
+                # Unauthorized
+                if resp.status == 400:
+                    raise BadRequest(resp, data.get("description"))
+                elif resp.status == 401:
+                    raise InvalidToken(resp, data.get("description"))
                 # Forbidden
-                if resp.status == 403:
+                elif resp.status == 403:
                     raise Forbidden(resp, data.get("description"))
-                # Bad token
-                elif resp.status in (401, 404):
+                # Not found
+                if resp.status == 404:
                     raise InvalidToken(resp, data.get("description"))
                 # Conflict with other request
                 elif resp.status == 409:
                     raise Conflict(resp, data.get("description"))
                 # Some sort of internal Telegram error
-                if resp.status in [500, 502, 503, 504]:
+                if resp.status >= 500:
                     await asyncio.sleep((1 + tries) * 2)
                     continue
                 else:
                     raise HTTPException(resp, (data).get("description"))
+
+        log.debug(f"Request to to {method}:{url} failed with status code {resp.status}")
 
         if resp.status >= 500:
             raise ServerError(resp, data.get("description"))

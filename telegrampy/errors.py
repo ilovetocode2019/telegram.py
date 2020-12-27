@@ -46,6 +46,15 @@ class HTTPException(TelegramException):
         self.message = message
         super().__init__(f"{response.status} {message}")
 
+class BadRequest(HTTPException):
+    """
+    Raised when a bad request is made.
+
+    This inherits from :exc:`telegrampy.HTTPException`.
+    """
+
+    pass
+
 class InvalidToken(HTTPException):
     """
     Raised when a token is invalid.
