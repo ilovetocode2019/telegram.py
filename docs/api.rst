@@ -12,10 +12,6 @@ Client
 Events
 ~~~~~~
 
-.. function:: on_ready()
-
-    Called when the bot is ready to receive updates.
-
 .. function:: on_message(message: telegrampy.Message)
 
     Called when a message is sent.

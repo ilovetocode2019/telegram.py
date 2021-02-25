@@ -158,12 +158,16 @@ class Bot(telegrampy.Client):
             The command specified was not found.
         """
 
+        if not hasattr(self, "_username"):
+            me = await self.get_me()
+            self._username = me.username
+
         content = message.content.split(" ")[0]
         command = None
         invoked_with = None
         if content.startswith("/"):
             splited = content.split("@")
-            if len(splited) == 1 or (len(splited) != 1 and splited[1] == self.user.username):
+            if len(splited) == 1 or (len(splited) != 1 and splited[1] == self._username):
                 invoked_with = splited[0][1:]
                 command = self.get_command(invoked_with)
 

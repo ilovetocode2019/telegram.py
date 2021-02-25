@@ -57,8 +57,6 @@ class Client:
         The API token.
     loop: :class:`asyncio.BaseEventLoop`
         The event loop that the bot is running on.
-    user: Optional[:class:`telegrampy.User`]
-        The state of the bot account upon startup. None if the bot hasn't started yet.
     """
 
     def __init__(self, token: str, **options):
@@ -66,7 +64,7 @@ class Client:
         self.loop = options.get("loop") or asyncio.get_event_loop()
         self.http = HTTPClient(token=token, loop=self.loop)
 
-        wait = options.get("wait") or 5
+        wait = options.get("wait") or 10
         if wait < 1 or wait > 10:
             raise ValueError("Wait time must be between 1 and 10")
 
@@ -81,7 +79,7 @@ class Client:
     async def get_me(self):
         """|coro|
 
-        Fetches the bot user.
+        Fetches the bot account.
 
         Returns
         -------
@@ -120,9 +118,6 @@ class Client:
         return await self.http.get_chat(chat_id=chat_id)
 
     async def _poll(self):
-        log.info("Fetching bot user")
-        self.user = await self.get_me()
-
         # Get last update id
         log.info("Fetching unread updates")
         try:
@@ -138,7 +133,6 @@ class Client:
                     for update in updates:
                         await self._handle_update(update)
 
-        await self._dispatch("ready")
         tries = 0
 
         # Main loop
@@ -397,7 +391,7 @@ class Client:
             log.info("Running the bot")
             self.loop.run_until_complete(self._poll())
         except KeyboardInterrupt:
-            log.info("Received KeyboardInterrupt, Stopping bot")
+            log.info("Received signal to stop bot")
             self.loop.run_until_complete(self.stop())
 
         self._clean_tasks()
