@@ -46,10 +46,10 @@ class Client:
         The API token.
     loop: :class:`asyncio.BaseEventLoop`
         The event loop to use for the bot. Uses :func:`asyncio.get_event_loop` is none is specified.
-    read_unread_updates: :class:`bool`
-        If the bot should read unread updates on startup. Defaults to False.
     wait: :class:`int`
         The timeout in seconds for long polling. Defaults to 5.
+    read_unread_updates: :class:`bool`
+        If the bot should read unread updates on startup. Defaults to False.
 
     Attributes
     ----------
@@ -64,14 +64,14 @@ class Client:
         self.loop = options.get("loop") or asyncio.get_event_loop()
         self.http = HTTPClient(token=token, loop=self.loop)
 
-        wait = options.get("wait") or 10
+        wait = options.get("wait", 10)
         if wait < 1 or wait > 10:
             raise ValueError("Wait time must be between 1 and 10")
 
         self._running = False
         self._last_update_id = None
-        self._read_unread_updates = options.get("read_unread_updates") or False
         self._wait = wait
+        self.read_unread_updates = options.get("read_unread_updates", False)
 
         self._listeners = {}
         self._waiting_for = {}
