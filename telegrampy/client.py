@@ -71,7 +71,7 @@ class Client:
         self._running = False
         self._last_update_id = None
         self._wait = wait
-        self.read_unread_updates = options.get("read_unread_updates", False)
+        self._read_unread_updates = options.get("read_unread_updates", False)
 
         self._listeners = {}
         self._waiting_for = {}
