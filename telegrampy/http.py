@@ -260,25 +260,25 @@ class HTTPClient:
             return User(self, user_data["result"].get("user"))
 
     async def get_me(self):
-        url = self._base_url + "getMe"
+        """Fetches the bot account."""
 
+        url = self._base_url + "getMe"
         me_data = await self.request(Route("GET", url))
 
         if "result" in me_data:
             return User(self, me_data["result"])
 
-    async def get_updates(self, offset=None, timeout=0):
+    async def get_updates(self, offset=None, limit=100, timeout=0, allowed_updates=None):
         """
         Fetches the new updates for the bot.
         """
 
         url = self._base_url + "getUpdates"
+        data = {"offset": offset, "limit": limit, "timeout": timeout, "allowed_updates": allowed_updates}
+        updates_data = await self.request(Route("POST", url), data=data)
 
-
-        data = await self.request(Route("POST", url), data={"offset": offset, "timeout": timeout})
-
-        self._last_update_time = datetime.datetime.now()
-        return data["result"]
+        if "result" in updates_data:
+            return updates_data["result"]
 
     async def close(self):
         """Closes the connection."""
