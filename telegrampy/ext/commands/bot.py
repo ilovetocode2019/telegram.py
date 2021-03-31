@@ -362,16 +362,16 @@ class Bot(telegrampy.Client):
     async def invoke(self, ctx):
         if not ctx.command:
             exc = CommandNotFound(f"Command '{ctx.invoked_with}' is not found")
-            return await self._dispatch("command_error", ctx, exc)
+            return self.dispatch("command_error", ctx, exc)
 
-        await self._dispatch("command", ctx)
+        self.dispatch("command", ctx)
         try:
             await ctx.command.invoke(ctx)
         except Exception as exc:
             self.command_failed = True
-            await self._dispatch("command_error", ctx, exc)
+            self.dispatch("command_error", ctx, exc)
         else:
-            await self._dispatch("command_completion", ctx)
+            self.dispatch("command_completion", ctx)
 
     def command(self, *args, **kwargs):
         """

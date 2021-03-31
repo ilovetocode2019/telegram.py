@@ -164,26 +164,26 @@ class Client:
     async def _handle_update(self, update):
         update_id = update["update_id"]
 
-        await self._dispatch("raw_update", update)
+        self.dispatch("raw_update", update)
 
         if "message" in update:
             message = Message(self.http, update["message"])
-            await self._dispatch("message", message)
+            self.dispatch("message", message)
         elif "edited_message" in update:
             message = Message(self.http, update["edited_message"])
-            await self._dispatch("message_edit", message)
+            self.dispatch("message_edit", message)
         elif "channel_post" in update:
             message = Message(self.http, update["channel_post"])
-            await self._dispatch("post", message)
+            self.dispatch("post", message)
         elif "edited_channel_post" in update:
             message = Message(self.http, update["edited_channel_post"])
-            await self._dispatch("post_edit", message)
+            self.dispatch("post_edit", message)
         elif "poll" in update:
             poll = Poll(self.http, update["poll"])
-            await self._dispatch("poll", poll)
+            self.dispatch("poll", poll)
         elif "poll_answer" in update:
             answer = PollAnswer(update["poll_answer"])
-            await self._dispatch("poll_answer", answer)
+            self.dispatch("poll_answer", answer)
         else:
             log.warning(f"Received an unknown update ({update_id}): {update}")
 
@@ -191,10 +191,11 @@ class Client:
         try:
             await func(*args, **kwargs)
         except Exception as exc:
-            await self._dispatch("error", exc)
+            self.dispatch("error", exc)
 
-    async def _dispatch(self, event, *args):
+    def dispatch(self, event, *args):
         log.debug(f"Dispatchng {event} with {args}")
+
         # Handle the active wait_fors
         waiting_for = self._waiting_for.get(event)
         if waiting_for:
