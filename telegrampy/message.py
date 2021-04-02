@@ -149,7 +149,7 @@ class Message(TelegramObject):
             Editing the message failed.
         """
 
-        await self._http.edit_message_content(chat_id=self.chat.id, message_id=self.id, content=content, parse_mode=parse_mode)
+        return await self._http.edit_message_content(chat_id=self.chat.id, message_id=self.id, content=content, parse_mode=parse_mode)
 
     async def delete(self):
         """|coro|

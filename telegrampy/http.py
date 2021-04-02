@@ -25,8 +25,9 @@ SOFTWARE.
 import asyncio
 import datetime
 import json
-import sys
+import io
 import logging
+import sys
 
 import aiohttp
 
@@ -83,10 +84,7 @@ class HTTPClient:
 
         # Try a request 5 times before dropping it
         for tries in range(5):
-            if not tries:
-                log.debug(f"Requesting to {method}:{url} with {kwargs}")
-            else:
-                log.debug(f"Requesting to {method}:{url} with {kwargs} (Retry {tries+1})")
+            log.debug(f"Requesting to {method}:{url} (Attempt {tries+1})")
 
             async with self.session.request(method, url, timeout=30, **kwargs) as resp:
                 # Telegram docs say all responses will have json
@@ -152,11 +150,11 @@ class HTTPClient:
         if reply_message_id:
             data["reply_to_message_id"] = reply_message_id
 
-        message_data = await self.request(Route("POST", url), data=data)
+        response = await self.request(Route("POST", url), json=data)
 
-        if "result" in message_data:
-            msg = Message(self, message_data["result"])
-            return msg
+        if "result" in response:
+            message = Message(self, response["result"])
+            return message
 
     async def edit_message_content(self, chat_id: int, message_id: int, content: str, parse_mode: str = None):
         """Edits a message."""
@@ -167,120 +165,122 @@ class HTTPClient:
         if parse_mode:
             data["parse_mode"] = parse_mode
 
-        await self.request(Route("POST", url), data=data)
+        response = await self.request(Route("POST", url), json=data)
+
+        if response is True:
+            return
+
+        if "result" in response:
+            edited_message = Message(self, response["result"])
+            return edited_message
 
     async def delete_message(self, chat_id: int, message_id: int):
         """Deletes a message."""
 
         url = self._base_url + "deleteMessage"
         data = {"chat_id": chat_id, "message_id": message_id}
-
-        await self.request(Route("POST", url), data=data)
+        await self.request(Route("POST", url), json=data)
 
     async def forward_message(self, chat_id: int, from_chat_id: int, message_id: int):
         """Forwards a message."""
 
         url = self._base_url + "forwardMessage"
         data = {"chat_id": chat_id, "from_chat_id": from_chat_id, "message_id": message_id}
+        response = await self.request(Route("POST", url), json=data)
 
-        message_data = await self.request(Route("POST", url), data=data)
+        if "result" in response:
+            forwarded_message = Message(self, response["result"])
+            return forwarded_message
 
-        if "result" in message_data:
-            msg = Message(self, message_data["result"])
-            return msg
-
-    async def send_document(self, chat_id: int, document: Document, filename: str = None):
-        """Sends a document to a chat."""
-
-        url = self._base_url + "sendDocument"
-
-        writer = aiohttp.FormData()
-        writer.add_field("document", document, filename=filename)
-        writer.add_field("chat_id", str(chat_id))
-        message_data = await self.request(Route("POST", url), data=writer)
-
-        if "result" in message_data:
-            msg = Message(self, message_data["result"])
-            return msg
-
-    async def send_photo(self, chat_id: int, photo: Photo, filename: str = None, caption: str = None):
+    async def send_photo(self, chat_id: int, file: Photo, filename: str = None, caption: str = None):
         """Sends a photo to a chat."""
 
         url = self._base_url + "sendPhoto"
         writer = aiohttp.FormData()
         writer.add_field("chat_id", str(chat_id))
-        writer.add_field("photo", photo, filename=filename)
+        writer.add_field("photo", file, filename=filename)
 
         if caption:
             writer.add_field("caption", caption)
 
-        message_data = await self.request(Route("POST", url), data=writer)
+        response = await self.request(Route("POST", url), data=writer)
 
-        if "result" in message_data:
-            msg = Message(self, message_data["result"])
-            return msg
+        if "result" in response:
+            message = Message(self, response["result"])
+            return message
+
+    async def send_document(self, chat_id: int, file: io.BytesIO, filename: str = None):
+        """Sends a document to a chat."""
+
+        url = self._base_url + "sendDocument"
+        writer = aiohttp.FormData()
+        writer.add_field("chat_id", str(chat_id))
+        writer.add_field("document", file, filename=filename)
+
+        response = await self.request(Route("POST", url), data=writer)
+
+        if "result" in response:
+            message = Message(self, response["result"])
+            return message
 
     async def send_poll(self, chat_id: int, question: str, options: list):
         """Sends a poll to a chat."""
 
         url = self._base_url + "sendPoll"
         data = {"chat_id": chat_id, "question": question, "options": json.dumps(options)}
+        response = await self.request(Route("POST", url), json=data)
 
-        poll_data = await self.request(Route("POST", url), data=data)
-
-        if "result" in poll_data:
-            msg = Poll(self, poll_data["result"])
+        if "result" in response:
+            message = Poll(self, response["result"])
+            return message
 
     async def send_chat_action(self, chat_id: int, action: str):
         """Sends a chat action to a chat."""
 
         url = self._base_url + "sendChatAction"
         data = {"chat_id": chat_id, "action": action}
-
-        chat_action_data = await self.request(Route("POST", url), data=data)
+        await self.request(Route("POST", url), json=data)
 
     async def get_chat(self, chat_id: int):
         """Fetches a chat."""
 
         url = self._base_url + "getChat"
         data = {"chat_id": chat_id}
-        chat_data = await self.request(Route("GET", url), data=data)
+        response = await self.request(Route("GET", url), json=data)
 
-        if "result" in chat_data:
-            return Chat(self, chat_data["result"])
+        if "result" in response:
+            return Chat(self, response["result"])
 
     async def get_chat_member(self, chat_id: int, user_id: int):
         """Fetches a member from a chat."""
 
         url = self._base_url + "getChatMember"
         data = {"chat_id": chat_id, "user_id": user_id}
-        user_data = await self.request(Route("GET", url), data=data)
+        response = await self.request(Route("GET", url), json=data)
 
-        if "result" in user_data:
-            return User(self, user_data["result"].get("user"))
+        if "result" in response:
+            return User(self, response["result"].get("user"))
 
     async def get_me(self):
         """Fetches the bot account."""
 
         url = self._base_url + "getMe"
-        me_data = await self.request(Route("GET", url))
+        response = await self.request(Route("GET", url))
 
-        if "result" in me_data:
-            return User(self, me_data["result"])
+        if "result" in response:
+            return User(self, response["result"])
 
     async def get_updates(self, offset=None, limit=100, timeout=0, allowed_updates=None):
-        """
-        Fetches the new updates for the bot.
-        """
+        """Fetches the new updates for the bot."""
 
         url = self._base_url + "getUpdates"
         data = {"offset": offset, "limit": limit, "timeout": timeout, "allowed_updates": allowed_updates}
-        updates_data = await self.request(Route("POST", url), data=data)
+        response = await self.request(Route("POST", url), json=data)
 
-        if "result" in updates_data:
-            return updates_data["result"]
+        if "result" in response:
+            return response["result"]
 
     async def close(self):
-        """Closes the connection."""
+        """Closes the HTTP session."""
 
         await self.session.close()

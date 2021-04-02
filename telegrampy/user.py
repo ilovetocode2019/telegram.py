@@ -146,7 +146,7 @@ class User(TelegramObject):
         content: :class:`str`
             The content of the message to send.
         file: :class:`telegrampy.Document`
-            The file to send
+            The file to send.
         parse_mode: :class:`str`
             The parse mode of the message to send.
 
@@ -165,6 +165,6 @@ class User(TelegramObject):
             return await self._http.send_message(chat_id=self.id, content=content, parse_mode=parse_mode)
         else:
             if isinstance(file, Photo):
-                return await self._http.send_photo(chat_id=self.id, photo=file.file, filename=file.filename, caption=file.caption)
+                return await self._http.send_photo(chat_id=self.id, file=file.file, filename=file.filename, caption=file.caption)
             elif isinstance(file, Document):
-                return await self._http.send_document(chat_id=self.id, document=file.file, filename=file.filename)
+                return await self._http.send_document(chat_id=self.id, file=file.file, filename=file.filename)
