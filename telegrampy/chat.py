@@ -23,9 +23,10 @@ SOFTWARE.
 """
 
 import asyncio
+import io
+import typing
 
 from .errors import *
-from .file import *
 from .abc import TelegramObject
 
 
@@ -70,7 +71,7 @@ class Chat(TelegramObject):
     def __str__(self):
         return self.title
 
-    async def send(self, content: str = None, file: Document = None, parse_mode: str = None):
+    async def send(self, content: str, parse_mode: str = None):
         """|coro|
 
         Sends a message to the chat.
@@ -79,8 +80,6 @@ class Chat(TelegramObject):
         ----------
         content: :class:`str`
             The content of the message to send.
-        file: :class:`telegrampy.Document`
-            The file to send.
         parse_mode: :class:`str`
             The parse mode of the message to send.
 
@@ -95,13 +94,65 @@ class Chat(TelegramObject):
             Sending the message failed.
         """
 
-        if not file:
-            return await self._http.send_message(chat_id=self.id, content=content, parse_mode=parse_mode)
-        else:
-            if isinstance(file, Photo):
-                return await self._http.send_photo(chat_id=self.id, file=file.file, filename=file.filename, caption=file.caption)
-            elif isinstance(file, Document):
-                return await self._http.send_document(chat_id=self.id, file=file.file, filename=file.filename)
+        return await self._http.send_message(chat_id=self.id, content=content, parse_mode=parse_mode)
+
+    async def send_document(self, document: typing.Union[io.BytesIO, str], filename: str = None, caption: str = None, parse_mode: str = None):
+        """|coro|
+
+        Sends a document to the chat.
+
+        Parameters
+        ----------
+        document: Union[class:`io.BytesIO`, :class:`str`]
+            The document to send. Either a file or the path to one.
+        filename: :class:`str`
+            The filename of the document.
+        caption: :class:`str`
+            The document's caption.
+        parse_mode: :class:`str`
+            The parse mode for the caption.
+
+        Raises
+        ------
+        :exc:`errors.HTTPException`
+            Sending the document failed.
+        """
+
+        if isinstance(document, str):
+            with open(document, "rb") as file:
+                content = file.read()
+                document = io.BytesIO(content)
+
+        return await self._http.send_document(chat_id=self.id, file=document, filename=filename, caption=caption, parse_mode=parse_mode)
+
+    async def send_photo(self, photo: typing.Union[io.BytesIO, str], filename: str = None, caption: str = None, parse_mode: str = None):
+        """|coro|
+
+        Sends a photo to the chat.
+
+        Parameters
+        ----------
+        photo: Union[class:`io.BytesIO`, :class:`str`]
+            The photo to send. Either a file or the path to one.
+        filename: Optional[:class:`str`]
+            The filename of the photo.
+        caption: Optional[:class:`str`]
+            The caption for the photo.
+        parse_mode: Optional[:class:`str`]
+            The parse mode for the caption.
+
+        Raises
+        ------
+        :exc:`errors.HTTPException`
+            Sending the photo failed.
+        """
+
+        if isinstance(photo, str):
+            with open(document, "rb") as file:
+                content = file.read()
+                document = io.BytesIO(content)
+
+        return await self._http.send_photo(chat_id=self.id, file=photo, filename=filename, caption=caption, parse_mode=parse_mode)
 
     async def send_poll(self, question: str, options: list):
         """|coro|

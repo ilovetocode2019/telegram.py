@@ -36,7 +36,6 @@ from .errors import *
 from .user import User
 from .chat import Chat
 from .message import Message
-from .file import *
 from .poll import *
 
 log = logging.getLogger("telegrampy.http")
@@ -192,7 +191,7 @@ class HTTPClient:
             forwarded_message = Message(self, response["result"])
             return forwarded_message
 
-    async def send_photo(self, chat_id: int, file: Photo, filename: str = None, caption: str = None):
+    async def send_photo(self, chat_id: int, file: io.BytesIO, filename: str = None, caption: str = None, parse_mode: str = None):
         """Sends a photo to a chat."""
 
         url = self._base_url + "sendPhoto"
@@ -202,6 +201,8 @@ class HTTPClient:
 
         if caption:
             writer.add_field("caption", caption)
+        if parse_mode:
+            writer.add_field("parse_mode", parse_mode)
 
         response = await self.request(Route("POST", url), data=writer)
 
@@ -209,13 +210,18 @@ class HTTPClient:
             message = Message(self, response["result"])
             return message
 
-    async def send_document(self, chat_id: int, file: io.BytesIO, filename: str = None):
+    async def send_document(self, chat_id: int, file: io.BytesIO, filename: str = None, caption: str = None, parse_mode: str = None):
         """Sends a document to a chat."""
 
         url = self._base_url + "sendDocument"
         writer = aiohttp.FormData()
         writer.add_field("chat_id", str(chat_id))
         writer.add_field("document", file, filename=filename)
+
+        if caption:
+            writer.add_field("caption", caption)
+        if parse_mode:
+            writer.add_field("parse_mode", parse_mode)
 
         response = await self.request(Route("POST", url), data=writer)
 

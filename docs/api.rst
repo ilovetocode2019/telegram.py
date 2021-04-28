@@ -67,15 +67,6 @@ Chat
 .. autoclass:: Chat
     :members:
 
-Files
-~~~~~
-
-.. autoclass:: Document
-    :members:
-
-.. autoclass:: Photo
-   :members:
-
 Poll
 ~~~~
 

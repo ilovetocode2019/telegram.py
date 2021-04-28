@@ -21,7 +21,6 @@ from .errors import *
 from .chat import Chat
 from .user import User
 from .message import Message
-from .file import *
 from .poll import *
 
 VersionInfo = namedtuple("VersionInfo", "major minor micro releaselevel serial")
