@@ -31,9 +31,9 @@ setuptools.setup(
     install_requires=requirements,
     extras_require={
         "docs": [
-            "sphinx==2.4.3",
+            "sphinx==3.5.3",
             "sphinx-rtd-theme",
-            "sphinxcontrib_trio==1.1.1",
+            "sphinxcontrib_trio==1.1.2",
             "sphinxcontrib-websupport",
         ]
     },
