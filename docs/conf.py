@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'telegram.py'
-copyright = '2021, ilovetocode'
+copyright = '2020-2021, ilovetocode'
 
 version = ''
 with open('../telegrampy/__init__.py') as f:

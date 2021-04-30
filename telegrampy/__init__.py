@@ -3,14 +3,14 @@ telegram.py: Telegram Bot API Wrapper
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 An async API wrapper for the Telegram bot API in Python.
 
-:copyright: (c) 2020 ilovetocode
+:copyright: (c) 2020-2021 ilovetocode
 :license: MIT, see LICENSE for more details.
 """
 
 __title__ = "telegrampy"
 __author__ = "ilovetocode"
 __license__ = "MIT"
-__copyright__ = "Copyright 2020 ilovetocode"
+__copyright__ = "Copyright 2020-2021 ilovetocode"
 __version__ = "0.4.0a"
 
 from collections import namedtuple
