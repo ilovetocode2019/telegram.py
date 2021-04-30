@@ -10,16 +10,12 @@ Welcome to telegram.py!
 
 An async API wrapper for the Telegram bot API in Python.
 
-Contents
---------
+Getting Started
+---------------
 
-.. toctree::
-   :maxdepth: 2
-   
-   intro
-   quickstart
-   changelog.rst
-   api
+- :doc:`quickstart`
+- `Creating a Bot <https://core.telegram.org/bots#3-how-do-i-create-a-bot>`_
+- `Examples <https://github.com/ilovetocode2019/telegram.py>`_
 
 Extensions
 ----------
@@ -37,3 +33,14 @@ and organize commands for your bot.
     :maxdepth: 3
 
     ext/commands/index
+
+Contents
+--------
+.. toctree::
+   :maxdepth: 2
+   
+   intro
+   quickstart
+   changelog.rst
+   api
+
