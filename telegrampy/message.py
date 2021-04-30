@@ -131,7 +131,7 @@ class Message(TelegramObject):
 
         return await self._http.forward_message(chat_id=destination.id, from_chat_id=self.chat.id, message_id=self.id)
 
-    async def edit(self, content: str, parse_mode: str = None):
+    async def edit_content(self, content: str, parse_mode: str = None):
         """|coro|
 
         Edits the message.
