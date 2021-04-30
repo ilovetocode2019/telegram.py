@@ -43,20 +43,20 @@ class Client:
     Parameters
     ----------
     token: :class:`str`
-        The API token.
-    loop: :class:`asyncio.BaseEventLoop`
+        The Telegram API token for the bot.
+    loop: Optional[:class:`asyncio.BaseEventLoop`]
         The event loop to use for the bot. Uses :func:`asyncio.get_event_loop` is none is specified.
-    wait: :class:`int`
+    wait: Optional[:class:`int`]
         The timeout in seconds for long polling. Defaults to 5.
-    read_unread_updates: :class:`bool`
+    read_unread_updates: Optional[:class:`bool`]
         If the bot should read unread updates on startup. Defaults to False.
 
     Attributes
     ----------
     token: :class:`str`
-        The API token.
+        The Telegram API  token for the bot.
     loop: :class:`asyncio.BaseEventLoop`
-        The event loop that the bot is running on.
+        The event loop to use for the bot.
     """
 
     def __init__(self, token: str, **options):
