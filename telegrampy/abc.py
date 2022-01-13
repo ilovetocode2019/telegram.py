@@ -22,19 +22,34 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-class TelegramObject:
+from .http import HTTPClient
+from .mixins import Hashable
+
+from typing import (
+    Any,
+    Dict,
+    SupportsInt,
+    TYPE_CHECKING,
+    Union,
+)
+
+if TYPE_CHECKING:
+    SupportsIntCast = Union[SupportsInt, str]
+
+
+class TelegramObject(Hashable):
     """Base telegram object."""
 
-    def __init__(self, http, data):
+    def __init__(self, http: HTTPClient, data: Any) -> None:
         self._http = http
-        self._data = data
 
-        self.id = data.get("id")
+        _id = data.get("id")
+        if not _id:
+            raise TypeError("data doesn't have an id key")
 
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.id  == other.id
-
-    def __ne__(self, other):
-        if isinstance(other, self.__class__):
-            return other.id != self.id
-        return True
+        try:
+            id = int(_id)
+        except ValueError:
+            raise TypeError(f'id parameter must be convertable to int not {_id.__class__!r}') from None
+        else:
+            self.id = id

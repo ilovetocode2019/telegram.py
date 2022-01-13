@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2020 ilovetocode
+Copyright (c) 2020-2021 ilovetocode
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,43 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from __future__ import annotations
-
-import re
-from typing import Literal
-
-Version = Literal[1, 2]
-ParseMode = Literal["HTML", "Markdown", "MarkdownV2"]
+from typing import TypedDict
 
 
-def escape_markdown(text: str, *, version: Version = 2) -> str:
-    """Tool that escapes markdown from a given string.
-
-    Parameters
-    ----------
-    text: :class:`str`
-        The text to escape markdown from.
-    version: Optional[:class:`int`]
-        The Telegram markdown version to use. Only 1 and 2 are supported.
-
-    Returns
-    -------
-    :class:`str`
-        The escaped text.
-
-    Raises
-    ------
-    :exc:`ValueError`
-        An unsupported version was provided.
-    """
-
-    if version == 1:
-        characters = r"_*`["
-
-    elif version == 2:
-        characters = r"_*[]()~`>#+-=|{}.!"
-
-    else:
-        raise ValueError(f"Version '{version}' unsupported. Only version 1 and 2 are supported.")
-
-    return re.sub(f"([{re.escape(characters)}])", r"\\\1", text)
+class Chat(TypedDict):
+    title: str
+    username: str
+    description: str
+    type: int

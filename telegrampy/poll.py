@@ -22,8 +22,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
+from typing import List, TYPE_CHECKING
+
 from .user import User
 from .abc import TelegramObject
+
+if TYPE_CHECKING:
+    from .http import HTTPClient
+    from .types.poll import (
+        PollOption as PollOptionPayload,
+        Poll as PollPayload,
+        PollAnswer as PollAnswerPayload
+    )
+
 
 class Poll(TelegramObject):
     """A Telegram poll.
@@ -62,18 +75,28 @@ class Poll(TelegramObject):
         If the poll allows multiple answers.
     """
 
-    def __init__(self, http, data):
-        super().__init__(http, data)
-        self.question = data.get("question")
-        self.options = data.get("options")
-        self.total_voter_count = data.get("total_voter_count")
-        self.is_closed = data.get("is_closed")
-        self.is_anonymous = data.get("is_anoymous")
-        self.type = data.get("type")
-        self.allow_multiple_answers = data.get("allow_multiple_answers")
+    if TYPE_CHECKING:
+        question: str
+        options: List[PollOptionPayload]
+        total_voter_count: int
+        is_closed: bool
+        is_anonymous: bool
+        type: str
+        allows_multiple_answers: bool
 
-    def __str__(self):
+    def __init__(self, http: HTTPClient, data: PollPayload) -> None:
+        super().__init__(http, data)
+        self.question: str = data.get("question")
+        self.options: List[PollOptionPayload] = data.get("options")
+        self.total_voter_count: int = data.get("total_voter_count")
+        self.is_closed: bool = data.get("is_closed")
+        self.is_anonymous: bool = data.get("is_anonymous")
+        self.type: str = data.get("type")
+        self.allows_multiple_answers: bool = data.get("allows_multiple_answers")
+
+    def __str__(self) -> str:
         return self.question
+
 
 class PollAnswer:
     """An answer to a non-anonymous poll.
@@ -86,12 +109,16 @@ class PollAnswer:
         The user that answered the poll.
     option_ids: List[:class:`int`]
         The options that the user selected.
-
     """
 
-    def __init__(self, data):
+    if TYPE_CHECKING:
+        id: str
+        user: User
+        option_ids: List[int]
+
+    def __init__(self, http: HTTPClient, data: PollAnswerPayload) -> None:
         self._data = data
 
-        self.poll_id = data.get("poll_id")
-        self.user = User(data.get("user"))
-        self.option_ids = data.get("option_ids")
+        self.id: str = data.get("poll_id")
+        self.user: User = User(http, data.get("user"))
+        self.option_ids: List[int] = data.get("option_ids")
