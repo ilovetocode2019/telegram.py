@@ -22,6 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import aiohttp
+
+
 class TelegramException(Exception):
     """Base exception for all errors."""
 
@@ -41,7 +47,7 @@ class HTTPException(TelegramException):
        The message for the request that failed.
     """
 
-    def __init__(self, response, message):
+    def __init__(self, response: aiohttp.ClientResponse, message: Optional[str]):
         self.response = response
         self.message = message
         super().__init__(f"{response.status} {message}")
@@ -90,4 +96,3 @@ class ServerError(HTTPException):
     """
 
     pass
-    
