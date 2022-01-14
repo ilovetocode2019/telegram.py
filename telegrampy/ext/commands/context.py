@@ -27,14 +27,13 @@ from __future__ import annotations
 import io
 from typing import TYPE_CHECKING, Any, Coroutine, Dict, Generic, List, Optional, TypeVar, Union
 
-
 if TYPE_CHECKING:
+    from .bot import Bot
     from telegrampy.chat import Chat, ChatActionSender
     from telegrampy.message import Message
     from telegrampy.poll import Poll
     from telegrampy.user import User
     from telegrampy.utils import ParseMode
-    from .bot import Bot
     from .cog import Cog
     from .core import Command
 
@@ -43,7 +42,8 @@ if TYPE_CHECKING:
     ContextT = TypeVar("ContextT", bound="Context")
     CommandT = TypeVar("CommandT", bound="Command")
     CogT = TypeVar("CogT", bound="Cog")
-    BotT = TypeVar("BotT", bound="Bot")
+
+BotT = TypeVar("BotT", bound="Bot")
 
 
 class Context(Generic[BotT]):

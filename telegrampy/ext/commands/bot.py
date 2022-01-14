@@ -40,7 +40,6 @@ from typing import (
     TypeVar,
     Union
 )
-from typing_extensions import ParamSpec, Concatenate
 
 import telegrampy
 from .errors import *
@@ -50,6 +49,8 @@ from .context import Context
 from .help import HelpCommand, DefaultHelpCommand
 
 if TYPE_CHECKING:
+    from typing_extensions import ParamSpec, Concatenate
+
     from telegrampy import Message
 
     T = TypeVar("T")

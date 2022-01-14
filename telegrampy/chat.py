@@ -28,7 +28,6 @@ import asyncio
 import io
 
 from .errors import *
-from .http import HTTPClient
 from .message import Message
 from .abc import TelegramObject
 from .poll import Poll
@@ -46,6 +45,7 @@ from typing import (
 )
 
 if TYPE_CHECKING:
+    from .http import HTTPClient
     from .utils import ParseMode
     from .types.chat import Chat as ChatPayload
 

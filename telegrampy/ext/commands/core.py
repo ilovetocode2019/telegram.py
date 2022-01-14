@@ -26,7 +26,6 @@ from __future__ import annotations
 
 import inspect
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, Generic, List, Optional, TypeVar, Union
-from typing_extensions import ParamSpec, Concatenate
 
 import telegrampy
 from telegrampy import User, Chat
@@ -36,20 +35,26 @@ from .converter import *
 from .context import Context
 
 if TYPE_CHECKING:
+    from typing_extensions import ParamSpec, Concatenate
+
     from .bot import Bot
     from .cog import Cog
-
-    T = TypeVar("T")
-    Coro = Coroutine[Any, Any, T]
-    CoroFunc = Callable[..., Coro[Any]]
     ContextT = TypeVar("ContextT", bound="Context")
     CommandT = TypeVar("CommandT", bound="Command")
-    CogT = TypeVar("CogT", bound="Cog")
 
+T = TypeVar("T")
+Coro = Coroutine[Any, Any, T]
+CoroFunc = Callable[..., Coro[Any]]
+MaybeCoro = Union[T, Coro[T]]
+Check = Callable[[Context[Any]], MaybeCoro[bool]]
+
+CogT = TypeVar("CogT", bound="Cog")
+
+if TYPE_CHECKING:
     P = ParamSpec("P")
+else:
+    P = TypeVar("P")
 
-    MaybeCoro = Union[T, Coro[T]]
-    Check = Callable[[Context[Any]], MaybeCoro[bool]]
 
 class Command(Generic[CogT, P, T]):
     """
