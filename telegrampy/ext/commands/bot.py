@@ -418,7 +418,7 @@ class Bot(telegrampy.Client):
                 Callable[Concatenate[ContextT, P], Coro[T]],
             ]
         ], Command[CogT, P, T]]:
-        """
+        r"""
         Turns a function into a command.
 
         Parameters
