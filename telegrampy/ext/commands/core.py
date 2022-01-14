@@ -22,7 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 import inspect
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, Generic, List, Optional, TypeVar, Union
+from typing_extensions import ParamSpec, Concatenate
 
 import telegrampy
 from telegrampy import User, Chat
@@ -31,7 +35,23 @@ from .errors import *
 from .converter import *
 from .context import Context
 
-class Command:
+if TYPE_CHECKING:
+    from .bot import Bot
+    from .cog import Cog
+
+    T = TypeVar("T")
+    Coro = Coroutine[Any, Any, T]
+    CoroFunc = Callable[..., Coro[Any]]
+    ContextT = TypeVar("ContextT", bound="Context")
+    CommandT = TypeVar("CommandT", bound="Command")
+    CogT = TypeVar("CogT", bound="Cog")
+
+    P = ParamSpec("P")
+
+    MaybeCoro = Union[T, Coro[T]]
+    Check = Callable[[Context[Any]], MaybeCoro[bool]]
+
+class Command(Generic[CogT, P, T]):
     """
     Represents a command.
 
@@ -55,26 +75,40 @@ class Command:
         The bot the command is in.
     """
 
-    def __init__(self, func, **kwargs):
+    def __init__(
+        self,
+        func: Union[
+            Callable[Concatenate[CogT, ContextT, P], Coro[T]],
+            Callable[Concatenate[ContextT, P], Coro[T]],
+        ],
+        **kwargs
+    ) -> None:
         self.callback = func
-        self.params = inspect.signature(func).parameters
 
-        self._data = kwargs
-        self.name = kwargs.get("name") or func.__name__
-        self.description = kwargs.get("description")
-        self.usage = kwargs.get("usage")
-        self.aliases = kwargs.get("aliases") or []
-        self.hidden = kwargs.get("hidden") or False
-        self.cog = None
-        self.bot = None
-        self.checks = []
+        signature = inspect.signature(func)
+        self.params: Dict[str, inspect.Parameter] = signature.parameters.copy()
 
-    def __str__(self):
+        # Support for PEP-585
+        for key, value in self.params.items():
+            if isinstance(value.annotation, str):
+                self.params[key] = value = value.replace(annotation=eval(value.annotation, function.__globals__))
+
+        self._data: Any = kwargs
+        self.name: str = kwargs.get("name") or func.__name__
+        self.description: Optional[str] = kwargs.get("description")
+        self.usage: Optional[str] = kwargs.get("usage")
+        self.aliases: List[str] = kwargs.get("aliases") or []
+        self.hidden: bool = kwargs.get("hidden") or False
+        self.cog: Optional[Cog] = None
+        self.bot: Optional[Bot] = None
+        self.checks: List[Check] = []
+
+    def __str__(self) -> str:
         return self.name
 
     @property
-    def clean_params(self):
-        """OrderedDict[:class:`str`, :class:`inspect.Parameter`]:
+    def clean_params(self) -> Dict[str, inspect.Parameter]:
+        """Dict[:class:`str`, :class:`inspect.Parameter`]:
         Returns a mapping similar to :attr:`inspect.Signature.parameters`,
         but without self or context.
         """
@@ -82,18 +116,21 @@ class Command:
 
         # if in a cog, the first parameter is self
         if self.cog is not None:
-            params.popitem(last=False)
+            try:
+                del params[next(iter(params))]
+            except StopIteration:
+                raise ValueError("Missing self parameter") from None
 
         # the context parameter is always first/next
         try:
-            params.popitem(last=False)
-        except Exception:
-            raise ValueError("Missing context parameter") from None
+            del params[next(iter(params))]
+        except StopIteration:
+            raise ValueError("missing context parameter") from None
 
         return params
 
     @property
-    def signature(self):
+    def signature(self) -> str:
         """:class:`str`: Returns a signature for a command that can be used in help commands
 
         <required> required param
@@ -126,7 +163,7 @@ class Command:
 
         return " ".join(final)
 
-    def add_check(self, func):
+    def add_check(self, func: Check) -> None:
         """
         Adds a check.
 
@@ -138,7 +175,7 @@ class Command:
 
         self.checks.append(func)
 
-    def remove_check(self, func):
+    def remove_check(self, func: Check) -> None:
         """
         Removes a check.
 
@@ -153,7 +190,7 @@ class Command:
 
         self.checks.remove(func)
 
-    async def _convert_argument(self, ctx, argument, param):
+    async def _convert_argument(self, ctx: Context, argument: str, param: inspect.Parameter) -> Any:
         # Get the converter for the argument
         if param.annotation == inspect._empty:
             converter = str if param.default == inspect._empty or param.default is None else type(param.default)
@@ -167,7 +204,7 @@ class Command:
         # If the converter is a subclass of Converter, then create an instance
         if inspect.isclass(converter) and issubclass(converter, Converter):
             converter = converter()
- 
+
         # If the converter is a Converter instance, use the convert method to convert
         if isinstance(converter, Converter):
             try:
@@ -186,10 +223,13 @@ class Command:
             try:
                 name = converter.__name__
             except AttributeError:
-                name = converter.__class__.__name__
+                name = converter.__class__.__name__  # type: ignore
             raise BadArgument(f"Converting to '{name}' failed for parameter '{param.name}'") from exc
 
-    async def _parse_arguments(self, ctx):
+    async def _parse_arguments(self, ctx: Context) -> None:
+        if not ctx.message or not ctx.message.content:
+            raise RuntimeError  # TODO: better solution?
+
         # Prepare parameters
         ctx.args = [ctx] if not self.cog else [self.cog, ctx]
         iterator = iter(self.params.items())
@@ -205,7 +245,7 @@ class Command:
             except StopIteration:
                 raise CommandError(f"Callback for {self} command is missing 'self' parameter")
 
-        # Eat ctx parameter        
+        # Eat ctx parameter
         try:
             next(iterator)
         except StopIteration:
@@ -236,7 +276,7 @@ class Command:
                 arguments = [await self._convert_argument(ctx, argument, param) for argument in arguments]
                 ctx.args.extend(arguments)
 
-    async def can_run(self, ctx):
+    async def can_run(self, ctx: Context) -> bool:
         """
         |coro|
 
@@ -271,7 +311,7 @@ class Command:
         # When everything passes, return True
         return True
 
-    async def invoke(self, ctx: Context):
+    async def invoke(self, ctx: Context) -> None:
         """
         |coro|
 
@@ -299,10 +339,11 @@ class Command:
         await self._parse_arguments(ctx)
 
         try:
-            return await self.callback(*ctx.args, **ctx.kwargs)
+            return await self.callback(*ctx.args, **ctx.kwargs)  # type: ignore
         except Exception as exc:
             ctx.command_failed = True
             raise CommandInvokeError(exc) from exc
+
 
 class ArgumentParser:
     def __init__(self, buffer):
@@ -357,14 +398,29 @@ class ArgumentParser:
 
         return arguments
 
-def command(*args, **kwargs):
+
+def command(
+    *args: Any,
+    **kwargs: Any,
+) -> Callable[
+    [
+        Union[
+            Callable[Concatenate[CogT, ContextT, P], Coro[T]],
+            Callable[Concatenate[ContextT, P], Coro[T]],
+        ],
+    ], Command[CogT, P, T]]:
     """Turns a function into a command.
 
     See :class:`telegrampy.ext.commands.Command`
     for parameters.
     """
 
-    def deco(func):
+    def deco(
+        func: Union[
+            Callable[Concatenate[CogT, ContextT, P], Coro[T]],
+            Callable[Concatenate[ContextT, P], Coro[T]],
+        ],
+    ) -> Command[CogT, P, T]:
         kwargs["name"] = kwargs.get("name")
 
         command = Command(func, **kwargs)
@@ -376,10 +432,10 @@ def command(*args, **kwargs):
     return deco
 
 
-def check(check_function):
+def check(check_function: Check) -> Callable[[T], T]:
     """Makes a check for a command."""
 
-    def deco(func):
+    def deco(func: Union[Command, CoroFunc]) -> Union[Command, CoroFunc]:
         if isinstance(func, Command):
             func.add_check(check_function)
         else:
@@ -389,15 +445,13 @@ def check(check_function):
                 func._command_checks.append(check_function)
         return func
 
-        return
-
-    return deco
+    return deco  # type: ignore
 
 
-def is_owner():
+def is_owner() -> Callable[[T], T]:
     """A command check for checking that the user is the owner."""
 
-    def is_owner_check(ctx):
+    def is_owner_check(ctx: Context) -> bool:
         if ctx.author.id not in (ctx.bot.owner_ids or [ctx.bot.owner_id]):
             raise NotOwner("You must be the owner to use this command")
         return True
@@ -405,10 +459,10 @@ def is_owner():
     return check(is_owner_check)
 
 
-def is_private_chat():
+def is_private_chat() -> Callable[[T], T]:
     """A command check for checking that the chat is a private chat."""
 
-    def is_private_chat_check(ctx):
+    def is_private_chat_check(ctx: Context) -> bool:
         if ctx.chat.type != "private":
             raise PrivateChatOnly()
         return True
@@ -416,10 +470,10 @@ def is_private_chat():
     return check(is_private_chat_check)
 
 
-def is_not_private_chat():
+def is_not_private_chat() -> Callable[[T], T]:
     """A command check for checking that the chat is not a private chat."""
 
-    def is_not_private_chat_check(ctx):
+    def is_not_private_chat_check(ctx: Context) -> bool:
         if ctx.chat.type == "private":
             raise GroupOnly()
         return True
