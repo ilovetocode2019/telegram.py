@@ -25,13 +25,13 @@ SOFTWARE.
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import TYPE_CHECKING, Optional
 
-from .chat import Chat
 from .user import User
 from .abc import TelegramObject
 
 if TYPE_CHECKING:
+    from .chat import Chat
     from .http import HTTPClient
     from .utils import ParseMode
     from .types.message import Message as MessagePayload

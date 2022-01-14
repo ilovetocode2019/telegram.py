@@ -22,12 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import traceback
 import sys
 from typing import Any, TYPE_CHECKING, Callable, Coroutine, Dict, List, Optional, Tuple, TypeVar
-from typing_extensions import ParamSpec
 
 from .errors import InvalidToken, Conflict
 from .http import HTTPClient
@@ -35,6 +36,8 @@ from .message import Message
 from .poll import Poll, PollAnswer
 
 if TYPE_CHECKING:
+    from typing_extensions import ParamSpec
+
     from .user import User
     from .chat import Chat
 

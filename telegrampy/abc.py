@@ -22,7 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from .http import HTTPClient
+from __future__ import annotations
+
 from .mixins import Hashable
 
 from typing import (
@@ -34,6 +35,8 @@ from typing import (
 )
 
 if TYPE_CHECKING:
+    from .http import HTTPClient
+
     SupportsIntCast = Union[SupportsInt, str]
 
 
