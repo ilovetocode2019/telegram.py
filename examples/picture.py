@@ -1,3 +1,4 @@
+import io
 import logging
 
 import telegrampy
@@ -11,12 +12,15 @@ bot = commands.Bot("token here")
 
 
 @bot.command(name="image")
-async def image_command(ctx):
+async def image_command(ctx: commands.Context):
     # Send the action 'upload_photo'
     await ctx.send_action("upload_photo")
 
     # Open an image and send it to the chat
-    with open("file path here", "rb") as photo:
-        await ctx.send_photo(photo, filename="photo.png", capton="This is a photo")
+    with open("file path here", "rb") as file:
+        content = file.read()
+        photo = io.BytesIO(content)
+
+    await ctx.send_photo(photo, filename="photo.png", caption="This is a photo")
 
 bot.run()

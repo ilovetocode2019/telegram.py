@@ -13,7 +13,7 @@ bot = commands.Bot("token here")
 # Create and register a simple command called "hi"
 # This is invoked with "/hi" and the bot will respond with "Hello"
 @bot.command()
-async def hi(ctx):
+async def hi(ctx: commands.Context):
     await ctx.send("Hello")
 
 # Start polling updates from Telegram

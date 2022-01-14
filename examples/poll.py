@@ -10,7 +10,7 @@ bot = commands.Bot("token here")
 
 
 @bot.command()
-async def poll(ctx):
+async def poll(ctx: commands.Context):
     await ctx.send_poll(question="What is your favorite pet?", options=["Dogs", "Cats"])
 
 bot.run()
