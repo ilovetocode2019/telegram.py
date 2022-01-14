@@ -22,14 +22,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 import types
 import inspect
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, List, Optional, TypeVar
 
 from .core import Command
+
+if TYPE_CHECKING:
+    T = TypeVar('T')
+
+    Coro = Coroutine[Any, Any, T]
+    CoroFunc = Callable[..., Coro[Any]]
 
 
 class CogMeta(type):
     """Metaclass for Cog."""
+
+    commands: List[Command]
+    listeners: List[CoroFunc]
 
     def __new__(cls, *args, **kwargs):
         name, bases, attrs = args
@@ -70,18 +82,22 @@ class Cog(metaclass=CogMeta):
         The cog's listeners.
     """
 
+    __cog_name__: str
+    commands: List[Command]
+    listeners: List[CoroFunc]
+
     @property
-    def qualified_name(self):
+    def qualified_name(self) -> str:
         """:class:`str`: The cog's name."""
         return self.__cog_name__
 
     @property
-    def description(self):
+    def description(self) -> Optional[str]:
         """:class:`str`: The cog's description."""
         return inspect.getdoc(self)
 
     @classmethod
-    def listener(cls, name: str = None):
+    def listener(cls, name: Optional[str] = None) -> Callable[[CoroFunc], CoroFunc]:
         """
         Makes a method in a cog a listener.
 
@@ -91,12 +107,12 @@ class Cog(metaclass=CogMeta):
             The name of the event to register the function as.
         """
 
-        def deco(func):
+        def deco(func: CoroFunc) -> CoroFunc:
             func._cog_listener = name or func.__name__
             return func
 
         return deco
-    
+
     def _add(self, bot):
         for command in self.commands:
             command.bot = bot

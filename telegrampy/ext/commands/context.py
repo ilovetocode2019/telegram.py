@@ -22,11 +22,31 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 import io
-import typing
+from typing import TYPE_CHECKING, Any, Coroutine, Dict, Generic, List, Optional, TypeVar, Union
 
 
-class Context:
+if TYPE_CHECKING:
+    from telegrampy.chat import Chat, ChatActionSender
+    from telegrampy.message import Message
+    from telegrampy.poll import Poll
+    from telegrampy.user import User
+    from telegrampy.utils import ParseMode
+    from .bot import Bot
+    from .cog import Cog
+    from .core import Command
+
+    T = TypeVar("T")
+    Coro = Coroutine[Any, Any, T]
+    ContextT = TypeVar("ContextT", bound="Context")
+    CommandT = TypeVar("CommandT", bound="Command")
+    CogT = TypeVar("CogT", bound="Cog")
+    BotT = TypeVar("BotT", bound="Bot")
+
+
+class Context(Generic[BotT]):
     """
     Context for a command.
 
@@ -52,18 +72,33 @@ class Context:
         The kwargs passed into the command.
     """
 
-    def __init__(self, **kwargs):
-        self.bot = kwargs.get("bot")
-        self.message = kwargs.get("message")
-        self.command = kwargs.get("command")
-        self.invoked_with = kwargs.get("invoked_with")
-        self.chat = kwargs.get("chat")
-        self.author = kwargs.get("author")
-        self.args = kwargs.get("args") or []
-        self.kwargs = kwargs.get("kwargs") or {}
-        self.command_failed = None
+    def __init__(
+        self,
+        *,
+        bot: BotT,
+        message: Message,
+        command: Command,
+        invoked_with: str,
+        chat: Chat,
+        author: User,
+        args: Optional[List[Any]] = None,
+        kwargs: Optional[Dict[str, Any]] = None
+    ) -> None:
+        self.bot: BotT = bot
+        self.message = message
+        self.command = command
+        self.invoked_with = invoked_with
+        self.chat = chat
+        self.author: User = author
+        self.args: List[Any] = args or []
+        self.kwargs: Dict[str, Any] = kwargs or {}
+        self.command_failed: Optional[bool] = None
 
-    async def send(self, content: str = None, parse_mode: str = None):
+    async def send(
+        self,
+        content: str,
+        parse_mode: Optional[ParseMode] = None
+    ) -> Message:
         """|coro|
 
         Sends a message to the destination.
@@ -88,7 +123,13 @@ class Context:
 
         return await self.chat.send(content=content, parse_mode=parse_mode)
 
-    async def send_document(self, document: typing.Union[io.BytesIO, str], filename: str = None, caption: str = None, parse_mode: str = None):
+    async def send_document(
+        self,
+        document: Union[io.BytesIO, str],
+        filename: Optional[str] = None,
+        caption: Optional[str] = None,
+        parse_mode: Optional[ParseMode] = None
+    ) -> Message:
         """|coro|
 
         Sends a document to the destination.
@@ -117,7 +158,13 @@ class Context:
 
         return await self.chat.send_document(document=document, filename=filename, caption=caption, parse_mode=parse_mode)
 
-    async def send_photo(self, photo: typing.Union[io.BytesIO, str], filename: str = None, caption: str = None, parse_mode: str = None):
+    async def send_photo(
+        self,
+        photo: Union[io.BytesIO, str],
+        filename: Optional[str] = None,
+        caption: Optional[str] = None,
+        parse_mode: Optional[ParseMode] = None
+    ) -> Message:
         """|coro|
 
         Sends a photo to the destination.
@@ -140,13 +187,13 @@ class Context:
         """
 
         if isinstance(photo, str):
-            with open(document, "rb") as file:
+            with open(photo, "rb") as file:
                 content = file.read()
-                document = io.BytesIO(content)
+                photo = io.BytesIO(content)
 
         return await self.chat.send_photo(photo=photo, filename=filename, caption=caption, parse_mode=parse_mode)
 
-    async def send_poll(self, question: str, options: list):
+    async def send_poll(self, question: str, options: List[str]) -> Poll:
         """|coro|
 
         Sends a poll to the destination.
@@ -171,7 +218,7 @@ class Context:
 
         return await self.chat.send_poll(question, options)
 
-    async def send_action(self, action: str):
+    async def send_action(self, action: str) -> None:
         """|coro|
 
         Sends an action to the destination.
@@ -189,9 +236,9 @@ class Context:
 
         await self.chat.send_action(action)
 
-    def action(self, action: str):
+    def action(self, action: str) -> ChatActionSender:
         """
-        Returns a context manager that sends a chat action, until the with statment is completed.
+        Returns a context manager that sends a chat action, until the with statement is completed.
 
         Parameters
         ----------
@@ -201,7 +248,7 @@ class Context:
 
         return self.chat.action(action)
 
-    async def reply(self, content: str, parse_mode: str = None):
+    async def reply(self, content: str, parse_mode: Optional[ParseMode] = None) -> Message:
         """
         |coro|
 
