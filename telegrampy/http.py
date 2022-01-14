@@ -45,9 +45,9 @@ if TYPE_CHECKING:
     Response = Coroutine[Any, Any, T]
     HTTPMethod = Literal["GET", "POST", "HEAD", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE"]
 
-log = logging.getLogger("telegrampy.http")
+log: logging.Logger = logging.getLogger("telegrampy.http")
 
-user_agent = "TelegramBot (https://github.com/ilovetocode2019/telegram.py {0}) Python/{1[0]}.{1[1]} aiohttp/{2}"
+user_agent: str = "TelegramBot (https://github.com/ilovetocode2019/telegram.py {0}) Python/{1[0]}.{1[1]} aiohttp/{2}"
 
 
 class Route:

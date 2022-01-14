@@ -47,7 +47,7 @@ if TYPE_CHECKING:
 
 
 
-log = logging.getLogger("telegrampy")
+log: logging.Logger = logging.getLogger("telegrampy")
 
 
 class Client:
