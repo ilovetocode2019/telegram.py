@@ -28,6 +28,7 @@ setuptools.setup(
     version=version,
     lisence="MIT",
     packages=["telegrampy", "telegrampy.types", "telegrampy/ext/commands"],
+    include_package_data=True,
     install_requires=requirements,
     extras_require={
         "docs": [
