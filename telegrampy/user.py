@@ -29,6 +29,7 @@ import io
 from typing import TYPE_CHECKING, Optional, Union
 
 from .abc import TelegramObject
+from .mixins import Hashable
 from .utils import escape_markdown
 
 if TYPE_CHECKING:
@@ -40,7 +41,7 @@ if TYPE_CHECKING:
 
 
 
-class User(TelegramObject):
+class User(TelegramObject, Hashable):
     """
     Represents a Telegram user.
 
@@ -67,11 +68,11 @@ class User(TelegramObject):
     first_name: :class:`str`
         The first name of the user.
     last_name: Optional[:class:`str`]
-        The last name of the user.
+        The last name of the user, if applicable.
     username: Optional[:class:`str`]
-        The username of the user.
+        The username of the user, if applicable.
     language_code: Optional[:class:`str`]
-        The IETF language tag for the user's language.
+        The IETF language tag for the user's language, if applicable.
     can_join_groups: Optional[:class:`bool`]
         If the bot can join groups. Only returned in :class:`telegrampy.Client.get_me`.
     can_read_all_group_messages: Optional[:class:`bool`]
@@ -81,27 +82,29 @@ class User(TelegramObject):
     """
 
     if TYPE_CHECKING:
+        id: int
         is_bot: bool
-        username: str
+        username: Optional[str]
         first_name: str
-        last_name: str
-        language_code: str
-        can_join_groups: bool
-        can_read_all_group_messages: bool
-        supports_inline_queries: bool
+        last_name: Optional[str]
+        language_code: Optional[str]
+        can_join_groups: Optional[bool]
+        can_read_all_group_messages: Optional[bool]
+        supports_inline_queries: Optional[bool]
 
     def __init__(self, http: HTTPClient, data: UserPayload) -> None:
-        super().__init__(http, data)
+        super().__init__(http)
+        self.id: int = data.get("id")
         self.is_bot: bool = data.get("is_bot")
-        self.username: str = data.get("username")
+        self.username: Optional[str] = data.get("username")
         self.first_name: str = data.get("first_name")
-        self.last_name: str = data.get("last_name")
-        self.language_code: str = data.get("language_code")
-        self.can_join_groups: bool = data.get("can_join_groups")
-        self.can_read_all_group_messages: bool = data.get("can_read_all_group_messages")
-        self.supports_inline_queries: bool = data.get("supports_inline_queries")
+        self.last_name: Optional[str] = data.get("last_name")
+        self.language_code: Optional[str] = data.get("language_code")
+        self.can_join_groups: Optional[bool] = data.get("can_join_groups")
+        self.can_read_all_group_messages: Optional[bool] = data.get("can_read_all_group_messages")
+        self.supports_inline_queries: Optional[bool] = data.get("supports_inline_queries")
 
-    def __str__(self) -> str:
+    def __str__(self) -> Optional[str]:
         return self.username
 
     @property

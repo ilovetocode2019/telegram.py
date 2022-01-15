@@ -24,11 +24,12 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import Any, List, Literal, Optional, TypedDict
+from typing import TYPE_CHECKING, Any, List, Literal, Optional, TypedDict
 
-from .chat import Chat
-from .poll import Poll
-from .user import User
+if TYPE_CHECKING:
+    from .chat import Chat
+    from .poll import Poll
+    from .user import User
 
 
 class MessageEntity(TypedDict):

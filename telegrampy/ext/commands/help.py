@@ -26,7 +26,6 @@ from __future__ import annotations
 
 import html
 import itertools
-from sys import implementation
 from typing import TYPE_CHECKING, Any, Dict, List, TypeVar
 
 import telegrampy

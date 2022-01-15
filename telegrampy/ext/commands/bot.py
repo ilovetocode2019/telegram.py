@@ -115,7 +115,8 @@ class Bot(telegrampy.Client):
         self.cogs: Dict[str, Cog] = {}
         self.extensions: Dict[str, types.ModuleType] = {}
 
-        self._help_command: Optional[HelpCommand] = help_command
+        self._help_command: Optional[HelpCommand] = None
+        self.help_command = help_command
 
     @property
     def help_command(self) -> Optional[HelpCommand]:
@@ -125,7 +126,7 @@ class Bot(telegrampy.Client):
         return self._help_command
 
     @help_command.setter
-    def help_command(self, value: HelpCommand) -> None:
+    def help_command(self, value: Optional[HelpCommand]) -> None:
         if not isinstance(value, HelpCommand):
             raise TypeError("The new help command must inherit from HelpCommand.")
 
@@ -387,6 +388,7 @@ class Bot(telegrampy.Client):
         message: :class:`telegrampy.Message`
             The message to process.
         """
+
         if not message.content:
             return
 
