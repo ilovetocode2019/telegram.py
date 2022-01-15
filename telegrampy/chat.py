@@ -26,18 +26,15 @@ from __future__ import annotations
 
 import asyncio
 import io
+from optparse import Option
 
-from .errors import *
-from .message import Message
 from .abc import TelegramObject
-from .poll import Poll
-from .user import User
+from .errors import *
+from .mixins import Hashable
 
 from typing import (
     Any,
-    Dict,
     List,
-    Literal,
     Optional,
     TypeVar,
     Union,
@@ -46,6 +43,9 @@ from typing import (
 
 if TYPE_CHECKING:
     from .http import HTTPClient
+    from .message import Message
+    from .poll import Poll
+    from .user import User
     from .utils import ParseMode
     from .types.chat import Chat as ChatPayload
 
@@ -53,7 +53,7 @@ if TYPE_CHECKING:
 ChatActionSenderT = TypeVar("ChatActionSenderT", bound="ChatActionSender")
 
 
-class Chat(TelegramObject):
+class Chat(TelegramObject, Hashable):
     """
     Represents a chat in Telegram.
 
@@ -76,28 +76,36 @@ class Chat(TelegramObject):
     ----------
     id: :class:`int`
         The ID of the chat.
-    title: :class:`str`
-        The title of the chat.
-    description: Optional[:class:`str`]
-        The description of the chat.
     type: :class:`str`
         The type of the chat.
+    title: Optional[:class:`str`]
+        The title of the chat, if applicable..
+    username: Optional[:class:`str`]
+        The username of the chat, if applicable.
+    description: Optional[:class:`str`]
+        The description of the chat, if applicable.
+    invite_link: Optional[:class:`str`]
+        The invite link of the chat, if applicable.
     """
 
     if TYPE_CHECKING:
-        title: str
-        username: str
-        description: str
-        type: int
+        id: int
+        title: Optional[str]
+        username: Optional[str]
+        description: Optional[str]
+        type: str
+        invite_link: Optional[str]
 
     def __init__(self, http: HTTPClient, data: ChatPayload) -> None:
-        super().__init__(http, data)
-        self.title: str = data.pop("title")
-        self.username: str = data.pop("username")
-        self.description: str = data.pop("description")
-        self.type: int = data.pop("type")
+        super().__init__(http)
+        self.id: int = data.get("id")
+        self.title: Optional[str] = data.get("title")
+        self.username: Optional[str] = data.get("username")
+        self.description: Optional[str] = data.get("description")
+        self.type: str = data.get("type")
+        self.invite_link: Optional[str] = data.get("invite_link")
 
-    def __str__(self) -> str:
+    def __str__(self) -> Optional[str]:
         return self.title
 
     async def send(self, content: str, parse_mode: Optional[ParseMode] = None) -> Message:

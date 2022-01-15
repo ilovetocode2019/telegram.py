@@ -85,7 +85,7 @@ class Poll(TelegramObject):
         allows_multiple_answers: bool
 
     def __init__(self, http: HTTPClient, data: PollPayload) -> None:
-        super().__init__(http, data)
+        super().__init__(http)
         self.question: str = data.get("question")
         self.options: List[PollOptionPayload] = data.get("options")
         self.total_voter_count: int = data.get("total_voter_count")

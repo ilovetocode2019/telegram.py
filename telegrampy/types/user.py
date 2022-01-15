@@ -24,16 +24,16 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TypedDict
+from typing import Optional, TypedDict
 
 
 class User(TypedDict):
     id: int
     is_bot: bool
     first_name: str
-    last_name: str
-    username: str
-    language_code: str
-    can_join_groups: bool
-    can_read_all_group_messages: bool
-    supports_inline_queries: bool
+    last_name: Optional[str]
+    username: Optional[str]
+    language_code: Optional[str]
+    can_join_groups: Optional[bool]
+    can_read_all_group_messages: Optional[bool]
+    supports_inline_queries: Optional[bool]

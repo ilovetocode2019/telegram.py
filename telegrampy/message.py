@@ -27,17 +27,18 @@ from __future__ import annotations
 import datetime
 from typing import TYPE_CHECKING, Optional
 
-from .user import User
 from .abc import TelegramObject
+from .chat import Chat
+from .user import User
+from .mixins import Hashable
 
 if TYPE_CHECKING:
-    from .chat import Chat
     from .http import HTTPClient
     from .utils import ParseMode
     from .types.message import Message as MessagePayload
 
 
-class Message(TelegramObject):
+class Message(TelegramObject, Hashable):
     """
     Represents a message in Telegram.
 
@@ -76,7 +77,7 @@ class Message(TelegramObject):
         author: Optional[User]
 
     def __init__(self, http: HTTPClient, data: MessagePayload):
-        super().__init__(http, data)
+        super().__init__(http)
         self.id: int = data.get("message_id")
 
         created_at: int = data.get("date")

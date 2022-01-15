@@ -24,35 +24,14 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from .mixins import Hashable
-
-from typing import (
-    Any,
-    Dict,
-    SupportsInt,
-    TYPE_CHECKING,
-    Union,
-)
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .http import HTTPClient
 
-    SupportsIntCast = Union[SupportsInt, str]
 
-
-class TelegramObject(Hashable):
+class TelegramObject:
     """Base telegram object."""
 
-    def __init__(self, http: HTTPClient, data: Any) -> None:
-        self._http = http
-
-        _id = data.get("id")
-        if not _id:
-            raise TypeError("data doesn't have an id key")
-
-        try:
-            id = int(_id)
-        except ValueError:
-            raise TypeError(f'id parameter must be convertable to int not {_id.__class__!r}') from None
-        else:
-            self.id = id
+    def __init__(self, http: HTTPClient) -> None:
+        self._http: HTTPClient = http
