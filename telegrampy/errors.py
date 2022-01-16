@@ -24,7 +24,7 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     import aiohttp
@@ -33,11 +33,9 @@ if TYPE_CHECKING:
 class TelegramException(Exception):
     """Base exception for all errors."""
 
-    pass
 
 class HTTPException(TelegramException):
-    """
-    Raised when an HTTP request fails.
+    """Raised when an HTTP request fails.
 
     This inherits from :exc:`telegrampy.TelegramException`.
 
@@ -54,47 +52,37 @@ class HTTPException(TelegramException):
         self.message = message
         super().__init__(f"{response.status} {message}")
 
+
 class BadRequest(HTTPException):
-    """
-    Raised when a bad request is made.
+    """Raised when a bad request is made.
 
     This inherits from :exc:`telegrampy.HTTPException`.
     """
 
-    pass
 
 class InvalidToken(HTTPException):
-    """
-    Raised when a token is invalid.
+    """Raised when a token is invalid.
 
     This inherits from :exc:`telegrampy.HTTPException`.
     """
 
-    pass
 
 class Forbidden(HTTPException):
-    """
-    Raised when something is forbidden.
+    """Raised when something is forbidden.
 
     This inherits from :exc:`telegrampy.HTTPException`.
     """
 
-    pass
 
 class Conflict(HTTPException):
-    """
-    Raised when another instance of the bot is running.
+    """Raised when another instance of the bot is running.
 
     This inherits from :exc:`telegrampy.HTTPException`.
     """
 
-    pass
 
 class ServerError(HTTPException):
-    """
-    Raised when telegram returns a 500 error.
+    """Raised when telegram returns a 500 error.
 
     This inherits from :exc:`telegrampy.HTTPException`.
     """
-
-    pass

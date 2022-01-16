@@ -26,19 +26,17 @@ from __future__ import annotations
 
 import asyncio
 import io
-from optparse import Option
 
 from .abc import TelegramObject
-from .errors import *
 from .mixins import Hashable
 
 from typing import (
+    TYPE_CHECKING,
     Any,
     List,
     Optional,
     TypeVar,
     Union,
-    TYPE_CHECKING
 )
 
 if TYPE_CHECKING:
@@ -49,13 +47,11 @@ if TYPE_CHECKING:
     from .utils import ParseMode
     from .types.chat import Chat as ChatPayload
 
-
 ChatActionSenderT = TypeVar("ChatActionSenderT", bound="ChatActionSender")
 
 
 class Chat(TelegramObject, Hashable):
-    """
-    Represents a chat in Telegram.
+    """Represents a chat in Telegram.
 
     .. container:: operations
 
@@ -247,8 +243,7 @@ class Chat(TelegramObject, Hashable):
         await self._http.send_chat_action(chat_id=self.id, action=action)
 
     def action(self, action: str) -> ChatActionSender:
-        """
-        Returns a context manager that sends a chat action until the with statment is completed.
+        """Returns a context manager that sends a chat action until the with statement is completed.
 
         Parameters
         ----------

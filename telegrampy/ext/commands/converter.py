@@ -36,13 +36,10 @@ if TYPE_CHECKING:
 
 
 class Converter:
-    """
-    Base class for converters.
-    """
+    """Base class for converters."""
 
     async def convert(self, ctx: Context, arg: str) -> Any:
-        """
-        |coro|
+        """|coro|
 
         Does the converting.
         """
@@ -50,9 +47,7 @@ class Converter:
 
 
 class UserConverter(Converter):
-    """
-    Converts an argument into a user.
-    """
+    """Converts an argument into a user."""
 
     async def convert(self, ctx: Context, arg: Union[str, Any]) -> User:
         try:
@@ -66,10 +61,9 @@ class UserConverter(Converter):
         except HTTPException as exc:
             raise BadArgument(f"Error while fetching user '{arg}'") from exc
 
+
 class ChatConverter(Converter):
-    """
-    Converts an argument into a chat.
-    """
+    """Converts an argument into a chat."""
 
     async def convert(self, ctx: Context, arg: Union[str, Any]) -> Chat:
         try:

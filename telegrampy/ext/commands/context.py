@@ -28,12 +28,12 @@ import io
 from typing import TYPE_CHECKING, Any, Coroutine, Dict, Generic, List, Optional, TypeVar, Union
 
 if TYPE_CHECKING:
-    from .bot import Bot
     from telegrampy.chat import Chat, ChatActionSender
     from telegrampy.message import Message
     from telegrampy.poll import Poll
     from telegrampy.user import User
     from telegrampy.utils import ParseMode
+    from .bot import Bot
     from .cog import Cog
     from .core import Command
 
@@ -47,8 +47,7 @@ BotT = TypeVar("BotT", bound="Bot")
 
 
 class Context(Generic[BotT]):
-    """
-    Context for a command.
+    """Context for a command.
 
     Attributes
     ----------
@@ -237,8 +236,7 @@ class Context(Generic[BotT]):
         await self.chat.send_action(action)
 
     def action(self, action: str) -> ChatActionSender:
-        """
-        Returns a context manager that sends a chat action, until the with statement is completed.
+        """Returns a context manager that sends a chat action, until the with statement is completed.
 
         Parameters
         ----------
@@ -249,8 +247,7 @@ class Context(Generic[BotT]):
         return self.chat.action(action)
 
     async def reply(self, content: str, parse_mode: Optional[ParseMode] = None) -> Message:
-        """
-        |coro|
+        """|coro|
 
         Replys to the message.
 

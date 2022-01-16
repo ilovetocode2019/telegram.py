@@ -27,18 +27,18 @@ from __future__ import annotations
 import inspect
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, Generic, List, Optional, TypeVar, Union
 
-import telegrampy
-from telegrampy import User, Chat
+from telegrampy import Chat, User
 
-from .errors import *
-from .converter import *
+from . import errors
 from .context import Context
+from .converter import ChatConverter, Converter, UserConverter
 
 if TYPE_CHECKING:
-    from typing_extensions import ParamSpec, Concatenate
+    from typing_extensions import Concatenate, ParamSpec
 
     from .bot import Bot
     from .cog import Cog
+
     ContextT = TypeVar("ContextT", bound="Context")
     CommandT = TypeVar("CommandT", bound="Command")
 
@@ -57,8 +57,7 @@ else:
 
 
 class Command(Generic[CogT, P, T]):
-    """
-    Represents a command.
+    """Represents a command.
 
     Attributes
     ----------
@@ -114,8 +113,8 @@ class Command(Generic[CogT, P, T]):
     @property
     def clean_params(self) -> Dict[str, inspect.Parameter]:
         """Dict[:class:`str`, :class:`inspect.Parameter`]:
-        Returns a mapping similar to :attr:`inspect.Signature.parameters`,
-        but without self or context.
+            Returns a mapping similar to :attr:`inspect.Signature.parameters`,
+            but without self or context.
         """
         params = self.params.copy()
 
@@ -136,7 +135,7 @@ class Command(Generic[CogT, P, T]):
 
     @property
     def signature(self) -> str:
-        """:class:`str`: Returns a signature for a command that can be used in help commands
+        """:class:`str`: Returns a signature for a command that can be used in help commands.
 
         <required> required param
         [optional] optional param
@@ -169,8 +168,7 @@ class Command(Generic[CogT, P, T]):
         return " ".join(final)
 
     def add_check(self, func: Check) -> None:
-        """
-        Adds a check.
+        """Adds a check to the command.
 
         Parameters
         ----------
@@ -181,8 +179,7 @@ class Command(Generic[CogT, P, T]):
         self.checks.append(func)
 
     def remove_check(self, func: Check) -> None:
-        """
-        Removes a check.
+        """Removes a check from the command.
 
         Parameters
         ----------
@@ -214,22 +211,22 @@ class Command(Generic[CogT, P, T]):
         if isinstance(converter, Converter):
             try:
                 return await converter.convert(ctx, argument)
-            except CommandError:
+            except errors.CommandError:
                 raise
             except Exception as exc:
-                raise ConversionError(converter, exc) from exc
+                raise errors.ConversionError(converter, exc) from exc
 
         # Otherwise just use the converter as a callable
         try:
             return converter(argument)
-        except CommandError:
+        except errors.CommandError:
             raise
         except Exception as exc:
             try:
                 name = converter.__name__
             except AttributeError:
                 name = converter.__class__.__name__  # type: ignore
-            raise BadArgument(f"Converting to '{name}' failed for parameter '{param.name}'") from exc
+            raise errors.BadArgument(f"Converting to '{name}' failed for parameter '{param.name}'") from exc
 
     async def _parse_arguments(self, ctx: Context) -> None:
         if not ctx.message or not ctx.message.content:
@@ -246,15 +243,15 @@ class Command(Generic[CogT, P, T]):
         # Eat cog parameter if any
         if self.cog:
             try:
-               next(iterator)
+                next(iterator)
             except StopIteration:
-                raise CommandError(f"Callback for {self} command is missing 'self' parameter")
+                raise errors.CommandError(f"Callback for {self} command is missing 'self' parameter")
 
         # Eat ctx parameter
         try:
             next(iterator)
         except StopIteration:
-            raise CommandError(f"Callback for {self} command is missing 'ctx' parameter")
+            raise errors.CommandError(f"Callback for {self} command is missing 'ctx' parameter")
 
         # The remaining parameters in the iterator need to be filled with arguments
         for name, param in iterator:
@@ -263,7 +260,7 @@ class Command(Generic[CogT, P, T]):
                 if argument:
                     argument = await self._convert_argument(ctx, argument, param)
                 elif not argument and param.default == inspect._empty:
-                    raise MissingRequiredArgument(param)
+                    raise errors.MissingRequiredArgument(param)
 
                 ctx.args.append(argument or param.default)
 
@@ -272,7 +269,7 @@ class Command(Generic[CogT, P, T]):
                 if argument:
                     argument = await self._convert_argument(ctx, argument, param)
                 elif not argument and param.default == inspect._empty:
-                    raise MissingRequiredArgument(param)
+                    raise errors.MissingRequiredArgument(param)
 
                 ctx.kwargs[param.name] = argument or param.default
 
@@ -282,8 +279,7 @@ class Command(Generic[CogT, P, T]):
                 ctx.args.extend(arguments)
 
     async def can_run(self, ctx: Context) -> bool:
-        """
-        |coro|
+        """|coro|
 
         Checks if the command can run.
 
@@ -317,8 +313,7 @@ class Command(Generic[CogT, P, T]):
         return True
 
     async def invoke(self, ctx: Context) -> None:
-        """
-        |coro|
+        """|coro|
 
         Invokes the command with given context.
 
@@ -339,7 +334,7 @@ class Command(Generic[CogT, P, T]):
         """
 
         if not await self.can_run(ctx):
-            raise CheckFailure("The checks for this command failed")
+            raise errors.CheckFailure("The checks for this command failed")
 
         await self._parse_arguments(ctx)
 
@@ -347,7 +342,7 @@ class Command(Generic[CogT, P, T]):
             return await self.callback(*ctx.args, **ctx.kwargs)  # type: ignore
         except Exception as exc:
             ctx.command_failed = True
-            raise CommandInvokeError(exc) from exc
+            raise errors.CommandInvokeError(exc) from exc
 
 
 class ArgumentParser:
@@ -376,7 +371,7 @@ class ArgumentParser:
             except IndexError:
                 self.index = self.legnth
                 if in_quotes:
-                    raise ExpectedClosingQuote() from None
+                    raise errors.ExpectedClosingQuote() from None
 
                 if not result.strip(" "):
                     result = ""
@@ -458,7 +453,7 @@ def is_owner() -> Callable[[T], T]:
 
     def is_owner_check(ctx: Context) -> bool:
         if ctx.author.id not in (ctx.bot.owner_ids or [ctx.bot.owner_id]):
-            raise NotOwner("You must be the owner to use this command")
+            raise errors.NotOwner("You must be the owner to use this command")
         return True
 
     return check(is_owner_check)
@@ -469,7 +464,7 @@ def is_private_chat() -> Callable[[T], T]:
 
     def is_private_chat_check(ctx: Context) -> bool:
         if ctx.chat.type != "private":
-            raise PrivateChatOnly()
+            raise errors.PrivateChatOnly()
         return True
 
     return check(is_private_chat_check)
@@ -480,7 +475,7 @@ def is_not_private_chat() -> Callable[[T], T]:
 
     def is_not_private_chat_check(ctx: Context) -> bool:
         if ctx.chat.type == "private":
-            raise GroupOnly()
+            raise errors.GroupOnly()
         return True
 
     return check(is_not_private_chat_check)

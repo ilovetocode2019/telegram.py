@@ -24,9 +24,9 @@ SOFTWARE.
 
 from __future__ import annotations
 
-import traceback
 import importlib
 import sys
+import traceback
 import types
 from typing import (
     TYPE_CHECKING,
@@ -38,14 +38,14 @@ from typing import (
     Optional,
     Type,
     TypeVar,
-    Union
+    Union,
 )
 
 import telegrampy
-from .errors import *
-from .core import Command
+from . import errors
 from .cog import Cog
 from .context import Context
+from .core import Command
 from .help import HelpCommand, DefaultHelpCommand
 
 if TYPE_CHECKING:
@@ -63,9 +63,9 @@ if TYPE_CHECKING:
 
 _default_help = DefaultHelpCommand()
 
+
 class Bot(telegrampy.Client):
-    r"""
-    Represents a Telegram bot.
+    r"""Represents a Telegram bot.
 
     Parameters
     ----------
@@ -120,9 +120,7 @@ class Bot(telegrampy.Client):
 
     @property
     def help_command(self) -> Optional[HelpCommand]:
-        """Optional[:class:`telegrampy.ext.commands.HelpCommand`]:
-            The bot's help command.
-        """
+        """Optional[:class:`telegrampy.ext.commands.HelpCommand`]: The bot's help command."""
         return self._help_command
 
     @help_command.setter
@@ -135,10 +133,7 @@ class Bot(telegrampy.Client):
 
     @property
     def commands(self) -> List[Command]:
-        """
-        List[:class:`Command`:]
-            A list of the commands.
-        """
+        """List[:class:`Command`:] A list of the commands."""
 
         return list(self.commands_dict.values())
 
@@ -151,8 +146,7 @@ class Bot(telegrampy.Client):
         return all_names
 
     def get_command(self, name: str) -> Optional[Command]:
-        """
-        Gets a command by name.
+        """Gets a command by name.
 
         Parameters
         ----------
@@ -170,8 +164,7 @@ class Bot(telegrampy.Client):
                 return command
 
     async def get_context(self, message: Message, *, cls: Type[ContextT] = Context) -> Optional[ContextT]:
-        """
-        |coro|
+        """|coro|
 
         Gets context for a given message.
 
@@ -222,8 +215,7 @@ class Bot(telegrampy.Client):
         )
 
     def load_extension(self, extension: str) -> None:
-        """
-        Loads an extension.
+        """Loads an extension.
 
         Parameters
         ----------
@@ -239,35 +231,34 @@ class Bot(telegrampy.Client):
         """
 
         if extension in self.extensions:
-            raise ExtensionAlreadyLoaded(extension)
+            raise errors.ExtensionAlreadyLoaded(extension)
 
         # Attempt to import the extension
         try:
             lib = importlib.import_module(extension)
         except ModuleNotFoundError:
-            raise ExtensionNotFound(extension) from None
+            raise errors.ExtensionNotFound(extension) from None
         except Exception as exc:
-            raise ExtensionFailed(extension, exc) from exc
+            raise errors.ExtensionFailed(extension, exc) from exc
 
         # Attempt to get setup function
         try:
             setup = getattr(lib, "setup")
         except AttributeError:
             self._cleanup_extension(lib)
-            raise NoEntryPointError(extension) from None
+            raise errors.NoEntryPointError(extension) from None
 
         # Attempt to setup extension
         try:
             setup(self)
         except Exception as exc:
             self._cleanup_extension(lib)
-            raise ExtensionFailed(extension, exc) from exc
+            raise errors.ExtensionFailed(extension, exc) from exc
 
         self.extensions[lib.__name__] = lib
 
     def unload_extension(self, extension: str) -> None:
-        """
-        Unloads an extension.
+        """Unloads an extension.
 
         Parameters
         ----------
@@ -276,7 +267,7 @@ class Bot(telegrampy.Client):
         """
 
         if extension not in self.extensions:
-            raise ExtensionNotLoaded(extension)
+            raise errors.ExtensionNotLoaded(extension)
 
         lib = sys.modules[extension]
 
@@ -284,8 +275,7 @@ class Bot(telegrampy.Client):
         self.extensions.pop(extension)
 
     def reload_extension(self, extension: str) -> None:
-        """
-        Reloads an extension.
+        """Reloads an extension.
 
         Parameters
         ----------
@@ -294,7 +284,7 @@ class Bot(telegrampy.Client):
         """
 
         if extension not in self.extensions:
-            raise ExtensionNotLoaded(f"{extension} is not loaded")
+            raise errors.ExtensionNotLoaded(f"{extension} is not loaded")
 
         # Save the current state
         lib = sys.modules[extension]
@@ -306,7 +296,7 @@ class Bot(telegrampy.Client):
         try:
             # Attempt to load it back
             self.load_extension(extension)
-        except Exception as exc:
+        except Exception:
             # If this fails then revert the changes back
             self.extensions[lib.__name__] = lib
             lib.setup(self)
@@ -336,8 +326,7 @@ class Bot(telegrampy.Client):
                 sys.modules.pop(name, None)
 
     def add_cog(self, cog: Cog) -> None:
-        """
-        Adds a cog to the bot.
+        """Adds a cog to the bot.
 
         Parameters
         ----------
@@ -358,8 +347,7 @@ class Bot(telegrampy.Client):
         self.cogs[cog.qualified_name] = cog
 
     def remove_cog(self, cog: str) -> None:
-        """
-        Removes and cog from the bot.
+        """Removes and cog from the bot.
 
         Parameters
         ----------
@@ -377,8 +365,7 @@ class Bot(telegrampy.Client):
         await self.process_commands(message)
 
     async def process_commands(self, message: Message) -> None:
-        """
-        |coro|
+        """|coro|
 
         Process commands that have been registered.
         By default this is called in on_message. If you override Bot.on_message you need to call this manually.
@@ -398,7 +385,7 @@ class Bot(telegrampy.Client):
 
     async def invoke(self, ctx: Context) -> None:
         if not ctx.command:
-            exc = CommandNotFound(f"Command '{ctx.invoked_with}' is not found")
+            exc = errors.CommandNotFound(f"Command '{ctx.invoked_with}' is not found")
             return self.dispatch("command_error", ctx, exc)
 
         self.dispatch("command", ctx)
@@ -421,8 +408,7 @@ class Bot(telegrampy.Client):
                 Callable[Concatenate[ContextT, P], Coro[T]],
             ]
         ], Command[CogT, P, T]]:
-        r"""
-        Turns a function into a command.
+        r"""Turns a function into a command.
 
         Parameters
         ----------
@@ -442,7 +428,7 @@ class Bot(telegrampy.Client):
 
             kwargs["name"] = name
             if name in self._get_all_command_names():
-                raise CommandRegistrationError(f"{name} is already registered as a command name or alias")
+                raise errors.CommandRegistrationError(f"{name} is already registered as a command name or alias")
 
             command = Command(func, **kwargs)
             command.checks = getattr(func, "_command_checks", [])
@@ -453,8 +439,7 @@ class Bot(telegrampy.Client):
         return deco
 
     def add_command(self, command: CommandT) -> CommandT:
-        """
-        Adds a command.
+        """Adds a command.
 
         Parameters
         ----------
@@ -478,14 +463,13 @@ class Bot(telegrampy.Client):
             raise TypeError("Command must be a subclass of Command")
 
         if command.name in self._get_all_command_names():
-            raise CommandRegistrationError(f"{command.name} is already registered as a command name or alias")
+            raise errors.CommandRegistrationError(f"{command.name} is already registered as a command name or alias")
 
         self.commands_dict[command.name] = command
         return command
 
     def remove_command(self, name: str) -> Optional[Command]:
-        """
-        Removes a command by name.
+        """Removes a command by name.
 
         Parameters
         ----------
