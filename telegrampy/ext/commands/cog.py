@@ -24,8 +24,8 @@ SOFTWARE.
 
 from __future__ import annotations
 
-import types
 import inspect
+import types
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, List, Optional, TypeVar
 
 from .core import Command
@@ -71,8 +71,7 @@ class CogMeta(type):
 
 
 class Cog(metaclass=CogMeta):
-    """
-    Base cog class.
+    """Base cog class.
 
     Attributes
     ----------
@@ -98,8 +97,7 @@ class Cog(metaclass=CogMeta):
 
     @classmethod
     def listener(cls, name: Optional[str] = None) -> Callable[[CoroFunc], CoroFunc]:
-        """
-        Makes a method in a cog a listener.
+        """Makes a method in a cog a listener.
 
         Parameters
         ----------

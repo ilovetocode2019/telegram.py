@@ -29,16 +29,15 @@ import io
 import json
 import logging
 import sys
-from typing import Any, TYPE_CHECKING, List, Literal, Sequence, TypeVar, Coroutine, Optional, Dict
+from typing import TYPE_CHECKING, Any, List, Literal, Sequence, TypeVar, Coroutine, Optional, Dict
 
 import aiohttp
 
-from . import __version__
-from .errors import *
-from .user import User
+from . import __version__, errors
 from .chat import Chat
 from .message import Message
 from .poll import Poll
+from .user import User
 
 if TYPE_CHECKING:
     T = TypeVar("T")
@@ -115,13 +114,13 @@ class HTTPClient:
                         params = data.get("parameters")
 
                         if not params:
-                            raise HTTPException(resp, data.get("description"))
+                            raise errors.HTTPException(resp, data.get("description"))
 
                         retry_after = params.get("retry_after")
 
                         # We didn't get a retry after, so raise an HTTPException
                         if not retry_after:
-                            raise HTTPException(resp, data.get("description"))
+                            raise errors.HTTPException(resp, data.get("description"))
 
                         log.warning(f"We are being ratelimited. Retrying in {retry_after} seconds.")
 
@@ -130,24 +129,24 @@ class HTTPClient:
 
                     # Unauthorized
                     if resp.status == 400:
-                        raise BadRequest(resp, data.get("description"))
+                        raise errors.BadRequest(resp, data.get("description"))
                     elif resp.status == 401:
-                        raise InvalidToken(resp, data.get("description"))
+                        raise errors.InvalidToken(resp, data.get("description"))
                     # Forbidden
                     elif resp.status == 403:
-                        raise Forbidden(resp, data.get("description"))
+                        raise errors.Forbidden(resp, data.get("description"))
                     # Not found
                     if resp.status == 404:
-                        raise InvalidToken(resp, data.get("description"))
+                        raise errors.InvalidToken(resp, data.get("description"))
                     # Conflict with other request
                     elif resp.status == 409:
-                        raise Conflict(resp, data.get("description"))
+                        raise errors.Conflict(resp, data.get("description"))
                     # Some sort of internal Telegram error
                     if resp.status >= 500:
                         await asyncio.sleep((1 + tries) * 2)
                         continue
                     else:
-                        raise HTTPException(resp, (data).get("description"))
+                        raise errors.HTTPException(resp, (data).get("description"))
             except OSError as e:
                 # Connection reset by peer
                 if tries < 4 and e.errno in (54, 10054):
@@ -161,9 +160,9 @@ class HTTPClient:
             description = data.get("description") if isinstance(data, dict) else data
 
             if resp.status >= 500:
-                raise ServerError(resp, description)
+                raise errors.ServerError(resp, description)
             else:
-                raise HTTPException(resp, description)
+                raise errors.HTTPException(resp, description)
 
     async def send_message(self, chat_id: int, content: str, parse_mode: str = None, reply_message_id: int = None) -> Message:
         """Sends a message to a chat."""

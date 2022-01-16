@@ -29,8 +29,8 @@ from typing import TYPE_CHECKING, Optional
 
 from .abc import TelegramObject
 from .chat import Chat
-from .user import User
 from .mixins import Hashable
+from .user import User
 
 if TYPE_CHECKING:
     from .http import HTTPClient
@@ -39,8 +39,7 @@ if TYPE_CHECKING:
 
 
 class Message(TelegramObject, Hashable):
-    """
-    Represents a message in Telegram.
+    """Represents a message in Telegram.
 
     .. container:: operations
 

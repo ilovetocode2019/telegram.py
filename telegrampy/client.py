@@ -26,9 +26,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import traceback
 import sys
-from typing import Any, TYPE_CHECKING, Callable, Coroutine, Dict, List, Optional, Tuple, TypeVar
+import traceback
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, Optional, Tuple, TypeVar
 
 from .errors import InvalidToken, Conflict
 from .http import HTTPClient
@@ -38,8 +38,8 @@ from .poll import Poll, PollAnswer
 if TYPE_CHECKING:
     from typing_extensions import ParamSpec
 
-    from .user import User
     from .chat import Chat
+    from .user import User
 
     P = ParamSpec("P")
 
@@ -48,14 +48,11 @@ if TYPE_CHECKING:
     Coro = Coroutine[Any, Any, T]
     CoroFunc = Callable[..., Coro[Any]]
 
-
-
 log: logging.Logger = logging.getLogger("telegrampy")
 
 
 class Client:
-    """
-    Represents a client connection to Telegram.
+    """Represents a client connection to Telegram.
 
     Parameters
     ----------
@@ -138,7 +135,7 @@ class Client:
         log.info("Fetching unread updates")
         try:
             updates = await self.http.get_updates(offset=self._last_update_id)
-        except Exception as exc:
+        except Exception:
             raise
         else:
             if updates:
@@ -156,9 +153,9 @@ class Client:
             # Fetch updates
             try:
                 updates = await self.http.get_updates(offset=self._last_update_id, timeout=self._wait)
-            except (InvalidToken, Conflict) as exc:
+            except (InvalidToken, Conflict):
                 raise
-            except Exception as exc:
+            except Exception:
                 if self._running:
                     if tries < 30:
                         tries += 1
@@ -293,8 +290,7 @@ class Client:
         return await asyncio.wait_for(future, timeout=timeout)
 
     def event(self, func: CoroFunc) -> CoroFunc:
-        """
-        Turns a function into an event handler.
+        """Turns a function into an event handler.
 
         Parameters
         ----------
@@ -306,8 +302,7 @@ class Client:
         return func
 
     def add_listener(self, func: CoroFunc, name: str = None) -> None:
-        """
-        Registers a function as a listener.
+        """Registers a function as a listener.
 
         Parameters
         ----------
@@ -325,8 +320,7 @@ class Client:
             self._listeners[name] = [func]
 
     def remove_listener(self, func: CoroFunc) -> None:
-        """
-        Removes a listener.
+        """Removes a listener.
 
         Parameters
         ----------
@@ -339,8 +333,7 @@ class Client:
                 self._listeners[event].remove(func)
 
     def listen(self, name: str = None) -> Callable[[CoroFunc], CoroFunc]:
-        """
-        A decorator that registers a function as a listener.
+        """A decorator that registers a function as a listener.
 
         Parameters
         ---------
@@ -362,6 +355,7 @@ class Client:
 
     async def start(self) -> None:
         """|coro|
+
         Starts the bot.
         """
 
@@ -375,6 +369,7 @@ class Client:
 
     async def stop(self) -> None:
         """|coro|
+
         Stops the bot.
         """
 
@@ -399,9 +394,7 @@ class Client:
         self.loop.run_until_complete(self.loop.shutdown_asyncgens())
 
     def run(self) -> None:
-        """
-        Runs the bot.
-        """
+        """Runs the bot."""
 
         self._running = True
 

@@ -24,10 +24,10 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
-from .user import User
 from .abc import TelegramObject
+from .user import User
 
 if TYPE_CHECKING:
     from .http import HTTPClient

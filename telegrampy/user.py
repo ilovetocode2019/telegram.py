@@ -39,11 +39,8 @@ if TYPE_CHECKING:
     from .types.user import User as UserPayload
 
 
-
-
 class User(TelegramObject, Hashable):
-    """
-    Represents a Telegram user.
+    """Represents a Telegram user.
 
     .. container:: operations
 
@@ -109,34 +106,24 @@ class User(TelegramObject, Hashable):
 
     @property
     def name(self) -> str:
-        """
-        :class:`str`:
-            Username if the user has one. Otherwise the full name of the user.
-        """
+        """:class:`str`: Username if the user has one. Otherwise the full name of the user."""
 
         return self.username or self.full_name
 
     @property
     def full_name(self) -> str:
-        """
-        :class:`str`:
-            The user's full name.
-        """
+        """:class:`str`: The user's full name."""
 
         return f"{self.first_name} {self.last_name}" if self.last_name else self.first_name
 
     @property
     def link(self) -> Optional[str]:
-        """
-        Optional[:class:`str`]:
-            The t.me link for the user, if applicable.
-        """
+        """Optional[:class:`str`]: The t.me link for the user, if applicable."""
 
         return f"http://t.me/{self.username}" if self.username else None
 
     def mention(self, text: Optional[str] = None, parse_mode: ParseMode = "HTML") -> str:
-        """
-        Returns a mention for the user.
+        """Returns a mention for the user.
 
         Parameters
         ----------
