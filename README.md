@@ -8,7 +8,8 @@
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/telegram.py)](https://pypi.org/project/telegram.py)
 [![Documentation Status](https://readthedocs.org/projects/telegrampy/badge/?version=latest)](https://telegrampy.readthedocs.io/en/latest/?badge=latest)
 [![GitHub - License](https://img.shields.io/github/license/ilovetocode2019/telegram.py)](LICENSE)
-[![Telegram Channel](https://img.shields.io/badge/telegram-t.me%2Ftpy__updates-0088cc)](https://t.me/tpy_updates)
+[![Telegram Channel](https://img.shields.io/badge/channel-t.me%2Ftpy__updates-0088cc)](https://t.me/tpy_updates)
+[![Telegram Group](https://img.shields.io/badge/group-t.me%2Ftpy__group-0088cc)](https://t.me/tpy_group)
 
 An async API wrapper for the Telegram bot API in Python
 
