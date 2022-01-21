@@ -22,23 +22,37 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
-import datetime
-import traceback
 import sys
+import traceback
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, Optional, Tuple, TypeVar
 
+from .errors import InvalidToken, Conflict
 from .http import HTTPClient
-from .errors import *
 from .message import Message
-from .poll import *
+from .poll import Poll, PollAnswer
 
-log = logging.getLogger("telegrampy")
+if TYPE_CHECKING:
+    from typing_extensions import ParamSpec
+
+    from .chat import Chat
+    from .user import User
+
+    P = ParamSpec("P")
+
+    T = TypeVar('T')
+
+    Coro = Coroutine[Any, Any, T]
+    CoroFunc = Callable[..., Coro[Any]]
+
+log: logging.Logger = logging.getLogger("telegrampy")
 
 
 class Client:
-    """
-    Represents a client connection to Telegram.
+    """Represents a client connection to Telegram.
 
     Parameters
     ----------
@@ -59,24 +73,23 @@ class Client:
         The event loop to use for the bot.
     """
 
-    def __init__(self, token: str, **options):
-        self.token = token
-        self.loop = options.get("loop") or asyncio.get_event_loop()
-        self.http = HTTPClient(token=token, loop=self.loop)
+    def __init__(self, token: str, *, loop: asyncio.AbstractEventLoop = None, **options: Any):
+        self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
+        self.http: HTTPClient = HTTPClient(token=token, loop=self.loop)
 
-        wait = options.get("wait", 10)
+        wait: int = options.get("wait", 10)
         if wait < 1 or wait > 10:
             raise ValueError("Wait time must be between 1 and 10")
 
-        self._running = False
-        self._last_update_id = None
-        self._wait = wait
-        self._read_unread_updates = options.get("read_unread_updates", False)
+        self._running: bool = False
+        self._last_update_id: Optional[int] = None
+        self._wait: int = wait
+        self._read_unread_updates: bool = options.get("read_unread_updates", False)
 
-        self._listeners = {}
-        self._waiting_for = {}
+        self._listeners: Dict[str, List[CoroFunc]] = {}
+        self._waiting_for: Dict[str, List[Tuple[asyncio.Future, Callable[..., bool]]]] = {}
 
-    async def get_me(self):
+    async def get_me(self) -> User:
         """|coro|
 
         Fetches the bot account.
@@ -94,7 +107,7 @@ class Client:
 
         return await self.http.get_me()
 
-    async def get_chat(self, chat_id: int):
+    async def get_chat(self, chat_id: int) -> Chat:
         """|coro|
 
         Fetches a chat by ID.
@@ -117,12 +130,12 @@ class Client:
 
         return await self.http.get_chat(chat_id=chat_id)
 
-    async def _poll(self):
+    async def _poll(self) -> None:
         # Get last update id
         log.info("Fetching unread updates")
         try:
             updates = await self.http.get_updates(offset=self._last_update_id)
-        except Exception as exc:
+        except Exception:
             raise
         else:
             if updates:
@@ -140,9 +153,9 @@ class Client:
             # Fetch updates
             try:
                 updates = await self.http.get_updates(offset=self._last_update_id, timeout=self._wait)
-            except (InvalidToken, Conflict) as exc:
+            except (InvalidToken, Conflict):
                 raise
-            except Exception as exc:
+            except Exception:
                 if self._running:
                     if tries < 30:
                         tries += 1
@@ -159,9 +172,9 @@ class Client:
 
                 tries = 0
 
-        log.info("The bot succesfully completed")
+        log.info("The bot successfully completed")
 
-    async def _handle_update(self, update):
+    async def _handle_update(self, update: Dict[str, Any]) -> None:
         update_id = update["update_id"]
 
         self.dispatch("raw_update", update)
@@ -182,19 +195,19 @@ class Client:
             poll = Poll(self.http, update["poll"])
             self.dispatch("poll", poll)
         elif "poll_answer" in update:
-            answer = PollAnswer(update["poll_answer"])
+            answer = PollAnswer(self.http, update["poll_answer"])
             self.dispatch("poll_answer", answer)
         else:
             log.warning(f"Received an unknown update ({update_id}): {update}")
 
-    async def _use_event_handler(self, func, *args, **kwargs):
+    async def _use_event_handler(self, func: Callable[P, Any], *args: P.args, **kwargs: P.kwargs) -> None:
         try:
             await func(*args, **kwargs)
         except Exception as exc:
             self.dispatch("error", exc)
 
-    def dispatch(self, event, *args):
-        log.debug(f"Dispatchng {event} with {args}")
+    def dispatch(self, event: str, *args: Any) -> None:
+        log.debug(f"Dispatching {event} with {args}")
 
         # Handle the active wait_fors
         waiting_for = self._waiting_for.get(event)
@@ -247,7 +260,7 @@ class Client:
         for handler in handlers:
             self.loop.create_task(self._use_event_handler(handler, *args))
 
-    async def wait_for(self, event: str, check=None, timeout=None):
+    async def wait_for(self, event: str, *, check: Optional[Callable[..., bool]] = None, timeout: Optional[float] = None):
         """|coro|
 
         Waits for an event.
@@ -259,9 +272,10 @@ class Client:
         """
         ev = event.lower()
 
-        if not check:
-            def check(*args):
+        if check is None:
+            def _check(*args):
                 return True
+            check = _check
 
         future = self.loop.create_future()
 
@@ -275,9 +289,8 @@ class Client:
 
         return await asyncio.wait_for(future, timeout=timeout)
 
-    def event(self, func):
-        """
-        Turns a function into an event handler.
+    def event(self, func: CoroFunc) -> CoroFunc:
+        """Turns a function into an event handler.
 
         Parameters
         ----------
@@ -288,9 +301,8 @@ class Client:
         setattr(self, func.__name__, func)
         return func
 
-    def add_listener(self, func, name: str = None):
-        """
-        Registers a function as a listener.
+    def add_listener(self, func: CoroFunc, name: str = None) -> None:
+        """Registers a function as a listener.
 
         Parameters
         ----------
@@ -307,9 +319,8 @@ class Client:
         else:
             self._listeners[name] = [func]
 
-    def remove_listener(self, func):
-        """
-        Removes a listener.
+    def remove_listener(self, func: CoroFunc) -> None:
+        """Removes a listener.
 
         Parameters
         ----------
@@ -321,9 +332,8 @@ class Client:
             if func in self._listeners[event]:
                 self._listeners[event].remove(func)
 
-    def listen(self, name=None):
-        """
-        A decorator that registers a function as a listener.
+    def listen(self, name: str = None) -> Callable[[CoroFunc], CoroFunc]:
+        """A decorator that registers a function as a listener.
 
         Parameters
         ---------
@@ -331,20 +341,21 @@ class Client:
              The name of the event to register the function as.
         """
 
-        def deco(func):
+        def deco(func: CoroFunc) -> CoroFunc:
             self.add_listener(func, name)
             return func
 
         return deco
 
-    async def on_error(self, error):
+    async def on_error(self, error: Exception) -> None:
         if "on_error" in self._listeners:
             return
 
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
-    async def start(self):
+    async def start(self) -> None:
         """|coro|
+
         Starts the bot.
         """
 
@@ -354,10 +365,11 @@ class Client:
         log.info("Starting the bot")
 
         self._running = True
-        self.loop.create_task(await self._poll())
+        await self._poll()
 
-    async def stop(self):
+    async def stop(self) -> None:
         """|coro|
+
         Stops the bot.
         """
 
@@ -369,7 +381,7 @@ class Client:
         self._running = False
         await self.http.close()
 
-    def _clean_tasks(self):
+    def _clean_tasks(self) -> None:
         log.info("Cleaning up tasks")
         tasks = asyncio.all_tasks(loop=self.loop)
         if not tasks:
@@ -381,10 +393,8 @@ class Client:
         self.loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
         self.loop.run_until_complete(self.loop.shutdown_asyncgens())
 
-    def run(self):
-        """
-        Runs the bot.
-        """
+    def run(self) -> None:
+        """Runs the bot."""
 
         self._running = True
 

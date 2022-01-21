@@ -22,24 +22,31 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 import html
 import itertools
-import typing
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeVar
 
-import telegrampy
-
-from .errors import *
-from .core import Command
 from .cog import Cog
+from .core import Command
+from .errors import CommandError
+
+if TYPE_CHECKING:
+    from .bot import Bot
+
+    CommandT = TypeVar("CommandT", bound="Command")
+
 
 class _HelpCommandImplementation(Command):
     """Class that interfaces with :class:`telegrampy.ext.commands.Command`."""
 
-    def __init__(self, help_cmd, bot, command_attrs):
-        self.help_cmd = help_cmd
+    def __init__(self, help_cmd: HelpCommand, bot: Bot, command_attrs: Dict[str, Any]):
+        self.help_cmd: HelpCommand = help_cmd
 
         super().__init__(help_cmd, **command_attrs)
-        self.bot = bot
+        self.bot: Bot = bot
+
 
 class HelpCommand:
     """Help command template.
@@ -52,26 +59,28 @@ class HelpCommand:
         The :class:`telegrampy.ext.commands.Bot` from the Context
     """
 
-    def __init__(self, **options):
-        self.command_attrs = options.pop('command_attrs', {})
+    def __init__(self, **options: Any) -> None:
+        self.command_attrs: Dict[str, Any] = options.pop('command_attrs', {})
         self.command_attrs.setdefault("name", "help")
         self.command_attrs.setdefault("description", "The help command")
         self.command_attrs.setdefault("aliases", ["start"])
 
-        self._implementation = None
+        self._implementation: Optional[_HelpCommandImplementation] = None
 
-    def _add_to_bot(self, bot):
+    def _add_to_bot(self, bot: Bot) -> None:
         implementation = _HelpCommandImplementation(self, bot, self.command_attrs)
         bot.add_command(implementation)
         self._implementation = implementation
 
-    def _remove_from_bot(self, bot):
+    def _remove_from_bot(self, bot: Bot) -> None:
+        if self._implementation is None:
+            raise RuntimeError("Help command is not implemented.")
+
         bot.remove_command(self._implementation.name)
         self._implementation = None
 
-    async def get_command_signature(self, command):
-        """
-        |coro|
+    async def get_command_signature(self, command: Command) -> str:
+        """|coro|
 
         The method that gets a formatted command signature
 
@@ -82,9 +91,8 @@ class HelpCommand:
         sig = html.escape(command.signature)
         return f"/{name} {sig}"
 
-    async def send_bot_help(self):
-        """
-        |coro|
+    async def send_bot_help(self) -> None:
+        """|coro|
 
         The method that sends help for the bot.
 
@@ -93,9 +101,8 @@ class HelpCommand:
         """
         raise NotImplementedError("Subclasses must implement this.")
 
-    async def send_cog_help(self, cog: Cog):
-        """
-        |coro|
+    async def send_cog_help(self, cog: Cog) -> None:
+        """|coro|
 
         The method that sends help for a cog.
 
@@ -109,7 +116,7 @@ class HelpCommand:
         """
         raise NotImplementedError("Subclasses must implement this.")
 
-    async def send_command_help(self, command: Command):
+    async def send_command_help(self, command: Command) -> None:
         """The method that sends help for a command.
 
         This is called when a command matches the query.
@@ -122,9 +129,8 @@ class HelpCommand:
         """
         raise NotImplementedError("Subclasses must implement this.")
 
-    async def send_not_found(self, query: str):
-        """
-        |coro|
+    async def send_not_found(self, query: str) -> None:
+        """|coro|
 
         The method that sends a 'not found' message or similar.
 
@@ -137,9 +143,8 @@ class HelpCommand:
         """
         await self.ctx.send(f"A command or cog named '{query}' was not found.")
 
-    async def help_callback(self, query: typing.Optional[str]):
-        """
-        |coro|
+    async def help_callback(self, query: Optional[str]) -> None:
+        """|coro|
 
         The callback that searches for a matching commmand or cog.
 
@@ -195,20 +200,27 @@ class DefaultHelpCommand(HelpCommand):
         Defaults to ``True``.
     """
 
-    def __init__(self, **options):
-        self.no_category = options.pop("no_category", "No Category")
-        self.sort_commands = options.pop("sort_commands", True)
+    if TYPE_CHECKING:
+        no_category: str
+        sort_commands: bool
+
+    def __init__(self, **options: Any):
+        self.no_category: str = options.pop("no_category", "No Category")
+        self.sort_commands: bool = options.pop("sort_commands", True)
         super().__init__(**options)
 
-    def get_ending_note(self):
+    def get_ending_note(self) -> str:
         """Returns the command's ending note."""
+        if self._implementation is None:
+            raise RuntimeError("Help command is not implemented.")
+
         name = self._implementation.name
         return (
             f"Type /{name} [command] for more info on a command.\n"
             f"You can also type /{name} [category] for more info on a category."
         )
 
-    async def format_commands(self, commands: typing.List[Command], *, heading: str):
+    async def format_commands(self, commands: List[Command], *, heading: str) -> List[str]:
         """|coro|
 
         The method that formats a given list of commands.
@@ -248,11 +260,10 @@ class DefaultHelpCommand(HelpCommand):
 
         return formatted
 
-    async def format_command(self, command):
-        """
-        |coro|
+    async def format_command(self, command: Command) -> List[str]:
+        """|coro|
 
-        The method that formats an indivitual command.
+        The method that formats an individual command.
 
         Parameters
         ------------
@@ -269,9 +280,8 @@ class DefaultHelpCommand(HelpCommand):
 
         return help_text
 
-    async def filter_commands(self, commands):
-        """
-        |coro|
+    async def filter_commands(self, commands: List[CommandT]) -> List[CommandT]:
+        """|coro|
 
         Takes a list of commands and filters them.
 
@@ -282,7 +292,7 @@ class DefaultHelpCommand(HelpCommand):
 
         Returns
         -------
-        List[:class:`telegrmpy.ext.commands.Command`]
+        List[:class:`telegrampy.ext.commands.Command`]
             The filtered commands.
         """
 
@@ -300,11 +310,11 @@ class DefaultHelpCommand(HelpCommand):
 
         return filtered_commands
 
-    async def send_help_text(self, help_text):
+    async def send_help_text(self, help_text: List[str]) -> None:
         message = "\n".join(help_text)
         await self.ctx.send(message, parse_mode="HTML")
 
-    async def send_bot_help(self):
+    async def send_bot_help(self) -> None:
         bot = self.bot
 
         help_text = []
@@ -340,9 +350,7 @@ class DefaultHelpCommand(HelpCommand):
 
         await self.send_help_text(help_text)
 
-    async def send_cog_help(self, cog: Cog):
-        bot = self.bot
-
+    async def send_cog_help(self, cog: Cog) -> None:
         help_text = []
 
         if cog.description:
@@ -360,5 +368,5 @@ class DefaultHelpCommand(HelpCommand):
 
         await self.send_help_text(help_text)
 
-    async def send_command_help(self, command: Command):
+    async def send_command_help(self, command: Command) -> None:
         await self.send_help_text(await self.format_command(command))

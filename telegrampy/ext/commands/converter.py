@@ -22,30 +22,34 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from .errors import BadArgument
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Union
+
 from telegrampy.chat import Chat
-from telegrampy.user import User
 from telegrampy.errors import HTTPException, BadRequest
+from .errors import BadArgument
+
+if TYPE_CHECKING:
+    from telegrampy.user import User
+    from .context import Context
+
 
 class Converter:
-    """
-    Base class for converters.
-    """
+    """Base class for converters."""
 
-    async def convert(self, ctx, arg):
-        """
-        |coro|
+    async def convert(self, ctx: Context, arg: str) -> Any:
+        """|coro|
 
         Does the converting.
         """
         raise NotImplementedError
 
-class UserConverter(Converter):
-    """
-    Converts an argument into a user.
-    """
 
-    async def convert(self, ctx, arg):
+class UserConverter(Converter):
+    """Converts an argument into a user."""
+
+    async def convert(self, ctx: Context, arg: Union[str, Any]) -> User:
         try:
             arg = int(arg)
         except ValueError:
@@ -57,12 +61,11 @@ class UserConverter(Converter):
         except HTTPException as exc:
             raise BadArgument(f"Error while fetching user '{arg}'") from exc
 
-class ChatConverter(Converter):
-    """
-    Converts an argument into a chat.
-    """
 
-    async def convert(self, ctx, arg):
+class ChatConverter(Converter):
+    """Converts an argument into a chat."""
+
+    async def convert(self, ctx: Context, arg: Union[str, Any]) -> Chat:
         try:
             arg = int(arg)
         except ValueError:

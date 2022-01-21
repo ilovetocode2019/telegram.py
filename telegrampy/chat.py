@@ -22,17 +22,36 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 import asyncio
 import io
-import typing
 
-from .errors import *
 from .abc import TelegramObject
+from .mixins import Hashable
+
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    List,
+    Optional,
+    TypeVar,
+    Union,
+)
+
+if TYPE_CHECKING:
+    from .http import HTTPClient
+    from .message import Message
+    from .poll import Poll
+    from .user import User
+    from .utils import ParseMode
+    from .types.chat import Chat as ChatPayload
+
+ChatActionSenderT = TypeVar("ChatActionSenderT", bound="ChatActionSender")
 
 
-class Chat(TelegramObject):
-    """
-    Represents a chat in Telegram.
+class Chat(TelegramObject, Hashable):
+    """Represents a chat in Telegram.
 
     .. container:: operations
 
@@ -53,25 +72,39 @@ class Chat(TelegramObject):
     ----------
     id: :class:`int`
         The ID of the chat.
-    title: :class:`str`
-        The title of the chat.
-    description: Optional[:class:`str`]
-        The description of the chat.
     type: :class:`str`
         The type of the chat.
+    title: Optional[:class:`str`]
+        The title of the chat, if applicable..
+    username: Optional[:class:`str`]
+        The username of the chat, if applicable.
+    description: Optional[:class:`str`]
+        The description of the chat, if applicable.
+    invite_link: Optional[:class:`str`]
+        The invite link of the chat, if applicable.
     """
 
-    def __init__(self, http, data: dict):
-        super().__init__(http, data)
-        self.title = data.get("title")
-        self.username = data.get("username")
-        self.description = data.get("description")
-        self.type = data.get("type")
+    if TYPE_CHECKING:
+        id: int
+        title: Optional[str]
+        username: Optional[str]
+        description: Optional[str]
+        type: str
+        invite_link: Optional[str]
 
-    def __str__(self):
+    def __init__(self, http: HTTPClient, data: ChatPayload) -> None:
+        super().__init__(http)
+        self.id: int = data.get("id")
+        self.title: Optional[str] = data.get("title")
+        self.username: Optional[str] = data.get("username")
+        self.description: Optional[str] = data.get("description")
+        self.type: str = data.get("type")
+        self.invite_link: Optional[str] = data.get("invite_link")
+
+    def __str__(self) -> Optional[str]:
         return self.title
 
-    async def send(self, content: str, parse_mode: str = None):
+    async def send(self, content: str, parse_mode: Optional[ParseMode] = None) -> Message:
         """|coro|
 
         Sends a message to the chat.
@@ -96,7 +129,13 @@ class Chat(TelegramObject):
 
         return await self._http.send_message(chat_id=self.id, content=content, parse_mode=parse_mode)
 
-    async def send_document(self, document: typing.Union[io.BytesIO, str], filename: str = None, caption: str = None, parse_mode: str = None):
+    async def send_document(
+        self,
+        document: Union[io.BytesIO, str],
+        filename: Optional[str] = None,
+        caption: Optional[str] = None,
+        parse_mode: Optional[str] = None
+    ) -> Message:
         """|coro|
 
         Sends a document to the chat.
@@ -125,7 +164,13 @@ class Chat(TelegramObject):
 
         return await self._http.send_document(chat_id=self.id, file=document, filename=filename, caption=caption, parse_mode=parse_mode)
 
-    async def send_photo(self, photo: typing.Union[io.BytesIO, str], filename: str = None, caption: str = None, parse_mode: str = None):
+    async def send_photo(
+        self,
+        photo: Union[io.BytesIO, str],
+        filename: Optional[str] = None,
+        caption: Optional[str] = None,
+        parse_mode: Optional[str] = None
+    ) -> Message:
         """|coro|
 
         Sends a photo to the chat.
@@ -148,13 +193,13 @@ class Chat(TelegramObject):
         """
 
         if isinstance(photo, str):
-            with open(document, "rb") as file:
+            with open(photo, "rb") as file:
                 content = file.read()
-                document = io.BytesIO(content)
+                photo = io.BytesIO(content)
 
         return await self._http.send_photo(chat_id=self.id, file=photo, filename=filename, caption=caption, parse_mode=parse_mode)
 
-    async def send_poll(self, question: str, options: list):
+    async def send_poll(self, question: str, options: List[str]) -> Poll:
         """|coro|
 
         Sends a poll to the chat.
@@ -179,7 +224,7 @@ class Chat(TelegramObject):
 
         return await self._http.send_poll(chat_id=self.id, question=question, options=options)
 
-    async def send_action(self, action: str):
+    async def send_action(self, action: str) -> None:
         """|coro|
 
         Sends an action to the chat.
@@ -197,9 +242,8 @@ class Chat(TelegramObject):
 
         await self._http.send_chat_action(chat_id=self.id, action=action)
 
-    def action(self, action: str):
-        """
-        Returns a context manager that sends a chat action until the with statment is completed.
+    def action(self, action: str) -> ChatActionSender:
+        """Returns a context manager that sends a chat action until the with statement is completed.
 
         Parameters
         ----------
@@ -209,7 +253,7 @@ class Chat(TelegramObject):
 
         return ChatActionSender(self, action)
 
-    async def get_member(self, user_id: int):
+    async def get_member(self, user_id: int) -> User:
         """|coro|
 
         Fetches a member in the chat.
@@ -232,25 +276,26 @@ class Chat(TelegramObject):
 
         return await self._http.get_chat_member(chat_id=self.id, user_id=user_id)
 
+
 class ChatActionSender:
-    def __init__(self, chat, action):
+    def __init__(self, chat: Chat, action: str) -> None:
         self.chat = chat
         self.action = action
 
-    async def action_loop(self):
+    async def action_loop(self) -> None:
         while True:
             await self.chat.send_action(self.action)
             await asyncio.sleep(5)
 
-    def __enter__(self):
+    def __enter__(self: ChatActionSenderT) -> ChatActionSenderT:
         self.task = self.chat._http.loop.create_task(self.action_loop())
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: Any) -> None:
         self.task.cancel()
 
-    async def __aenter__(self):
+    async def __aenter__(self: ChatActionSenderT) -> ChatActionSenderT:
         return self.__enter__()
 
-    async def __aexit__(self, *args):
+    async def __aexit__(self, *args) -> None:
         return self.__exit__()

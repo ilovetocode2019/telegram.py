@@ -22,16 +22,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 import html
 import io
-import typing
+from typing import TYPE_CHECKING, Optional, Union
 
 from .abc import TelegramObject
+from .mixins import Hashable
 from .utils import escape_markdown
 
-class User(TelegramObject):
-    """
-    Represents a Telegram user.
+if TYPE_CHECKING:
+    from .http import HTTPClient
+    from .message import Message
+    from .utils import ParseMode
+    from .types.user import User as UserPayload
+
+
+class User(TelegramObject, Hashable):
+    """Represents a Telegram user.
 
     .. container:: operations
 
@@ -56,11 +65,11 @@ class User(TelegramObject):
     first_name: :class:`str`
         The first name of the user.
     last_name: Optional[:class:`str`]
-        The last name of the user.
+        The last name of the user, if applicable.
     username: Optional[:class:`str`]
-        The username of the user.
+        The username of the user, if applicable.
     language_code: Optional[:class:`str`]
-        The IETF language tag for the user's language.
+        The IETF language tag for the user's language, if applicable.
     can_join_groups: Optional[:class:`bool`]
         If the bot can join groups. Only returned in :class:`telegrampy.Client.get_me`.
     can_read_all_group_messages: Optional[:class:`bool`]
@@ -69,50 +78,52 @@ class User(TelegramObject):
         If the bot has inline queries enabled. Only returned in :class:`telegrampy.Client.get_me`.
     """
 
-    def __init__(self, http, data):
-        super().__init__(http, data)
-        self.is_bot = data.get("is_bot")
-        self.username = data.get("username")
-        self.first_name = data.get("first_name")
-        self.last_name = data.get("last_name")
-        self.language_code = data.get("language_code")
-        self.can_join_groups = data.get("can_join_groups")
-        self.can_read_all_group_messages = data.get("can_read_all_group_messages")
-        self.supports_inline_queries = data.get("supports_inline_queries")
+    if TYPE_CHECKING:
+        id: int
+        is_bot: bool
+        username: Optional[str]
+        first_name: str
+        last_name: Optional[str]
+        language_code: Optional[str]
+        can_join_groups: Optional[bool]
+        can_read_all_group_messages: Optional[bool]
+        supports_inline_queries: Optional[bool]
 
-    def __str__(self):
+    def __init__(self, http: HTTPClient, data: UserPayload) -> None:
+        super().__init__(http)
+        self.id: int = data.get("id")
+        self.is_bot: bool = data.get("is_bot")
+        self.username: Optional[str] = data.get("username")
+        self.first_name: str = data.get("first_name")
+        self.last_name: Optional[str] = data.get("last_name")
+        self.language_code: Optional[str] = data.get("language_code")
+        self.can_join_groups: Optional[bool] = data.get("can_join_groups")
+        self.can_read_all_group_messages: Optional[bool] = data.get("can_read_all_group_messages")
+        self.supports_inline_queries: Optional[bool] = data.get("supports_inline_queries")
+
+    def __str__(self) -> Optional[str]:
         return self.username
 
     @property
-    def name(self):
-        """
-        :class:`str`:
-            Username if the user has one. Otherwise the full name of the user.
-        """
+    def name(self) -> str:
+        """:class:`str`: Username if the user has one. Otherwise the full name of the user."""
 
         return self.username or self.full_name
 
     @property
-    def full_name(self):
-        """
-        :class:`str`:
-            The user's full name.
-        """
+    def full_name(self) -> str:
+        """:class:`str`: The user's full name."""
 
         return f"{self.first_name} {self.last_name}" if self.last_name else self.first_name
 
     @property
-    def link(self):
-        """
-        :class:`str`:
-            The t.me link for the user.
-        """
+    def link(self) -> Optional[str]:
+        """Optional[:class:`str`]: The t.me link for the user, if applicable."""
 
         return f"http://t.me/{self.username}" if self.username else None
 
-    def mention(self, text = None, parse_mode = "HTML"):
-        """
-        Returns a mention for the user.
+    def mention(self, text: Optional[str] = None, parse_mode: ParseMode = "HTML") -> str:
+        """Returns a mention for the user.
 
         Parameters
         ----------
@@ -137,9 +148,9 @@ class User(TelegramObject):
         elif parse_mode == "MarkdownV2":
             return f"[{escape_markdown(text, version=2)}](tg://user?id={self.id})"
 
-    async def send(self, content: str = None, parse_mode: str = None):
+    async def send(self, content: str, parse_mode: Optional[ParseMode] = None) -> Message:
         """|coro|
-        
+
         Sends a message to the user.
 
         Parameters
@@ -162,7 +173,13 @@ class User(TelegramObject):
 
         return await self._http.send_message(chat_id=self.id, content=content, parse_mode=parse_mode)
 
-    async def send_document(self, document: typing.Union[io.BytesIO, str], filename: str = None, caption: str = None, parse_mode: str = None):
+    async def send_document(
+        self,
+        document: Union[io.BytesIO, str],
+        filename: Optional[str] = None,
+        caption: Optional[str] = None,
+        parse_mode: Optional[ParseMode] = None
+    ) -> Message:
         """|coro|
 
         Sends a document to the user.
@@ -191,7 +208,13 @@ class User(TelegramObject):
 
         return await self._http.send_document(chat_id=self.id, file=document, filename=filename, caption=caption, parse_mode=parse_mode)
 
-    async def send_photo(self, photo: typing.Union[io.BytesIO, str], filename: str = None, caption: str = None, parse_mode: str = None):
+    async def send_photo(
+        self,
+        photo: Union[io.BytesIO, str],
+        filename: Optional[str] = None,
+        caption: Optional[str] = None,
+        parse_mode: Optional[str] = None
+    ) -> Message:
         """|coro|
 
         Sends a photo to the user.
@@ -214,8 +237,8 @@ class User(TelegramObject):
         """
 
         if isinstance(photo, str):
-            with open(document, "rb") as file:
+            with open(photo, "rb") as file:
                 content = file.read()
-                document = io.BytesIO(content)
+                photo = io.BytesIO(content)
 
         return await self._http.send_photo(chat_id=self.id, file=photo, filename=filename, caption=caption, parse_mode=parse_mode)
