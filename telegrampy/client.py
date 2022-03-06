@@ -122,7 +122,11 @@ class Client:
             try:
                 log.debug("Fetching updates")
                 updates = await self.http.get_updates(self._last_update_id)
+
                 if len(updates) != 0:
+                    update_ids = [int(update["update_id"]) for update in updates]
+                    self._last_update_id = max(update_ids) + 1
+
                     log.debug(f"Handling update(s): {[update['update_id'] for update in updates]} ({len(updates)} update(s))")
                     for update in updates:
                         if "message" in update:
@@ -144,8 +148,6 @@ class Client:
                     else:
                         await self._dispatch(event, Message(self.http, data))
 
-                    update_ids = [int(update["update_id"]) for update in updates]
-                    self._last_update_id = max(update_ids) + 1
                     key = None
                     event = None
 
