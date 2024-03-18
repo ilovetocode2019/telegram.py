@@ -13,6 +13,10 @@
 
 An async API wrapper for the Telegram bot API in Python
 
+## Deprecation Notice
+
+This library is no longer being maintained and I do not recommend using it as it is incomplete and probably buggy.
+
 ## Installation
 
 Python 3.7+ is **required** to install and use telegram.py.
