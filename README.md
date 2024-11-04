@@ -6,22 +6,20 @@
 
 [![PyPI](https://img.shields.io/pypi/v/telegram.py)](https://pypi.org/project/telegram.py)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/telegram.py)](https://pypi.org/project/telegram.py)
-[![Documentation Status](https://readthedocs.org/projects/telegrampy/badge/?version=latest)](https://telegrampy.readthedocs.io/en/latest/?badge=latest)
 [![GitHub - License](https://img.shields.io/github/license/ilovetocode2019/telegram.py)](LICENSE)
-[![Telegram Channel](https://img.shields.io/badge/channel-t.me%2Ftpy__updates-0088cc)](https://t.me/tpy_updates)
-[![Telegram Group](https://img.shields.io/badge/group-t.me%2Ftpy__group-0088cc)](https://t.me/tpy_group)
 
 An async API wrapper for the Telegram bot API in Python
 
-## Deprecation Notice
-
-For now, development on this project has been mostly halted.
+## Features
+- Uses async and await syntax, over multithreading
+- Simple Object Oriented API interface
+- Easy to use commands framework
 
 ## Installation
 
-Python 3.7+ is **required** to install and use telegram.py.
+**Python 3.7+ is required to install and use telegram.py.**
 
-Install the latest release from PyPI:
+Install the latest stable release from PyPI:
 
 ```bash
 # Mac/Linux
@@ -63,6 +61,8 @@ bot.run()
 
 For a line-by-line walkthrough for this example, see the [quickstart](https://telegrampy.readthedocs.io/en/latest/quickstart.html#basic-example).
 
-## Documentation
+## Important Links
 
-[Documentation can be found here.](https://telegrampy.readthedocs.io)
+- [Documentation](https://telegrampy.readthedocs.io)  
+- [Telegram Group](https://t.me/tpy_group)  
+- [Telegram Channel](https://t.me/tpy_update)  
