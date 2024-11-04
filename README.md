@@ -15,7 +15,7 @@ An async API wrapper for the Telegram bot API in Python
 
 ## Deprecation Notice
 
-This library is no longer being maintained and I do not recommend using it as it is incomplete and probably buggy.
+For now, development on this project has been mostly halted.
 
 ## Installation
 
