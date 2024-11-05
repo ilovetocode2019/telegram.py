@@ -63,16 +63,16 @@ class User(TelegramObject, Hashable):
     is_bot: :class:`bool`
         If the user is a bot.
     first_name: :class:`str`
-        The first name of the user.
+        The first name of the user, if exists.
     last_name: Optional[:class:`str`]
-        The last name of the user, if applicable.
+        The last name of the user, if exists.
     username: Optional[:class:`str`]
         The username of the user, if applicable.
     language_code: Optional[:class:`str`]
         The IETF language tag for the user's language, if applicable.
     added_to_attachment_menu: :class:`bool`
         Whether the logged in bot is added to this user's attachment menu.  
-    is_premium: Optional[:class:`str`]
+    is_premium: :class:`bool`
         Whether the user is subscribed to Telegram Premium.
     can_join_groups: :class:`bool`
         Whether the logged in bot can join groups. Only returned in :class:`telegrampy.Client.get_me`.

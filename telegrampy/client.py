@@ -58,20 +58,18 @@ class Client:
     Parameters
     ----------
     token: :class:`str`
-        The Telegram API token for the bot.
+        The Telegram API token to authenticate the bot with.
     loop: Optional[:class:`asyncio.BaseEventLoop`]
-        The event loop to use for the bot. Uses :func:`asyncio.get_event_loop` is none is specified.
+        The event loop to run the bot on. Uses :func:`asyncio.get_event_loop` is none is specified.
     wait: Optional[:class:`int`]
-        The timeout in seconds for long polling. Defaults to 5.
+        The timeout in seconds for long polling. Defaults to 10.
     read_unread_updates: Optional[:class:`bool`]
         If the bot should read unread updates on startup. Defaults to False.
 
     Attributes
     ----------
-    token: :class:`str`
-        The Telegram API  token for the bot.
     loop: :class:`asyncio.BaseEventLoop`
-        The event loop to use for the bot.
+        The event loop that the bot is running on.
     """
 
     def __init__(self, token: str, *, loop: asyncio.AbstractEventLoop = None, **options: Any):
@@ -80,7 +78,7 @@ class Client:
 
         wait: int = options.get("wait", 10)
         if wait < 1 or wait > 10:
-            raise ValueError("Wait time must be between 1 and 10")
+            raise ValueError("Wait time must be between 1 and 10 seconds")
 
         self._running: bool = False
         self._last_update_id: Optional[int] = None
@@ -93,7 +91,7 @@ class Client:
     async def get_me(self) -> User:
         """|coro|
 
-        Fetches the bot account.
+        Fetches the authenticated bot account.
 
         Returns
         -------

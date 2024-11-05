@@ -66,13 +66,13 @@ class Poll(TelegramObject):
     total_voter_count: :class:`int`
         The total voter count of the poll.
     is_closed: :class:`bool`
-        If the poll is closed.
+        Whether the poll is closed.
     is_anonymous: :class:`bool`
-        If the poll is anonymous.
+        Whether the poll is anonymous.
     type: :class:`str`
         The type of the poll.
     allow_multiple_answers: :class:`bool`
-        If the poll allows multiple answers.
+        Whether the poll allows multiple answers.
     """
 
     if TYPE_CHECKING:
