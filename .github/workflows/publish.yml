@@ -1,9 +1,13 @@
 # Workflow file datapted from
 # https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows
 
-name: Publish to PyPI and TestPyPI
+name: Publish to PyPI
 
-on: push
+on:
+  push:
+    tags:
+    - '*'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -32,7 +36,6 @@ jobs:
 
   publish-to-pypi:
     name: Publish to PyPI
-    if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
     needs:
     - build
     runs-on: ubuntu-latest
@@ -51,7 +54,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
 
   github-release:
-    name: Sign and upload GitHub Release
+    name: Sign and upload to GitHub release
     needs:
     - publish-to-pypi
     runs-on: ubuntu-latest
@@ -90,27 +93,3 @@ jobs:
         gh release upload
         '${{ github.ref_name }}' dist/**
         --repo '${{ github.repository }}'
-
-  publish-to-testpypi:
-    name: Publish to TestPyPI
-    needs:
-    - build
-    runs-on: ubuntu-latest
-
-    environment:
-      name: testpypi
-      url: https://test.pypi.org/p/telegram.py-test
-
-    permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
-
-    steps:
-    - name: Download dists
-      uses: actions/download-artifact@v4
-      with:
-        name: python-package-distributions
-        path: dist/
-    - name: Publish to TestPyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        repository-url: https://test.pypi.org/legacy/
