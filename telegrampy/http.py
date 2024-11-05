@@ -308,6 +308,25 @@ class HTTPClient:
 
         return response["result"]
 
+    async def set_my_name(
+        self,
+        name: str = None,
+        language: str = None
+    ) -> None:
+        """Changes the name of the bot."""
+
+        url = self._base_url + "setMyName"
+        data = {"name": name, "language": language}
+        await self.request(Route("POST", url), json=data)
+
+    async def set_my_commands(
+        self,
+        commands
+    ) -> None:
+        url = self._base_url + "setMyCommands"
+        data = {"commands": commands}
+        await self.request(Route("POST", url), json=data)
+
     async def close(self) -> None:
         """Closes the HTTP session."""
 

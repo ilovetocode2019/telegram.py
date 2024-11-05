@@ -37,6 +37,44 @@ if TYPE_CHECKING:
     from .utils import ParseMode
     from .types.message import Message as MessagePayload
 
+class MessageEntity(TelegramObject):
+    """Represents a message entity.
+
+    Attributes
+    ----------
+    type: :class:`str`
+        The type of entity.
+    value: :class:`str`
+        The text content of the entity.
+    offset: :class:`int`
+        The offset of the start of the entity.
+    length: :class:`int`
+        The length of the entity.
+    url: Optional[:class:`str`]
+        The URL that will be opened, for `text_link`.
+    user: Optional[:class:`telegrampy.User`]
+        The mentioned user for `text_mention`.
+    language: Optional[:class:`str`]
+        The programming language of the entity text, for `pre`.
+    custom_emoji_id: Optional[:class:`str`]
+        The ID, for custom_emoji.
+    """
+    def __init__(self, http: HTTPClient, data: MessagePayload, *, text):
+        super().__init__(http)
+        self.type: str = data["type"]
+        self.offset: int = data["offset"]
+        self.length: int = data["length"]
+        self.url: Optional[str] = data.get("url")
+
+        self.user: Optional[user]
+        if "user" in data:
+            self.user = User(data.get("user"))
+        else:
+            self.user = None
+
+        self.language: Optional[str] = data.get("language")
+        self.custom_emoji_id: Optional[str] = data.get("custom_emoji_id")
+        self.value: str = text[self.offset:self.offset+self.length+1]
 
 class Message(TelegramObject, Hashable):
     """Represents a message in Telegram.
@@ -78,6 +116,7 @@ class Message(TelegramObject, Hashable):
     def __init__(self, http: HTTPClient, data: MessagePayload):
         super().__init__(http)
         self.id: int = data.get("message_id")
+        self.message_thread_id: Optional[int] = data.get("message_thread_id")
 
         created_at: int = data.get("date")
         self.created_at: Optional[datetime.datetime]
@@ -93,6 +132,11 @@ class Message(TelegramObject, Hashable):
 
         self.content: Optional[str] = data.get("text")
         self.chat: Chat = Chat(http, data.get("chat"))
+        self.entities: Union["entities"] = [MessageEntity(
+            http,
+            entity,
+            text=self.content)
+        for entity in data.get("entities", [])]
 
         self.author: Optional[User]
         if "from" in data:

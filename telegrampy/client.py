@@ -130,6 +130,9 @@ class Client:
 
         return await self.http.get_chat(chat_id=chat_id)
 
+    async def set_name(self, name: str = None, *, language_code: str = None) -> None:
+        await self.http.set_my_name(name, language_code)
+
     async def _poll(self) -> None:
         # Get last update id
         log.info("Fetching unread updates")

@@ -191,28 +191,23 @@ class Bot(telegrampy.Client):
             me = await self.get_me()
             self._username = me.username
 
-        content = message.content.split(" ")[0]
-        command = None
-        invoked_with = None
-        if content.startswith("/"):
-            split = content.split("@")
-            if len(split) == 1 or (len(split) != 1 and split[1] == self._username):
-                invoked_with = split[0][1:]
-                command = self.get_command(invoked_with)
+        for entity in message.entities:
+            if entity.type == "bot_command":
+                split = entity.value.split("@")
+                if len(split) == 1 or split[1] == self._username:
+                    invoked_with = split[0][1:]
+                    command = self.get_command(invoked_with)
 
-        if not invoked_with or not command:
-            return None
-
-        return cls(
-            bot=self,
-            message=message,
-            command=command,
-            invoked_with=invoked_with,
-            chat=message.chat,
-            author=message.author,
-            args=[],
-            kwargs={}
-        )
+                    return cls(
+                        bot=self,
+                        message=message,
+                        command=command,
+                        invoked_with=invoked_with,
+                        chat=message.chat,
+                        author=message.author,
+                        args=[],
+                        kwargs={}
+                    )
 
     def load_extension(self, extension: str) -> None:
         """Loads an extension.
@@ -499,3 +494,9 @@ class Bot(telegrampy.Client):
         traceback.print_exception(
             type(error), error, error.__traceback__, file=sys.stderr
         )
+
+    async def sync(self):
+        await self.http.set_my_commands([{
+            "command": command.name,
+            "description": command.description
+        } for command in self.commands])

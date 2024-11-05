@@ -39,6 +39,7 @@ class MessageEntity(TypedDict):
     url: str
     user: User
     language: str
+    custom_emoji_id: str
 
 
 class _BaseFile(TypedDict):
