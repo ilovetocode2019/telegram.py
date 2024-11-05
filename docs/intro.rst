@@ -3,8 +3,7 @@
 Introduction
 ============
 
-Welcome to the documentation for telegram.py, an async API wrapper
-for Telegram written in Python.
+Welcome to the documentation for telegram.py, an async API wrapper for the Telegram bot API in Python.
 
 .. _installation:
 
@@ -12,9 +11,9 @@ Installation
 ------------
 
 .. note::
-    telegram.py requires Python 3.6+
+    telegram.py requires Python 3.7+
 
-Install via git and pip:
+Install via pip:
 
 .. code-block:: shell
 

@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "telegram.py"
+description = "An async API wrapper for the Telegram bot API in Python"
+readme  =  "README.md"
+authors = [
+    {name = "ilovetocode"}
+]
+dependencies = [
+    "aiohttp"
+]
+license = {file = "LICENSE"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Topic :: Internet",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+    "Typing :: Typed",
+]
+requires-python = ">=3.7"
+dynamic = ["version"]
+
+[project.optional-dependencies]
+docs = [
+    "sphinx==8.1.3",
+    "sphinxcontrib_trio==1.1.2",
+    "sphinxcontrib-websupport",
+    "furo",
+]
+
+[project.urls]
+HomePage = "https://github.com/ilovetocode2019/telegram.py"
+Repository = "https://github.com/ilovetocode2019/telegram.py.git"
+Documentation = "https://telegrampy.readthedocs.io"
+Issues = "https://github.com/ilovetocode2019/telegram.py/issues"
+
+[tool.setuptools]
+packages = ["telegrampy", "telegrampy.types", "telegrampy.ext.commands"]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "telegrampy.__version__"}

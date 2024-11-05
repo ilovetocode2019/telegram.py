@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2020 ilovetocode
+Copyright (c) 2020-2021 ilovetocode
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,19 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .http import HTTPClient
+
+
 class TelegramObject:
     """Base telegram object."""
 
-    def __init__(self, http, data):
-        self._http = http
-        self._data = data
-
-        self.id = data.get("id")
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.id  == other.id
-
-    def __ne__(self, other):
-        if isinstance(other, self.__class__):
-            return other.id != self.id
-        return True
+    def __init__(self, http: HTTPClient) -> None:
+        self._http: HTTPClient = http

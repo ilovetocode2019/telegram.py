@@ -35,7 +35,7 @@ line-by-line.
 Line number(s)    Description
 ================  ========================================================================================================================================
 Lines 1-4         Import logging, telegrampy, and the telegram.py commands extension
-Lines 6-7         Configure basic logging to get updates in console
+Lines 6-7         Configure basic logging to get updates in the console
 Line 9            Create a ``commands.Bot`` instance with a token (get a token from `BotFather <https://core.telegram.org/bots#3-how-do-i-create-a-bot>`_)
 Line 11-12        Define and add a command to our bot called 'hi'
 Line 13           Send a greeting message to the chat where the command was invoked

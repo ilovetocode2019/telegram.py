@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2020 ilovetocode
+Copyright (c) 2020-2021 ilovetocode
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,14 +22,36 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from .errors import *
-from .file import *
+from __future__ import annotations
+
+import asyncio
+import io
+
 from .abc import TelegramObject
+from .mixins import Hashable
+
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    List,
+    Optional,
+    TypeVar,
+    Union,
+)
+
+if TYPE_CHECKING:
+    from .http import HTTPClient
+    from .message import Message
+    from .poll import Poll
+    from .user import User
+    from .utils import ParseMode
+    from .types.chat import Chat as ChatPayload
+
+ChatActionSenderT = TypeVar("ChatActionSenderT", bound="ChatActionSender")
 
 
-class Chat(TelegramObject):
-    """
-    Represents a chat in Telegram.
+class Chat(TelegramObject, Hashable):
+    """Represents a chat in Telegram.
 
     .. container:: operations
 
@@ -50,24 +72,39 @@ class Chat(TelegramObject):
     ----------
     id: :class:`int`
         The ID of the chat.
-    title: :class:`str`
-        The title of the chat.
-    description: Optional[:class:`str`]
-        The description of the chat.
     type: :class:`str`
         The type of the chat.
+    title: Optional[:class:`str`]
+        The title of the chat, if applicable..
+    username: Optional[:class:`str`]
+        The username of the chat, if applicable.
+    description: Optional[:class:`str`]
+        The description of the chat, if applicable.
+    invite_link: Optional[:class:`str`]
+        The invite link of the chat, if applicable.
     """
 
-    def __init__(self, http, data: dict):
-        super().__init__(http, data)
-        self.title = data.get("title")
-        self.description = data.get("description")
-        self.type = data.get("type")
+    if TYPE_CHECKING:
+        id: int
+        title: Optional[str]
+        username: Optional[str]
+        description: Optional[str]
+        type: str
+        invite_link: Optional[str]
 
-    def __str__(self):
+    def __init__(self, http: HTTPClient, data: ChatPayload) -> None:
+        super().__init__(http)
+        self.id: int = data.get("id")
+        self.title: Optional[str] = data.get("title")
+        self.username: Optional[str] = data.get("username")
+        self.description: Optional[str] = data.get("description")
+        self.type: str = data.get("type")
+        self.invite_link: Optional[str] = data.get("invite_link")
+
+    def __str__(self) -> Optional[str]:
         return self.title
 
-    async def send(self, content: str = None, file: File = None, parse_mode: str = None):
+    async def send(self, content: str, parse_mode: Optional[ParseMode] = None) -> Message:
         """|coro|
 
         Sends a message to the chat.
@@ -76,8 +113,6 @@ class Chat(TelegramObject):
         ----------
         content: :class:`str`
             The content of the message to send.
-        file: :class:`telegrampy.File`
-            The file to send.
         parse_mode: :class:`str`
             The parse mode of the message to send.
 
@@ -92,16 +127,79 @@ class Chat(TelegramObject):
             Sending the message failed.
         """
 
-        if not file:
-            return await self._http.send_message(chat_id=self.id, content=content, parse_mode=parse_mode)
-        else:
-            if isinstance(file, Document):
-                return await self._http.send_document(chat_id=self.id, document=file.file, filename=file.filename)
+        return await self._http.send_message(chat_id=self.id, content=content, parse_mode=parse_mode)
 
-            elif isinstance(file, Photo):
-                return await self._http.send_photo(chat_id=self.id, photo=file.file, filename=file.filename, caption=file.caption)
+    async def send_document(
+        self,
+        document: Union[io.BytesIO, str],
+        filename: Optional[str] = None,
+        caption: Optional[str] = None,
+        parse_mode: Optional[str] = None
+    ) -> Message:
+        """|coro|
 
-    async def send_poll(self, question: str, options: list):
+        Sends a document to the chat.
+
+        Parameters
+        ----------
+        document: Union[class:`io.BytesIO`, :class:`str`]
+            The document to send. Either a file or the path to one.
+        filename: :class:`str`
+            The filename of the document.
+        caption: :class:`str`
+            The document's caption.
+        parse_mode: :class:`str`
+            The parse mode for the caption.
+
+        Raises
+        ------
+        :exc:`errors.HTTPException`
+            Sending the document failed.
+        """
+
+        if isinstance(document, str):
+            with open(document, "rb") as file:
+                content = file.read()
+                document = io.BytesIO(content)
+
+        return await self._http.send_document(chat_id=self.id, file=document, filename=filename, caption=caption, parse_mode=parse_mode)
+
+    async def send_photo(
+        self,
+        photo: Union[io.BytesIO, str],
+        filename: Optional[str] = None,
+        caption: Optional[str] = None,
+        parse_mode: Optional[str] = None
+    ) -> Message:
+        """|coro|
+
+        Sends a photo to the chat.
+
+        Parameters
+        ----------
+        photo: Union[class:`io.BytesIO`, :class:`str`]
+            The photo to send. Either a file or the path to one.
+        filename: Optional[:class:`str`]
+            The filename of the photo.
+        caption: Optional[:class:`str`]
+            The caption for the photo.
+        parse_mode: Optional[:class:`str`]
+            The parse mode for the caption.
+
+        Raises
+        ------
+        :exc:`errors.HTTPException`
+            Sending the photo failed.
+        """
+
+        if isinstance(photo, str):
+            with open(photo, "rb") as file:
+                content = file.read()
+                photo = io.BytesIO(content)
+
+        return await self._http.send_photo(chat_id=self.id, file=photo, filename=filename, caption=caption, parse_mode=parse_mode)
+
+    async def send_poll(self, question: str, options: List[str]) -> Poll:
         """|coro|
 
         Sends a poll to the chat.
@@ -126,7 +224,7 @@ class Chat(TelegramObject):
 
         return await self._http.send_poll(chat_id=self.id, question=question, options=options)
 
-    async def send_action(self, action: str):
+    async def send_action(self, action: str) -> None:
         """|coro|
 
         Sends an action to the chat.
@@ -144,7 +242,18 @@ class Chat(TelegramObject):
 
         await self._http.send_chat_action(chat_id=self.id, action=action)
 
-    async def get_member(self, user_id: int):
+    def action(self, action: str) -> ChatActionSender:
+        """Returns a context manager that sends a chat action until the with statement is completed.
+
+        Parameters
+        ----------
+        action: :class:`str`
+            The action to send.
+        """
+
+        return ChatActionSender(self, action)
+
+    async def get_member(self, user_id: int) -> User:
         """|coro|
 
         Fetches a member in the chat.
@@ -167,30 +276,33 @@ class Chat(TelegramObject):
 
         return await self._http.get_chat_member(chat_id=self.id, user_id=user_id)
 
-    @property
-    def history(self):
-        """
-        :class:`list`:
-            The cached messages in the chat.
-        """
+    async def leave(self) -> None:
+        """|coro|
 
-        return [x for x in self._http.messages if x.chat.id == self.id]
-
-    def fetch_message(self, message_id: int):
-        """
-        Fetches a message from the cache.
-
-        Parameters
-        ----------
-        message_id: :class:`int`
-            The ID of the message to fetch.
-
-        Returns
-        -------
-        :class:`chat.Message`
-            The message fetched.
+        Removes the logged in bot from the chat.
         """
 
-        for x in self.history:
-            if x.id == message_id:
-                return x
+        return await self._http.leave_chat(chat_id=self.id)
+
+class ChatActionSender:
+    def __init__(self, chat: Chat, action: str) -> None:
+        self.chat = chat
+        self.action = action
+
+    async def action_loop(self) -> None:
+        while True:
+            await self.chat.send_action(self.action)
+            await asyncio.sleep(5)
+
+    def __enter__(self: ChatActionSenderT) -> ChatActionSenderT:
+        self.task = self.chat._http.loop.create_task(self.action_loop())
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        self.task.cancel()
+
+    async def __aenter__(self: ChatActionSenderT) -> ChatActionSenderT:
+        return self.__enter__()
+
+    async def __aexit__(self, *args) -> None:
+        return self.__exit__()

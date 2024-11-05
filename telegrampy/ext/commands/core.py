@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2020 ilovetocode
+Copyright (c) 2020-2021 ilovetocode
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,18 +22,42 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 import inspect
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, Generic, List, Optional, TypeVar, Union
 
-import telegrampy
-from telegrampy import User, Chat
+from telegrampy import Chat, User
 
-from .errors import *
+from . import errors
 from .context import Context
+from .converter import ChatConverter, Converter, UserConverter
+
+if TYPE_CHECKING:
+    from typing_extensions import Concatenate, ParamSpec
+
+    from .bot import Bot
+    from .cog import Cog
+
+    ContextT = TypeVar("ContextT", bound="Context")
+    CommandT = TypeVar("CommandT", bound="Command")
+
+T = TypeVar("T")
+Coro = Coroutine[Any, Any, T]
+CoroFunc = Callable[..., Coro[Any]]
+MaybeCoro = Union[T, Coro[T]]
+Check = Callable[[Context[Any]], MaybeCoro[bool]]
+
+CogT = TypeVar("CogT", bound="Cog")
+
+if TYPE_CHECKING:
+    P = ParamSpec("P")
+else:
+    P = TypeVar("P")
 
 
-class Command:
-    """
-    Represents a command.
+class Command(Generic[CogT, P, T]):
+    """Represents a command.
 
     Attributes
     ----------
@@ -55,25 +79,96 @@ class Command:
         The bot the command is in.
     """
 
-    def __init__(self, func, **kwargs):
+    def __init__(
+        self,
+        func: Union[
+            Callable[Concatenate[CogT, ContextT, P], Coro[T]],
+            Callable[Concatenate[ContextT, P], Coro[T]],
+        ],
+        **kwargs
+    ) -> None:
         self.callback = func
 
-        self._data = kwargs
-        self.name = kwargs.get("name") or func.__name__
-        self.description = kwargs.get("description")
-        self.usage = kwargs.get("usage")
-        self.aliases = kwargs.get("aliases") or []
-        self.hidden = kwargs.get("hidden") or False
-        self.cog = None
-        self.bot = None
-        self.checks = []
+        signature = inspect.signature(func)
+        self.params: Dict[str, inspect.Parameter] = signature.parameters.copy()
 
-    def __str__(self):
+        # Support for PEP-585
+        for key, value in self.params.items():
+            if isinstance(value.annotation, str):
+                self.params[key] = value = value.replace(annotation=eval(value.annotation, function.__globals__))
+
+        self._data: Any = kwargs
+        self.name: str = kwargs.get("name") or func.__name__
+        self.description: Optional[str] = kwargs.get("description")
+        self.usage: Optional[str] = kwargs.get("usage")
+        self.aliases: List[str] = kwargs.get("aliases") or []
+        self.hidden: bool = kwargs.get("hidden") or False
+        self.cog: Optional[Cog] = None
+        self.bot: Optional[Bot] = None
+        self.checks: List[Check] = []
+
+    def __str__(self) -> str:
         return self.name
 
-    def add_check(self, func):
+    @property
+    def clean_params(self) -> Dict[str, inspect.Parameter]:
+        """Dict[:class:`str`, :class:`inspect.Parameter`]:
+            Returns a mapping similar to :attr:`inspect.Signature.parameters`,
+            but without self or context.
         """
-        Adds a check.
+        params = self.params.copy()
+
+        # if in a cog, the first parameter is self
+        if self.cog is not None:
+            try:
+                del params[next(iter(params))]
+            except StopIteration:
+                raise ValueError("Missing self parameter") from None
+
+        # the context parameter is always first/next
+        try:
+            del params[next(iter(params))]
+        except StopIteration:
+            raise ValueError("missing context parameter") from None
+
+        return params
+
+    @property
+    def signature(self) -> str:
+        """:class:`str`: Returns a signature for a command that can be used in help commands.
+
+        <required> required param
+        [optional] optional param
+        [params...] optional list of params
+        [optional=0] optional param defaults to 0
+        """
+        if self.usage:
+            return self.usage
+
+        params = self.clean_params
+
+        if not params:
+            return ""
+
+        final = []
+        for name, param in params.items():
+            if param.default is not param.empty:
+                if param.default is None or (isinstance(param.default, str) and not param.default):
+                    final.append(f"[{name}]")
+
+                else:
+                    final.append(f"[{name}={param.default}]")
+
+            elif param.kind == param.VAR_POSITIONAL:
+                final.append(f"[{name}...]")
+
+            else:
+                final.append(f"<{name}>")
+
+        return " ".join(final)
+
+    def add_check(self, func: Check) -> None:
+        """Adds a check to the command.
 
         Parameters
         ----------
@@ -83,9 +178,8 @@ class Command:
 
         self.checks.append(func)
 
-    def remove_check(self, func):
-        """
-        Removes a check.
+    def remove_check(self, func: Check) -> None:
+        """Removes a check from the command.
 
         Parameters
         ----------
@@ -98,114 +192,235 @@ class Command:
 
         self.checks.remove(func)
 
-    async def _convert_arg(self, ctx, converter, arg):
-        try:
+    async def _convert_argument(self, ctx: Context, argument: str, param: inspect.Parameter) -> Any:
+        # Get the converter for the argument
+        if param.annotation == inspect._empty:
+            converter = str if param.default == inspect._empty or param.default is None else type(param.default)
+        else:
+            converter = param.annotation
             if converter == User:
-                return ctx.chat.get_member(arg)
+                converter = UserConverter()
             elif converter == Chat:
-                return ctx.bot.get_chat(arg)
-            else:
-                return converter(arg)
-        except:
-            return None
+                converter = ChatConverter()
 
-    async def _parse_args(self, ctx: Context):
-        given_args = ctx.message.content.split(" ")
-        given_args.pop(0)
+        # If the converter is a subclass of Converter, then create an instance
+        if inspect.isclass(converter) and issubclass(converter, Converter):
+            converter = converter()
 
-        if ctx.command:
-            takes_args = [x[1] for x in list(inspect.signature(ctx.command.callback).parameters.items())]
-            if ctx.command.cog:
-                takes_args.pop(0)
-            takes_args.pop(0)
+        # If the converter is a Converter instance, use the convert method to convert
+        if isinstance(converter, Converter):
+            try:
+                return await converter.convert(ctx, argument)
+            except errors.CommandError:
+                raise
+            except Exception as exc:
+                raise errors.ConversionError(converter, exc) from exc
 
-            # Iter through the arguments
-            for counter, argument in enumerate(takes_args):
-                try:
-                    # If argument can be positional, give one arg
-                    if argument.kind in (inspect._ParameterKind.POSITIONAL_OR_KEYWORD, inspect._ParameterKind.POSITIONAL_ONLY):
-                        give = given_args[0]
-                        converter = argument.annotation
-                        # If the argument as a converter, try and convert
-                        if converter != inspect._empty:
-                            give = await self._convert_arg(ctx, converter, give)
-                            if not give:
-                                raise BadArgument(give, converter.__name__)
-                        ctx.args.append(give)
-                        given_args.pop(0)
+        # Otherwise just use the converter as a callable
+        try:
+            return converter(argument)
+        except errors.CommandError:
+            raise
+        except Exception as exc:
+            try:
+                name = converter.__name__
+            except AttributeError:
+                name = converter.__class__.__name__  # type: ignore
+            raise errors.BadArgument(f"Converting to '{name}' failed for parameter '{param.name}'") from exc
 
-                    # If argument is a keyword argument, give the rest of the arguments
-                    elif argument.kind == inspect._ParameterKind.KEYWORD_ONLY:
-                        give = " ".join(given_args)
-                        if give == "":
-                            raise IndexError()
+    async def _parse_arguments(self, ctx: Context) -> None:
+        if not ctx.message or not ctx.message.content:
+            raise RuntimeError  # TODO: better solution?
 
-                        converter = argument.annotation
-                        # If the argument has a converter, try and convert
-                        if converter != inspect._empty:
-                            give = await self._convert_arg(ctx, converter, give)
-                            if not give:
-                                raise BadArgument(give, converter.__name__)
-                        ctx.kwargs[argument.name] = give
+        # Prepare parameters
+        ctx.args = [ctx] if not self.cog else [self.cog, ctx]
+        iterator = iter(self.params.items())
 
-                    elif argument.kind == inspect._ParameterKind.VAR_POSITIONAL:
-                        if len(given_args) == 0:
-                            raise IndexError()
-                        for give in given_args:
-                            converter = argument.annotation
-                            if converter != inspect._empty:
-                                give = await self._convert_arg(ctx, converter, give)
-                                if not give:
-                                    raise BadArgument(give, converter.__name__)
-                            ctx.args.append(give)
+        # Prepare input
+        text, = ctx.message.content.split(" ", 1)[1:] or ("",)
+        parser = ArgumentParser(text)
 
-                except IndexError:
-                    # If no argument does not have a default, raise MissingRequiredArgument
-                    if argument.default == inspect._empty:
-                        raise MissingRequiredArgument(argument.name)
-                    # Otherwise set the argument to the default
-                    if argument.kind in (inspect._ParameterKind.POSITIONAL_OR_KEYWORD, inspect._ParameterKind.POSITIONAL_ONLY):
-                        ctx.args.append(argument.default)
+        # Eat cog parameter if any
+        if self.cog:
+            try:
+                next(iterator)
+            except StopIteration:
+                raise errors.CommandError(f"Callback for {self} command is missing 'self' parameter")
 
-    async def invoke(self, ctx: Context):
+        # Eat ctx parameter
+        try:
+            next(iterator)
+        except StopIteration:
+            raise errors.CommandError(f"Callback for {self} command is missing 'ctx' parameter")
+
+        # The remaining parameters in the iterator need to be filled with arguments
+        for name, param in iterator:
+            if param.kind == inspect._ParameterKind.POSITIONAL_OR_KEYWORD:
+                argument = parser.argument()
+                if argument:
+                    argument = await self._convert_argument(ctx, argument, param)
+                elif not argument and param.default == inspect._empty:
+                    raise errors.MissingRequiredArgument(param)
+
+                ctx.args.append(argument or param.default)
+
+            elif param.kind == inspect._ParameterKind.KEYWORD_ONLY:
+                argument = parser.keyword_argument()
+                if argument:
+                    argument = await self._convert_argument(ctx, argument, param)
+                elif not argument and param.default == inspect._empty:
+                    raise errors.MissingRequiredArgument(param)
+
+                ctx.kwargs[param.name] = argument or param.default
+
+            elif param.kind == inspect._ParameterKind.VAR_POSITIONAL:
+                arguments = parser.extras()
+                arguments = [await self._convert_argument(ctx, argument, param) for argument in arguments]
+                ctx.args.extend(arguments)
+
+    async def can_run(self, ctx: Context) -> bool:
+        """|coro|
+
+        Checks if the command can run.
+
+        Parameters
+        ----------
+        ctx: :class:`telegrampy.ext.commands.Context`
+            The context invoking the command.
+
+        Returns
+        -------
+        :class:`bool`
+            A boolean indicating if the command can be invoked or not.
+
+        Raises
+        ------
+        :exc:`telegrampy.ext.commands.CheckFailure`
+            A check failed.
         """
-        |coro|
-        
+
+        # Run command checks
+        for check in self.checks:
+            if not check(ctx):
+                return False
+
+        # Run cog check if any
+        if self.cog:
+            if not self.cog.cog_check(ctx):
+                return False
+
+        # When everything passes, return True
+        return True
+
+    async def invoke(self, ctx: Context) -> None:
+        """|coro|
+
         Invokes the command with given context.
 
         Parameters
         ----------
         ctx: :class:`telegrampy.ext.commands.Context`
-            The context to invoke the command with.
+            The context invoking the command.
+
+        Returns
+        -------
+        :class:`bool`
+            A boolean that indicates if the command can be invoked or not.
+
+        Raises
+        ------
+        :exc:`telegrampy.ext.commands.CommandError`
+            The command failed.
         """
 
-        # Checks
-        for check in self.checks:
-            if not check(ctx):
-                raise CheckFailure("A check for this command has failed")
+        if not await self.can_run(ctx):
+            raise errors.CheckFailure("The checks for this command failed")
 
-        if self.cog:
-            if not self.cog.cog_check(ctx):
-                raise CheckFailure("A check for this command has failed")
+        await self._parse_arguments(ctx)
 
-        other_args = []
-        if self.cog:
-            other_args.append(self.cog)
-        other_args.append(ctx)
-
-        await self._parse_args(ctx)
-
-        return await self.callback(*other_args, *ctx.args, **ctx.kwargs)
+        try:
+            return await self.callback(*ctx.args, **ctx.kwargs)  # type: ignore
+        except Exception as exc:
+            ctx.command_failed = True
+            raise errors.CommandInvokeError(exc) from exc
 
 
-def command(*args, **kwargs):
+class ArgumentParser:
+    def __init__(self, buffer):
+        self.index = 0
+        self.buffer = buffer
+        self.legnth = len(buffer)
+
+    def argument(self):
+        pos = 0
+        in_quotes = False
+        result = ""
+
+        while True:
+            try:
+                current = self.buffer[self.index + pos]
+                pos += 1
+                if current == " " and result.strip(" ") and not in_quotes:
+                    self.index += pos
+                    break
+                elif current == '"':
+                    in_quotes = True if not in_quotes else False
+                else:
+                    result += current
+
+            except IndexError:
+                self.index = self.legnth
+                if in_quotes:
+                    raise errors.ExpectedClosingQuote() from None
+
+                if not result.strip(" "):
+                    result = ""
+                break
+
+        return result
+
+    def keyword_argument(self):
+        result = self.buffer[self.index:]
+        self.index == self.legnth
+
+        if not result.strip(" "):
+            return ""
+        return result
+
+    def extras(self):
+        arguments = []
+        while True:
+            argument = self.argument()
+            if argument:
+                arguments.append(argument)
+            else:
+                break
+
+        return arguments
+
+
+def command(
+    *args: Any,
+    **kwargs: Any,
+) -> Callable[
+    [
+        Union[
+            Callable[Concatenate[CogT, ContextT, P], Coro[T]],
+            Callable[Concatenate[ContextT, P], Coro[T]],
+        ],
+    ], Command[CogT, P, T]]:
     """Turns a function into a command.
 
     See :class:`telegrampy.ext.commands.Command`
     for parameters.
     """
 
-    def deco(func):
+    def deco(
+        func: Union[
+            Callable[Concatenate[CogT, ContextT, P], Coro[T]],
+            Callable[Concatenate[ContextT, P], Coro[T]],
+        ],
+    ) -> Command[CogT, P, T]:
         kwargs["name"] = kwargs.get("name")
 
         command = Command(func, **kwargs)
@@ -217,10 +432,10 @@ def command(*args, **kwargs):
     return deco
 
 
-def check(check_function):
+def check(check_function: Check) -> Callable[[T], T]:
     """Makes a check for a command."""
 
-    def deco(func):
+    def deco(func: Union[Command, CoroFunc]) -> Union[Command, CoroFunc]:
         if isinstance(func, Command):
             func.add_check(check_function)
         else:
@@ -230,39 +445,37 @@ def check(check_function):
                 func._command_checks.append(check_function)
         return func
 
-        return
-
-    return deco
+    return deco  # type: ignore
 
 
-def is_owner():
+def is_owner() -> Callable[[T], T]:
     """A command check for checking that the user is the owner."""
 
-    def is_owner_check(ctx):
+    def is_owner_check(ctx: Context) -> bool:
         if ctx.author.id not in (ctx.bot.owner_ids or [ctx.bot.owner_id]):
-            raise NotOwner("You must be the owner to use this command")
+            raise errors.NotOwner("You must be the owner to use this command")
         return True
 
     return check(is_owner_check)
 
 
-def is_private_chat():
+def is_private_chat() -> Callable[[T], T]:
     """A command check for checking that the chat is a private chat."""
 
-    def is_private_chat_check(ctx):
+    def is_private_chat_check(ctx: Context) -> bool:
         if ctx.chat.type != "private":
-            raise PrivateChatOnly()
+            raise errors.PrivateChatOnly()
         return True
 
     return check(is_private_chat_check)
 
 
-def is_not_private_chat():
+def is_not_private_chat() -> Callable[[T], T]:
     """A command check for checking that the chat is not a private chat."""
 
-    def is_not_private_chat_check(ctx):
+    def is_not_private_chat_check(ctx: Context) -> bool:
         if ctx.chat.type == "private":
-            raise GroupOnly()
+            raise errors.GroupOnly()
         return True
 
     return check(is_not_private_chat_check)
