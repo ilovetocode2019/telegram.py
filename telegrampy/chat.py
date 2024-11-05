@@ -276,6 +276,13 @@ class Chat(TelegramObject, Hashable):
 
         return await self._http.get_chat_member(chat_id=self.id, user_id=user_id)
 
+    async def leave(self) -> None:
+        """|coro|
+
+        Removes the logged in bot from the chat.
+        """
+
+        return await self._http.leave_chat(chat_id=self.id)
 
 class ChatActionSender:
     def __init__(self, chat: Chat, action: str) -> None:

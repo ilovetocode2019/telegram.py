@@ -285,6 +285,13 @@ class HTTPClient:
 
         return User(self, response["result"].get("user"))
 
+    async def leave_chat(self, chat_id: int) -> None:
+        """Leaves a chat."""
+
+        url = self._base_url + "leaveChat"
+        data = {"chat_id": chat_id}
+        await self.request(Route("POST", url), json=data)
+
     async def get_me(self) -> User:
         """Fetches the bot account."""
 
