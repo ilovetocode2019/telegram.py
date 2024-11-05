@@ -34,9 +34,9 @@ dynamic = ["version"]
 [project.optional-dependencies]
 docs = [
     "sphinx==8.1.3",
-    "sphinx-rtd-theme",
     "sphinxcontrib_trio==1.1.2",
     "sphinxcontrib-websupport",
+    "furo",
 ]
 
 [project.urls]
