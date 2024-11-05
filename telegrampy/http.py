@@ -318,12 +318,46 @@ class HTTPClient:
     async def set_my_name(
         self,
         name: str = None,
-        language: str = None
+        language_code: str = None
     ) -> None:
         """Changes the name of the bot."""
 
         url = self._base_url + "setMyName"
-        data = {"name": name, "language": language}
+        data = {"name": name}
+
+        if language_code:
+            data["language_code"] = language_code
+
+        await self.request(Route("POST", url), json=data)
+
+    async def set_my_description(
+        self,
+        description: str = None,
+        language_code: str = None
+    ) -> None:
+        """Changes the full description of the bot."""
+
+        url = self._base_url + "setMyDescription"
+        data = {"description": description}
+
+        if language_code:
+            data["language_code"] = language_code
+
+        await self.request(Route("POST", url), json=data)
+
+    async def set_my_short_description(
+        self,
+        short_description: str = None,
+        language_code: str = None
+    ) -> None:
+        """Changes the short description of the bot."""
+
+        url = self._base_url + "setMyShortDescription"
+        data = {"short_description": short_description}
+
+        if language_code:
+            data["language_code"] = language_code
+
         await self.request(Route("POST", url), json=data)
 
     async def set_my_commands(
@@ -332,6 +366,10 @@ class HTTPClient:
     ) -> None:
         url = self._base_url + "setMyCommands"
         data = {"commands": commands}
+
+        if language_code:
+            data["language_code"] = language_code
+
         await self.request(Route("POST", url), json=data)
 
     async def close(self) -> None:

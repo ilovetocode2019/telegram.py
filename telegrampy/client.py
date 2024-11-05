@@ -131,8 +131,51 @@ class Client:
 
         return await self.http.get_chat(chat_id=chat_id)
 
-    async def set_name(self, name: str = None, *, language_code: str = None) -> None:
+    async def set_name(
+        self,
+        name: str = None,
+        *,
+        language_code: str = None
+    ) -> None:
+        """|coro|
+
+        Sets the description that is shown for the bot.
+
+        Paramaters
+        ----------
+        name :class:`str`
+            The display name of the bot, no longer than 64 chatacters.
+        """
+
         await self.http.set_my_name(name, language_code)
+
+    async def set_description(
+        self,
+        description: str = None,
+        *,
+        language_code: str = None,
+        short: bool = False
+    ) -> None:
+        """|coro|
+
+        Sets the description that is shown for the bot.
+
+        Paramaters
+        ----------
+        description :class:`str`
+            The new description. Clear the description by setting an empty string.
+            Maxmium of 512 characters for full description and 120 for short description.
+        language_code :class:`str`
+            The two-letter ISO 639-1 language code for this description.
+        short :class:`str`
+            Whether to set the short or full description.
+            The full description appears on empty chats with the bot, while the long decription appears on the profile page.
+        """
+
+        if short:
+            await self.http.set_my_short_description(description, language_code)
+        else:
+            await self.http.set_my_description(description, language_code)
 
     async def _poll(self) -> None:
         # Get last update id
