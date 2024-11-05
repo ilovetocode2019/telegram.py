@@ -26,4 +26,4 @@ from .user import User
 
 VersionInfo = namedtuple("VersionInfo", "major minor micro releaselevel serial")
 
-version_info: VersionInfo = VersionInfo(major=0, minor=4, micro=0, releaselevel="alpha", serial=0)
+version_info: VersionInfo = VersionInfo(major=1, minor=0, micro=0, releaselevel="alpha", serial=0)
