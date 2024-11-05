@@ -496,6 +496,8 @@ class Bot(telegrampy.Client):
         )
 
     async def sync(self):
+        """Registers all of the commands associated with the bot to Telegram."""
+
         await self.http.set_my_commands([{
             "command": command.name,
             "description": command.description

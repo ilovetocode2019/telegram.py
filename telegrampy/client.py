@@ -143,7 +143,7 @@ class Client:
 
         Paramaters
         ----------
-        name :class:`str`
+        name: :class:`str`
             The display name of the bot, no longer than 64 chatacters.
         """
 
@@ -162,12 +162,12 @@ class Client:
 
         Paramaters
         ----------
-        description :class:`str`
+        description: :class:`str`
             The new description. Clear the description by setting an empty string.
             Maxmium of 512 characters for full description and 120 for short description.
-        language_code :class:`str`
+        language_code: :class:`str`
             The two-letter ISO 639-1 language code for this description.
-        short :class:`str`
+        short: :class:`str`
             Whether to set the short or full description.
             The full description appears on empty chats with the bot, while the long decription appears on the profile page.
         """

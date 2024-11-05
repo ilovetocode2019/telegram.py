@@ -43,6 +43,6 @@ MemberUpdated = TypedDict(
         "new_chat_member": Member,
         "invite_link": Optional[Any], # TODO
         "via_join_request": bool,
-        "via_chat_folder_link": bool
+        "via_chat_folder_invite_link": bool
     }
 )

@@ -16,9 +16,9 @@ class Member(User):
     """
     Attributes
     ----------
-    status: :object:`str`
+    status: :class:`str`
         The status or role of the user in the chat.
-    chat: :object:`str
+    chat: :class::`telegrampy.Chat`
         The chat that the user belongs to.
     """
 
@@ -34,6 +34,27 @@ class Member(User):
 
 
 class MemberUpdated(TelegramObject):
+    """
+    Attributes
+    ----------
+    chat: :class:`telegrampy.Chat`
+        The chat that the update occured in.
+    author: :class:`telegrampy.User`
+        The user who performed the action resulting in a change.
+    taken_at: :class:`datetime.datetime`
+        The time that the action was taken at.
+    old_member: :class:`telegrampy.Member`
+        The affected chat member, prior to the change.
+    new_member: :class:`telegrampy.Member`
+        The affected chat member, after the change.
+    invite_link: Optional[Any]
+        The invite link used to join the chat, if applicable.
+    via_join_request: :class:`bool`
+        Whether the user joined the chat with a direct join request.
+    via_chat_folder_invite_link: :class:`bool`
+        Whether the the user joined the chat with a chat folder invite link.
+    """
+
     if TYPE_CHECKING:
         chat: Chat
         author: User
@@ -42,7 +63,7 @@ class MemberUpdated(TelegramObject):
         new_member: Member
         invite_link: Optional[str]
         via_join_request: bool
-        via_chat_folder_link: bool
+        via_chat_folder_invite_link: bool
 
     def __init__(self, http: HTTPClient, data: MemberUpdatedPayload):
         super().__init__(http)

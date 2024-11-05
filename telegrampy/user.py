@@ -70,12 +70,20 @@ class User(TelegramObject, Hashable):
         The username of the user, if applicable.
     language_code: Optional[:class:`str`]
         The IETF language tag for the user's language, if applicable.
-    can_join_groups: Optional[:class:`bool`]
-        If the bot can join groups. Only returned in :class:`telegrampy.Client.get_me`.
-    can_read_all_group_messages: Optional[:class:`bool`]
-        If privacy mode is disabled. Only returned in :class:`telegrampy.Client.get_me`.
-    supports_inline_queries: Optional[:class:`bool`]
-        If the bot has inline queries enabled. Only returned in :class:`telegrampy.Client.get_me`.
+    added_to_attachment_menu: :class:`bool`
+        Whether the logged in bot is added to this user's attachment menu.  
+    is_premium: Optional[:class:`str`]
+        Whether the user is subscribed to Telegram Premium.
+    can_join_groups: :class:`bool`
+        Whether the logged in bot can join groups. Only returned in :class:`telegrampy.Client.get_me`.
+    can_read_all_group_messages: :class:`bool`
+        Whether privacy mode is disabled for the logged in bot. Only returned in :class:`telegrampy.Client.get_me`.
+    supports_inline_queries: :class:`bool`
+        Whether the logged in bot has inline queries enabled. Only returned in :class:`telegrampy.Client.get_me`.
+    can_connect_to_business: :class:`bool`
+        Whether the logged in bot can be connected to a Telegram business account to receive its messages.
+    has_main_web_app: :class:`bool`
+        Whether the logged in bot has a main web app.
     """
 
     if TYPE_CHECKING:
@@ -85,9 +93,13 @@ class User(TelegramObject, Hashable):
         first_name: str
         last_name: Optional[str]
         language_code: Optional[str]
-        can_join_groups: Optional[bool]
-        can_read_all_group_messages: Optional[bool]
-        supports_inline_queries: Optional[bool]
+        is_premium: bool
+        added_to_attachment_menu: bool
+        can_join_groups: bool
+        can_read_all_group_messages: bool
+        supports_inline_queries: bool
+        can_connect_to_business: bool
+        has_main_web_app: bool
 
     def __init__(self, http: HTTPClient, data: UserPayload) -> None:
         super().__init__(http)
@@ -97,9 +109,13 @@ class User(TelegramObject, Hashable):
         self.first_name: str = data.get("first_name")
         self.last_name: Optional[str] = data.get("last_name")
         self.language_code: Optional[str] = data.get("language_code")
-        self.can_join_groups: Optional[bool] = data.get("can_join_groups")
-        self.can_read_all_group_messages: Optional[bool] = data.get("can_read_all_group_messages")
-        self.supports_inline_queries: Optional[bool] = data.get("supports_inline_queries")
+        self.is_premium: bool = data.get("is_premium", False)
+        self.added_to_attachment_menu: bool = data.get("added_to_attachment_menu", False)
+        self.can_join_groups: bool = data.get("can_join_groups", False)
+        self.can_read_all_group_messages: bool = data.get("can_read_all_group_messages", False)
+        self.supports_inline_queries: bool = data.get("supports_inline_queries", False)
+        self.can_connect_to_business: bool = data.get("can_connect_to_business", False)
+        self.has_main_web_app: bool = data.get("has_main_web_app", False)
 
     def __str__(self) -> Optional[str]:
         return self.username

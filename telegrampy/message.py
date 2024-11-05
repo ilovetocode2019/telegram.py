@@ -38,6 +38,16 @@ if TYPE_CHECKING:
     from .types.message import Message as MessagePayload
 
 class MessageEntity(TelegramObject):
+    if TYPE_CHECKING:
+        type: str
+        value: str
+        offset: int
+        length: int
+        url: Optional[int]
+        user: Optional[User]
+        language: Optional[str]
+        custom_emoi_id: Optional[str]
+
     """Represents a message entity.
 
     Attributes
@@ -61,9 +71,9 @@ class MessageEntity(TelegramObject):
     """
     def __init__(self, http: HTTPClient, data: MessagePayload, *, text: str):
         super().__init__(http)
-        self.type: str = data["type"]
-        self.offset: int = data["offset"]
-        self.length: int = data["length"]
+        self.type: str = data.get("type")
+        self.offset: int = data.get("offset")
+        self.length: int = data.get("length")
         self.url: Optional[str] = data.get("url")
 
         self.user: Optional[user]
@@ -176,7 +186,7 @@ class Message(TelegramObject, Hashable):
 
         Parameters
         ----------
-        destination: :class:telegrampy.Chat`
+        destination: :class:`telegrampy.Chat`
             The chat forward the message to.
 
         Returns

@@ -67,6 +67,15 @@ Chat
 .. autoclass:: Chat
     :members:
 
+Member
+~~~~~~
+
+.. autoclass:: Member
+    :members:
+
+.. autoclass:: MemberUpdated
+    :members:
+
 Poll
 ~~~~
 

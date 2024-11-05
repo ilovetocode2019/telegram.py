@@ -40,7 +40,7 @@ Checks
 
 .. autofunction:: telegrampy.ext.commands.check
 
-.. autofunction:: telegrampy.ext.commands.telegrampy.ext.commands.is_owner
+.. autofunction:: telegrampy.ext.commands.is_owner
 
 .. autofunction:: telegrampy.ext.commands.is_private_chat
 

@@ -362,7 +362,8 @@ class HTTPClient:
 
     async def set_my_commands(
         self,
-        commands
+        commands: List[Dict],
+        language_code: str = None
     ) -> None:
         url = self._base_url + "setMyCommands"
         data = {"commands": commands}
