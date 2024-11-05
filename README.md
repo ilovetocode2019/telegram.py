@@ -11,9 +11,9 @@
 An async API wrapper for the Telegram bot API in Python
 
 ## Features
-- Uses async and await syntax, over multithreading
-- Simple Object Oriented API interface
-- Easy to use commands framework
+- Clean Object Oriented interface with async and await syntax
+- Easy to use commands framework that integrates with with Telegram
+- Modular bot structure, allowing for reloading of individual components
 
 ## Installation
 
@@ -31,7 +31,7 @@ py -3 -m pip install telegram.py
 
 Or install the development version from GitHub:
 
-```
+```bash
 # Mac/Linux
 python3 -m pip install git+https://github.com/ilovetocode2019/telegram.py
 
