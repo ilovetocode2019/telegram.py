@@ -32,6 +32,17 @@ and organize commands for your bot.
 
     ext/commands/index
 
+Conversations Extension
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The conversations extension helps with building
+conversations with another user.
+
+.. toctree::
+    :maxdepth: 3
+
+    ext/conversations/index
+
 Contents
 --------
 .. toctree::
