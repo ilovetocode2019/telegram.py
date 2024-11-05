@@ -32,6 +32,7 @@ from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, Optional
 
 from .errors import InvalidToken, Conflict
 from .http import HTTPClient
+from .member import MemberUpdated
 from .message import Message
 from .poll import Poll, PollAnswer
 
@@ -200,6 +201,12 @@ class Client:
         elif "poll_answer" in update:
             answer = PollAnswer(self.http, update["poll_answer"])
             self.dispatch("poll_answer", answer)
+        elif "my_chat_member" in update:
+            member_update = MemberUpdated(self.http, update["my_chat_member"])
+            self.dispatch("member_updated", member_update)
+        elif "chat_member" in update:
+            member_update = MemberUpdated(self.http, update["chat_member"])
+            self.dispatch("member_updated", member_update)
         else:
             log.warning(f"Received an unknown update ({update_id}): {update}")
 

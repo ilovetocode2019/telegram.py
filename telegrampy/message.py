@@ -59,7 +59,7 @@ class MessageEntity(TelegramObject):
     custom_emoji_id: Optional[:class:`str`]
         The ID, for custom_emoji.
     """
-    def __init__(self, http: HTTPClient, data: MessagePayload, *, text):
+    def __init__(self, http: HTTPClient, data: MessagePayload, *, text: str):
         super().__init__(http)
         self.type: str = data["type"]
         self.offset: int = data["offset"]
