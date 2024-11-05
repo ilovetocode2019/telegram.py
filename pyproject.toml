@@ -38,6 +38,7 @@ docs = [
     "sphinxcontrib-websupport",
     "sphinx-copybutton",
     "sphinx-autobuild",
+    "sphinxext-opengraph",
     "furo",
 ]
 

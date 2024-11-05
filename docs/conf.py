@@ -40,6 +40,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinxcontrib_trio',
     'sphinx_copybutton',
+    'sphinxext.opengraph',
 ]
 
 intersphinx_mapping = {
