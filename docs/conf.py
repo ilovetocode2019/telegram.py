@@ -41,6 +41,7 @@ extensions = [
     'sphinxcontrib_trio',
     'sphinx_copybutton',
     'sphinxext.opengraph',
+    'sphinx_inline_tabs',
 ]
 
 intersphinx_mapping = {

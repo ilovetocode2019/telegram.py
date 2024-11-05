@@ -15,12 +15,16 @@ Installation
 
 Install via pip:
 
-.. code-block:: shell
+.. tab:: Unix (Mac/Linux)
 
-    # Mac/Linux
-    python3 -m pip install telegram.py
+    .. code-block:: shell
 
-    # Windows
-    py -3 -m pip install telegram.py
+        python3 -m pip install telegram.py
+
+.. tab:: Windows
+
+    .. code-block:: shell
+
+        py -3 -m pip install telegram.py
 
 You should now have telegram.py installed! You are ready to continue.

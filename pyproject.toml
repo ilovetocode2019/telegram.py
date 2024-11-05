@@ -39,6 +39,7 @@ docs = [
     "sphinx-copybutton",
     "sphinx-autobuild",
     "sphinxext-opengraph",
+    "sphinx-inline-tabs",
     "furo",
 ]
 
