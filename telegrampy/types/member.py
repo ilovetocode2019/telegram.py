@@ -22,11 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any, Optional, TypedDict
 
 if TYPE_CHECKING:
     from .chat import Chat
     from .user import User
+
 
 class Member(TypeDict):
     status: str
