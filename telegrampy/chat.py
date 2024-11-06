@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2020-2021 ilovetocode
+Copyright (c) 2020-2024 ilovetocode
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -66,7 +66,6 @@ class Chat(TelegramObject, Hashable):
         .. describe:: str(x)
 
             Returns the chat's title.
-
 
     Attributes
     ----------
