@@ -1,9 +1,11 @@
-.. _telegrampy_ext_conversations:
+.. currentmodule:: telegrampy
 
-``telegrampy.ext.conversations`` -- Conversation helper tool
-============================================================
+.. _ext_conversations:
 
-The conversations extension helps with building conversations with another user.
+``telegrampy.ext.conversations`` -- Conversation Helper
+=======================================================
+
+The conversations extension is a framework that simplies having back and forth conversations with a user.
 
 
 .. toctree::

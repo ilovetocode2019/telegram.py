@@ -2,8 +2,8 @@
 
 .. _ext_commands:
 
-``telegrampy.ext.commands`` - Commands Extension
-================================================
+``telegrampy.ext.commands`` -- Commands Extension
+=================================================
 
 The telegrampy commands extension aids in making and
 managing commands.

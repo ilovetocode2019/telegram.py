@@ -15,6 +15,16 @@ Getting Started
 - `Creating a Bot <https://core.telegram.org/bots#3-how-do-i-create-a-bot>`_
 - `Examples <https://github.com/ilovetocode2019/telegram.py>`_
 
+Contents
+--------
+.. toctree::
+   :maxdepth: 2
+   
+   intro
+   quickstart
+   changelog.rst
+   api
+
 Extensions
 ----------
 
@@ -42,14 +52,3 @@ conversations with another user.
     :maxdepth: 3
 
     ext/conversations/index
-
-Contents
---------
-.. toctree::
-   :maxdepth: 2
-   
-   intro
-   quickstart
-   changelog.rst
-   api
-
