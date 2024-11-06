@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2020 ilovetocode
+Copyright (c) 2020-2021 ilovetocode
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,50 +22,92 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
-import datetime
-import traceback
 import sys
+import traceback
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, Optional, Tuple, TypeVar
 
+from .errors import InvalidToken, Conflict
 from .http import HTTPClient
-from .errors import *
-from .message import Message
-from .poll import Poll
 from .inline import InlineQuery
+from .member import MemberUpdated
+from .message import Message
+from .poll import Poll, PollAnswer
 
-logger = logging.getLogger("telegrampy")
+if TYPE_CHECKING:
+    from typing_extensions import ParamSpec
+
+    from .chat import Chat
+    from .user import User
+
+    P = ParamSpec("P")
+
+    T = TypeVar('T')
+
+    Coro = Coroutine[Any, Any, T]
+    CoroFunc = Callable[..., Coro[Any]]
+
+log: logging.Logger = logging.getLogger("telegrampy")
 
 
 class Client:
-    """
-    Represents a client connection to Telegram.
+    """Represents a client connection to Telegram.
 
     Parameters
     ----------
     token: :class:`str`
-        The API token.
+        The Telegram API token to authenticate the bot with.
+    loop: Optional[:class:`asyncio.BaseEventLoop`]
+        The event loop to run the bot on. Uses :func:`asyncio.get_event_loop` is none is specified.
+    wait: Optional[:class:`int`]
+        The timeout in seconds for long polling. Defaults to 10.
+    read_unread_updates: Optional[:class:`bool`]
+        If the bot should read unread updates on startup. Defaults to False.
+
+    Attributes
+    ----------
+    loop: :class:`asyncio.BaseEventLoop`
+        The event loop that the bot is running on.
     """
 
-    def __init__(self, token: str):
-        self._running = False
-        self._last_looped = datetime.datetime.now()
+    def __init__(self, token: str, *, loop: asyncio.AbstractEventLoop = None, **options: Any):
+        self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
+        self.http: HTTPClient = HTTPClient(token=token, loop=self.loop)
 
-        self.loop = asyncio.get_event_loop()
-        self.http = HTTPClient(token=token, loop=self.loop)
+        wait: int = options.get("wait", 10)
+        if wait < 1 or wait > 10:
+            raise ValueError("Wait time must be between 1 and 10 seconds")
 
-        self._listeners = {}
-        self._waiting_for = {}
+        self._running: bool = False
+        self._last_update_id: Optional[int] = None
+        self._wait: int = wait
+        self._read_unread_updates: bool = options.get("read_unread_updates", False)
 
-    async def user(self):
+        self._listeners: Dict[str, List[CoroFunc]] = {}
+        self._waiting_for: Dict[str, List[Tuple[asyncio.Future, Callable[..., bool]]]] = {}
+
+    async def get_me(self) -> User:
         """|coro|
 
-        The user of the bot.
+        Fetches the authenticated bot account.
+
+        Returns
+        -------
+        :class:`telegrampy.User`:
+            The user that was fetched.
+
+        Raises
+        ------
+        :exc:`telegrampy.HTTPException`
+            Fetching the bot user failed.
         """
 
         return await self.http.get_me()
 
-    async def get_chat(self, chat_id: int):
+    async def get_chat(self, chat_id: int) -> Chat:
         """|coro|
 
         Fetches a chat by ID.
@@ -88,97 +130,137 @@ class Client:
 
         return await self.http.get_chat(chat_id=chat_id)
 
-    async def _poll(self):
-        logger.info("Bot is started")
+    async def set_name(
+        self,
+        name: str = None,
+        *,
+        language_code: str = None
+    ) -> None:
+        """|coro|
 
-        # Create some variables
-        self._last_update_id = None
-        self._last_update_time = datetime.datetime.now()
-        self._wait_time = 1
+        Sets the description that is shown for the bot.
 
+        Paramaters
+        ----------
+        name: :class:`str`
+            The display name of the bot, no longer than 64 chatacters.
+        """
+
+        await self.http.set_my_name(name, language_code)
+
+    async def set_description(
+        self,
+        description: str = None,
+        *,
+        language_code: str = None,
+        short: bool = False
+    ) -> None:
+        """|coro|
+
+        Sets the description that is shown for the bot.
+
+        Paramaters
+        ----------
+        description: :class:`str`
+            The new description. Clear the description by setting an empty string.
+            Maxmium of 512 characters for full description and 120 for short description.
+        language_code: :class:`str`
+            The two-letter ISO 639-1 language code for this description.
+        short: :class:`str`
+            Whether to set the short or full description.
+            The full description appears on empty chats with the bot, while the long decription appears on the profile page.
+        """
+
+        if short:
+            await self.http.set_my_short_description(description, language_code)
+        else:
+            await self.http.set_my_description(description, language_code)
+
+    async def _poll(self) -> None:
         # Get last update id
-
-        while True:
-            try:
-                updates = await self.http.get_updates(self._last_update_id)
-                if len(updates) != 0:
-                    update_ids = [int(update["update_id"]) for update in updates]
-                    self._last_update_id = max(update_ids) + 1
-                break
-
-            except HTTPException as exc:
-                traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
-                if exc.response.status in (401, 403, 404):
-                    await self.stop()
-                    return
-                await asyncio.sleep(10)
-            except Exception as exc:
-                traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
-                await asyncio.sleep(10)
-
-        # After fetching unread updates, start the loop
-        while self._running:
-            self._last_looped = datetime.datetime.now()
-
-            try:
-                updates = await self.http.get_updates(self._last_update_id)
-                if len(updates) != 0:
+        log.info("Fetching unread updates")
+        try:
+            updates = await self.http.get_updates(offset=self._last_update_id)
+        except Exception:
+            raise
+        else:
+            if updates:
+                update_ids = [int(update["update_id"]) for update in updates]
+                self._last_update_id = max(update_ids) + 1
+                if self._read_unread_updates:
+                    log.debug(f"Handling updates: {[update['update_id'] for update in updates]} ({len(updates)}")
                     for update in updates:
-                        if "message" in update:
-                            key = "message"
-                            event = "message"
-                        elif "edited_message" in update:
-                            key = "edited_message"
-                            event = "edit"
-                        elif "poll" in update:
-                            key = "poll"
-                            event = "poll"
-                        elif "inline_query" in update:
-                            key = "inline_query"
-                            event = "inline_query"
+                        await self._handle_update(update)
 
-                    data = update[key]
+        tries = 0
 
-                    if event == "poll":
-                        await self._dispatch(event, Poll(data))
-                    elif event == "inline_query":
-                        await self._dispatch(event, InlineQuery(self.http, data))
-                    elif event == "edit":
-                        await self._dispatch(event, self.http.messages_dict.get(data["message_id"]), Message(self.http, data))
-                    else:
-                        await self._dispatch(event, Message(self.http, data))
-
+        # Main loop
+        while self._running:
+            # Fetch updates
+            try:
+                updates = await self.http.get_updates(offset=self._last_update_id, timeout=self._wait)
+            except (InvalidToken, Conflict):
+                raise
+            except Exception:
+                if self._running:
+                    if tries < 30:
+                        tries += 1
+                    log.warning(f"Couldn't connect to Telegram. Retrying in {tries*2} seconds.")
+                    await asyncio.sleep(tries*2)
+            else:
+                if updates:
+                    # Handle them
                     update_ids = [int(update["update_id"]) for update in updates]
                     self._last_update_id = max(update_ids) + 1
-                    key = None
-                    event = None
+                    log.debug(f"Handling updates: {[update['update_id'] for update in updates]}")
+                    for update in updates:
+                        await self._handle_update(update)
 
-                for x in [x for x in updates if "message" in x]:
-                    self.http.messages_dict[x["message"]["message_id"]] = Message(self.http, x["message"])
-                for x in [x for x in updates if "edited_message" in x]:
-                    self.http.messages_dict[x["edited_message"]["message_id"]] = Message(self.http, x["edited_message"])
+                tries = 0
 
-            except HTTPException as exc:
-                traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
-                if exc.response.status in (401, 403, 404):
-                    await self.stop()
-                    return
-                await asyncio.sleep(10)
-            except Exception as exc:
-                traceback.print_exception(type(exc), exc, exc.__traceback__, file=sys.stderr)
-                await asyncio.sleep(10)
+        log.info("The bot successfully completed")
 
-            await asyncio.sleep(self._wait_time)
+    async def _handle_update(self, update: Dict[str, Any]) -> None:
+        update_id = update["update_id"]
 
-        logger.info("Bot is finished")
+        self.dispatch("raw_update", update)
 
-    async def _use_event_handler(self, func, *args, **kwargs):
+        if "message" in update:
+            message = Message(self.http, update["message"])
+            self.dispatch("message", message)
+        elif "edited_message" in update:
+            message = Message(self.http, update["edited_message"])
+            self.dispatch("message_edit", message)
+        elif "channel_post" in update:
+            message = Message(self.http, update["channel_post"])
+            self.dispatch("post", message)
+        elif "edited_channel_post" in update:
+            message = Message(self.http, update["edited_channel_post"])
+            self.dispatch("post_edit", message)
+        elif "poll" in update:
+            poll = Poll(self.http, update["poll"])
+            self.dispatch("poll", poll)
+        elif "poll_answer" in update:
+            answer = PollAnswer(self.http, update["poll_answer"])
+            self.dispatch("poll_answer", answer)
+        elif "my_chat_member" in update:
+            member_update = MemberUpdated(self.http, update["my_chat_member"])
+            self.dispatch("member_updated", member_update)
+        elif "chat_member" in update:
+            member_update = MemberUpdated(self.http, update["chat_member"])
+            self.dispatch("member_updated", member_update)
+        else:
+            log.warning(f"Received an unknown update ({update_id}): {update}")
+
+    async def _use_event_handler(self, func: Callable[P, Any], *args: P.args, **kwargs: P.kwargs) -> None:
         try:
             await func(*args, **kwargs)
         except Exception as exc:
-            await self._dispatch("error", exc)
+            self.dispatch("error", exc)
 
-    async def _dispatch(self, event, *args):
+    def dispatch(self, event: str, *args: Any) -> None:
+        log.debug(f"Dispatching {event} with {args}")
+
         # Handle the active wait_fors
         waiting_for = self._waiting_for.get(event)
         if waiting_for:
@@ -230,7 +312,7 @@ class Client:
         for handler in handlers:
             self.loop.create_task(self._use_event_handler(handler, *args))
 
-    async def wait_for(self, event: str, check=None, timeout=None):
+    async def wait_for(self, event: str, *, check: Optional[Callable[..., bool]] = None, timeout: Optional[float] = None):
         """|coro|
 
         Waits for an event.
@@ -242,9 +324,10 @@ class Client:
         """
         ev = event.lower()
 
-        if not check:
-            def check(*args):
+        if check is None:
+            def _check(*args):
                 return True
+            check = _check
 
         future = self.loop.create_future()
 
@@ -258,9 +341,8 @@ class Client:
 
         return await asyncio.wait_for(future, timeout=timeout)
 
-    def event(self, func):
-        """
-        Turns a function into an event handler.
+    def event(self, func: CoroFunc) -> CoroFunc:
+        """Turns a function into an event handler.
 
         Parameters
         ----------
@@ -271,20 +353,8 @@ class Client:
         setattr(self, func.__name__, func)
         return func
 
-    async def on_error(self, error):
-        """|coro|
-
-        Default error handler.
-        """
-
-        if "on_error" in self._listeners:
-            return
-
-        traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
-
-    def add_listener(self, func, name: str = None):
-        """
-        Registers a function as a listener.
+    def add_listener(self, func: CoroFunc, name: str = None) -> None:
+        """Registers a function as a listener.
 
         Parameters
         ----------
@@ -301,9 +371,8 @@ class Client:
         else:
             self._listeners[name] = [func]
 
-    def remove_listener(self, func):
-        """
-        Removes a listener.
+    def remove_listener(self, func: CoroFunc) -> None:
+        """Removes a listener.
 
         Parameters
         ----------
@@ -315,9 +384,8 @@ class Client:
             if func in self._listeners[event]:
                 self._listeners[event].remove(func)
 
-    def listen(self, name=None):
-        """
-        A decorator that registers a function as a listener.
+    def listen(self, name: str = None) -> Callable[[CoroFunc], CoroFunc]:
+        """A decorator that registers a function as a listener.
 
         Parameters
         ---------
@@ -325,45 +393,69 @@ class Client:
              The name of the event to register the function as.
         """
 
-        def deco(func):
+        def deco(func: CoroFunc) -> CoroFunc:
             self.add_listener(func, name)
             return func
 
         return deco
 
-    async def stop(self):
+    async def on_error(self, error: Exception) -> None:
+        if "on_error" in self._listeners:
+            return
+
+        traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+
+    async def start(self) -> None:
         """|coro|
 
-        Stops the bot
+        Starts the bot.
+        """
+
+        if self._running:
+            raise RuntimeError("Bot is already running")
+
+        log.info("Starting the bot")
+
+        self._running = True
+        await self._poll()
+
+    async def stop(self) -> None:
+        """|coro|
+
+        Stops the bot.
         """
 
         if not self._running:
             raise RuntimeError("Bot is not running")
 
-        await self.http.close()
-        self._running = False
+        log.info("Stopping the bot")
 
-    def _clean_tasks(self):
-        pending = asyncio.all_tasks(loop=self.loop)
-        if not pending:
+        self._running = False
+        await self.http.close()
+
+    def _clean_tasks(self) -> None:
+        log.info("Cleaning up tasks")
+        tasks = asyncio.all_tasks(loop=self.loop)
+        if not tasks:
             return
 
-        logger.info(f"Cleaning up {len(pending)} task(s)")
-        for task in pending:
+        for task in tasks:
             task.cancel()
-        self.loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
 
-    def run(self):
-        """Runs the bot"""
+        self.loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
+        self.loop.run_until_complete(self.loop.shutdown_asyncgens())
+
+    def run(self) -> None:
+        """Runs the bot."""
 
         self._running = True
 
         try:
+            log.info("Running the bot")
             self.loop.run_until_complete(self._poll())
         except KeyboardInterrupt:
-            logger.info("KeyboardInterrupt, Finishing bot")
+            log.info("Received signal to stop bot")
             self.loop.run_until_complete(self.stop())
-        finally:
-            self._clean_tasks()
-            self.loop.run_until_complete(self.loop.shutdown_asyncgens())
-            self.loop.close()
+
+        self._clean_tasks()
+        self.loop.close()

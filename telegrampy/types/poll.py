@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2020 ilovetocode
+Copyright (c) 2020-2021 ilovetocode
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,41 +24,35 @@ SOFTWARE.
 
 from __future__ import annotations
 
-import re
-from typing import Literal
+from typing import TYPE_CHECKING, List, TypedDict
 
-Version = Literal[1, 2]
-ParseMode = Literal["HTML", "Markdown", "MarkdownV2"]
+if TYPE_CHECKING:
+    from .message import MessageEntity
+    from .user import User
 
 
-def escape_markdown(text: str, *, version: Version = 2) -> str:
-    """Tool that escapes markdown from a given string.
+class PollOption(TypedDict):
+    text: str
+    voter_count: int
 
-    Parameters
-    ----------
-    text: :class:`str`
-        The text to escape markdown from.
-    version: Optional[:class:`int`]
-        The Telegram markdown version to use. Only 1 and 2 are supported.
 
-    Returns
-    -------
-    :class:`str`
-        The escaped text.
+class Poll(TypedDict):
+    id: str
+    question: str
+    options: List[PollOption]
+    total_voter_count: int
+    is_closed: bool
+    is_anonymous: bool
+    type: str
+    allows_multiple_answers: bool
+    correct_option_id: int
+    explanation: str
+    explanation_entries: List[MessageEntity]
+    open_period: int
+    close_date: int
 
-    Raises
-    ------
-    :exc:`ValueError`
-        An unsupported version was provided.
-    """
 
-    if version == 1:
-        characters = r"_*`["
-
-    elif version == 2:
-        characters = r"_*[]()~`>#+-=|{}.!"
-
-    else:
-        raise ValueError(f"Version '{version}' unsupported. Only version 1 and 2 are supported.")
-
-    return re.sub(f"([{re.escape(characters)}])", r"\\\1", text)
+class PollAnswer(TypedDict):
+    poll_id: str
+    user: User
+    option_ids: List[int]

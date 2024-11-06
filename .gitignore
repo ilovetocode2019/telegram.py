@@ -1,2 +1,6 @@
-*.pyc
+*.py[cod]
 docs/_build
+build/*
+dist/*
+telegram.py.egg-info/*
+.python-version

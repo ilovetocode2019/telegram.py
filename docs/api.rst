@@ -10,19 +10,35 @@ Client
     :members:
 
 Events
-------
+~~~~~~
 
 .. function:: on_message(message: telegrampy.Message)
 
     Called when a message is sent.
 
-.. function:: on_edit(before: telegrampy.Message, after: telegrampy.Message)
+.. function:: on_message_edit(message: telegrampy.Message)
 
     Called when a message is edited.
 
+.. function:: on_post(message: telegrampy.Message)
+
+    Called when a channel post is sent.
+
+.. function:: on_post_edit(message: telegrampy.Message)
+
+    Called when a channel post is edited.
+
 .. function:: on_poll(poll: telegrampy.Poll)
 
-    Called when poll is created or updated.
+    Called when a poll is created.
+
+.. function:: on_poll_answer(answer: telegrampy.PollAnswer)
+
+    Called when someone answers a non-anonymous poll.
+
+.. function:: on_error(error)
+
+    Called when an error occurs.
 
 Utilities
 ---------
@@ -51,13 +67,14 @@ Chat
 .. autoclass:: Chat
     :members:
 
-Files
-~~~~~
+Member
+~~~~~~
 
-.. autoclass:: Document
+.. autoclass:: Member
     :members:
-.. autoclass:: Photo
-   :members:
+
+.. autoclass:: MemberUpdated
+    :members:
 
 Poll
 ~~~~
@@ -65,6 +82,8 @@ Poll
 .. autoclass:: Poll
     :members:
 
+.. autoclass:: PollAnswer
+    :members:
 
 Exceptions
 ----------
@@ -73,4 +92,19 @@ Exceptions
     :members:
 
 .. autoclass:: HTTPException
+    :members:
+
+.. autoclass:: BadRequest
+    :members:
+
+.. autoclass:: InvalidToken
+    :members:
+
+.. autoclass:: Forbidden
+    :members:
+
+.. autoclass:: Conflict
+    :members:
+
+.. autoclass:: ServerError
     :members:

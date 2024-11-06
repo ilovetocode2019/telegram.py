@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'telegram.py'
-copyright = '2020, ilovetocode'
+copyright = '2020-2021, ilovetocode'
 
 version = ''
 with open('../telegrampy/__init__.py') as f:
@@ -39,6 +39,9 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon',
     'sphinxcontrib_trio',
+    'sphinx_copybutton',
+    'sphinxext.opengraph',
+    'sphinx_inline_tabs',
 ]
 
 intersphinx_mapping = {
@@ -70,10 +73,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
-html_theme_options = {
-    "collapse_navigation": False,
-}
+html_title = "telegram.py"
+html_theme = 'furo'
 html_logo = 'icon.png'
 html_favicon = 'icon.png'
 
@@ -81,4 +82,4 @@ html_favicon = 'icon.png'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = []

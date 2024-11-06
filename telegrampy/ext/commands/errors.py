@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2020 ilovetocode
+Copyright (c) 2020-2021 ilovetocode
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,69 +22,154 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
+import inspect
+from typing import TYPE_CHECKING, Optional
+
 from telegrampy import TelegramException
+
+if TYPE_CHECKING:
+    from .converter import Converter
 
 
 class CommandError(TelegramException):
-    """Base exception for all command errors."""
+    """Base exception for all command errors.
 
-    pass
+    This inherits from :exc:`telegrampy.TelegramException`.
+    """
+
 
 class CommandNotFound(CommandError):
-    """Raised when a command is not found."""
+    """Raised when a command is not found.
 
-    pass
+    This inherits from :exc:`telegrampy.ext.commands.CommandError`.
+    """
+
 
 class CommandRegistrationError(CommandError):
-    """Raised when a command cannot be registered."""
+    """Raised when a command cannot be registered.
 
-    pass
-
-class ExtensionNotLoaded(CommandError):
-    """
-    Raised when an extension is not loaded.
-
-    Attributes
-    ----------
-    name: :class:`str`
-        The name of the extension that is not loaded.
+    This inherits from :exc:`telegrampy.ext.commands.CommandError`.
     """
 
-    def __init__(self, name):
+
+class ExtensionError(CommandError):
+    """Base exception for extension related errors.
+
+    This inherits from :exc:`telegrampy.ext.commands.CommandError`.
+    """
+
+
+class ExtensionAlreadyLoaded(ExtensionError):
+    """Raised when an extension is already loaded.
+
+    This inherits from :exc:`telegrampy.ext.commands.ExtensionError`.
+    """
+
+    def __init__(self, name: str) -> None:
         self.name = name
-        super().__init__(f"Extension '{name}' has not been loaded")
+        super().__init__(f"Extension {name} is already loaded")
 
-class ExtensionAlreadyLoaded(CommandError):
-    """
-    Raised when an extension is already loaded.
 
-    Attributes
-    ----------
-    name: :class:`str`
-        The name of the extension that is already loaded.
+class ExtensionNotLoaded(ExtensionError):
+    """Raised when an extension is not loaded.
+
+    This inherits from :exc:`telegrampy.ext.commands.ExtensionError`.
     """
 
-    def __init__(self, name):
+    def __init__(self, name: str) -> None:
         self.name = name
-        super().__init__(f"Extension '{name}' is already loaded")
+        super().__init__(f"Extension {name} has not been loaded")
 
-class MissingRequiredArgument(CommandError):
+
+class ExtensionNotFound(ExtensionError):
+    """Raised when an extension is not found.
+
+    This inherits from :exc:`telegrampy.ext.commands.ExtensionError`.
     """
-    Raised when a required argument is missing.
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+        super().__init__(f"Extension {name} could not be loaded")
+
+
+class NoEntryPointError(ExtensionError):
+    """Raised when an extension has no `setup` function.
+
+    This inherits from :exc:`telegrampy.ext.commands.ExtensionError`.
+    """
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+        super().__init__(f"Extension {name} has no setup function")
+
+
+class ExtensionFailed(ExtensionError):
+    """Raised when an extension fails.
+
+    This inherits from :exc:`telegrampy.ext.commands.ExtensionError`.
+
+    Attributes
+    ---------
+    name: :class:`str`
+        The extension that failed.
+    original: :class:`Exception`
+        The original error that was raised.
+    """
+
+    def __init__(self, name: str, original: Exception) -> None:
+        self.name = name
+        self.original = original
+        super().__init__(f"Extension raised an exception: {original.__class__.__name__}: {original}")
+
+
+class UserInputError(CommandError):
+    """Base exception for errors that involve user input.
+
+    This inherits from :exc:`telegrampy.ext.commands.CommandError`.
+    """
+
+
+class MissingRequiredArgument(UserInputError):
+    """Raised when a required argument is missing.
+
+    This inherits from :exc:`telegrampy.ext.commands.UserInputError`.
 
     Attributes
     ----------
-    param: :class:`str`
+    param: :class:`inspect.Parameter`
         The argument that is missing.
     """
 
-    def __init__(self, param):
+    def __init__(self, param: inspect.Parameter) -> None:
         self.param = param
         super().__init__(f"'{param}' is a required argument that is missing")
 
-class BadArgument(CommandError):
+
+class ConversionError(CommandError):
+    """Raised when a :class:`telegrampy.ext.commands.Converter` fails.
+
+    This inherits from :exc:telegrampy.ext.commands.UserInputError`.
+
+    Attributes
+    ----------
+    converter: :class:`telegrampy.ext.commands.Converter`
+        The converter that failed.
+    original: :class:`Exception`
+        The original error that was failed.
     """
-    Raised when a bad argument is given.
+
+    def __init__(self, converter: Converter, original: Exception) -> None:
+        self.converter = converter
+        self.original = original
+        super().__init__(f"Converter raised an exception: {original.__class__.__name__}: {original}")
+
+
+class BadArgument(UserInputError):
+    """Raised when a bad argument is given.
+
+    This inherits from :exc:`telegrampy.ext.commands.UserInputError`.
 
     Attributes
     ----------
@@ -94,31 +179,72 @@ class BadArgument(CommandError):
         The name of the converter that failed.
     """
 
-    def __init__(self, arg, converter, message=None):
-        self.arg = arg
-        self.converter = converter
-        super().__init__(message or f"Failed to convert '{arg}' to '{converter}'")
+
+class ArgumentParsingError(UserInputError):
+    """Base exception for argument parsing errors.
+
+    This inherits from :exc:`telegrampy.ext.commands.UserInputError`.
+    """
+
+
+class ExpectedClosingQuote(ArgumentParsingError):
+    """Raised when the argument parser expects a closing quote but can't find one.
+
+    This inherits from :exc:`telegrampy.ext.commands.ArgumentParsingError`.
+    """
+
+    def __init__(self, message: Optional[str] = None):
+        super().__init__(message or "Expected a closing quote")
+
 
 class CheckFailure(CommandError):
-    """Raised when a check fails."""
+    """Raised when a check fails.
 
-    pass
+    This inherits from :exc:`telegrampy.ext.commands.CheckFailure`.
+    """
+
 
 class NotOwner(CheckFailure):
-    """Raised when a user is not the owner of the bot."""
+    """Raised when a user is not the owner of the bot.
 
-    pass
+    This inherits from :exc:`telegrampy.ext.commands.CheckFailure`.
+    """
+
+    def __init__(self, message: Optional[str] = None):
+        super().__init__(message or "Only the owner can use this command")
+
 
 class PrivateChatOnly(CheckFailure):
-    """Raised when a command can only be used in private chats."""
+    """Raised when a command can only be used in private chats.
 
-    def __init__(self, message=None):
+    This inherits from :exc:`telegrampy.ext.commands.CheckFailure`.
+    """
+
+    def __init__(self, message: Optional[str] = None):
         super().__init__(message or "This command can only be used in private messages")
 
-class GroupOnly(CheckFailure):
-    """Raised when a command can only be used in groups."""
 
-    def __init__(self, message=None):
+class GroupOnly(CheckFailure):
+    """Raised when a command can only be used in groups.
+
+    This inherits from :exc:`telegrampy.ext.commands.CheckFailure`.
+    """
+
+    def __init__(self, message: Optional[str] = None):
         super().__init__(message or "This command can only be used in groups")
 
-    pass
+
+class CommandInvokeError(CommandError):
+    """Raised when a command fails.
+
+    This inherits from :exc:`telegrampy.ext.commands.CommandError`.
+
+    Attributes
+    ---------
+    original: :class:`Exception`
+        The original error that was raised.
+    """
+
+    def __init__(self, original: Exception) -> None:
+        self.original = original
+        super().__init__(f"Command raised an exception: {original.__class__.__name__}: {original}")

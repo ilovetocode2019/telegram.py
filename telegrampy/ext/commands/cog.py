@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2020 ilovetocode
+Copyright (c) 2020-2021 ilovetocode
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,14 +22,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import types
+from __future__ import annotations
+
 import inspect
+import types
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, List, Optional, TypeVar
 
 from .core import Command
+
+if TYPE_CHECKING:
+    T = TypeVar('T')
+
+    Coro = Coroutine[Any, Any, T]
+    CoroFunc = Callable[..., Coro[Any]]
 
 
 class CogMeta(type):
     """Metaclass for Cog."""
+
+    commands: List[Command]
+    listeners: List[CoroFunc]
 
     def __new__(cls, *args, **kwargs):
         name, bases, attrs = args
@@ -46,29 +58,46 @@ class CogMeta(type):
                     commands.append(command)
 
                 # If object is a method and it has _cog_listener attribute, add the listener
-                elif isinstance(command, types.MethodType):
-                    try:
-                        listeners.append(command)
-                    except AttributeError:
-                        pass
+                elif isinstance(command, types.FunctionType):
+                    if hasattr(command, "_cog_listener"):
+                        try:
+                            listeners.append(command)
+                        except AttributeError:
+                            pass
 
-        new_cls._commands = commands
-        new_cls._listeners = listeners
+        new_cls.commands = commands
+        new_cls.listeners = listeners
         return new_cls
 
 
 class Cog(metaclass=CogMeta):
-    """Base cog class."""
+    """Base cog class.
+
+    Attributes
+    ----------
+    commands: List[:class:`telegrampy.Command`]
+        The cog's commands.
+    listeners: :class:`list`
+        The cog's listeners.
+    """
+
+    __cog_name__: str
+    commands: List[Command]
+    listeners: List[CoroFunc]
 
     @property
-    def qualified_name(self):
+    def qualified_name(self) -> str:
         """:class:`str`: The cog's name."""
         return self.__cog_name__
 
+    @property
+    def description(self) -> Optional[str]:
+        """:class:`str`: The cog's description."""
+        return inspect.getdoc(self)
+
     @classmethod
-    def listener(cls, name: str = None):
-        """
-        Makes a method in a cog a listener.
+    def listener(cls, name: Optional[str] = None) -> Callable[[CoroFunc], CoroFunc]:
+        """Makes a method in a cog a listener.
 
         Parameters
         ----------
@@ -76,28 +105,25 @@ class Cog(metaclass=CogMeta):
             The name of the event to register the function as.
         """
 
-        def deco(func):
+        def deco(func: CoroFunc) -> CoroFunc:
             func._cog_listener = name or func.__name__
             return func
 
         return deco
-    
+
     def _add(self, bot):
-        for command in self.__class__._commands:
+        for command in self.commands:
             command.bot = bot
             command.cog = self
             bot.add_command(command)
-        for listener in self.__class__._listeners:
-            bot.add_listener(listener, listener._cog_listener)
-
-        self.commands = self.__class__._commands
-        self.listeners = self.__class__._listeners
+        for listener in self.listeners:
+            bot.add_listener(getattr(self, listener.__name__), listener._cog_listener)
 
     def _remove(self, bot):
         for command in self.commands:
             bot.remove_command(command.name)
         for listener in self.listeners:
-            bot.remove_listener(listener)
+            bot.remove_listener(getattr(self, listener.__name__))
 
     def cog_check(self, ctx):
         return True

@@ -1,29 +1,29 @@
 """
 telegram.py: Telegram Bot API Wrapper
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-A simple API wrapper for the Telegram Bot API.
+An async API wrapper for the Telegram bot API in Python.
 
-:copyright: (c) 2020 ilovetocode
+:copyright: (c) 2020-2021 ilovetocode
 :license: MIT, see LICENSE for more details.
 """
 
 __title__ = "telegrampy"
 __author__ = "ilovetocode"
 __license__ = "MIT"
-__copyright__ = "Copyright 2020 ilovetocode"
-__version__ = "0.1.0"
+__copyright__ = "Copyright 2020-2021 ilovetocode"
+__version__ = "1.0.0a"
 
 from collections import namedtuple
 
 from . import utils
+from .chat import Chat
 from .client import Client
 from .errors import *
-from .chat import Chat
-from .user import User
+from .member import Member, MemberUpdated
 from .message import Message
-from .file import *
-from .poll import Poll
+from .poll import Poll, PollAnswer
+from .user import User
 
 VersionInfo = namedtuple("VersionInfo", "major minor micro releaselevel serial")
 
-version_info = VersionInfo(major=0, minor=1, micro=0, releaselevel="final", serial=0)
+version_info: VersionInfo = VersionInfo(major=1, minor=0, micro=0, releaselevel="alpha", serial=0)
