@@ -243,11 +243,11 @@ class Client:
             answer = PollAnswer(self.http, update["poll_answer"])
             self.dispatch("poll_answer", answer)
         elif "my_chat_member" in update:
-            member_update = MemberUpdated(self.http, update["my_chat_member"])
-            self.dispatch("member_updated", member_update)
+            member_updated = MemberUpdated(self.http, update["my_chat_member"])
+            self.dispatch("member_update", member_updated)
         elif "chat_member" in update:
-            member_update = MemberUpdated(self.http, update["chat_member"])
-            self.dispatch("member_updated", member_update)
+            member_updated = MemberUpdated(self.http, update["chat_member"])
+            self.dispatch("member_update", member_updated)
         else:
             log.warning(f"Received an unknown update ({update_id}): {update}")
 

@@ -28,6 +28,10 @@ Events
 
     Called when a channel post is edited.
 
+.. function:: on_member_update(member_update: telegrampy.MemberUpdated)
+
+    Called when a chat member is updated.
+
 .. function:: on_poll(poll: telegrampy.Poll)
 
     Called when a poll is created.
@@ -35,6 +39,8 @@ Events
 .. function:: on_poll_answer(answer: telegrampy.PollAnswer)
 
     Called when someone answers a non-anonymous poll.
+
+.. function: 
 
 .. function:: on_error(error)
 
