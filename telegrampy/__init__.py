@@ -19,6 +19,8 @@ from . import utils
 from .chat import Chat
 from .client import Client
 from .errors import *
+from .inline import InlineQuery
+from .location import Location
 from .member import Member, MemberUpdated
 from .message import Message
 from .poll import Poll, PollAnswer

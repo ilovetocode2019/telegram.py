@@ -76,6 +76,18 @@ Member
 .. autoclass:: MemberUpdated
     :members:
 
+Inline
+~~~~~~
+
+.. autoclass:: InlineQuery
+    :members:
+
+Location
+~~~~~~~~
+
+.. autoclass:: Location
+    :members:
+
 Poll
 ~~~~
 
