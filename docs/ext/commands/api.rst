@@ -64,7 +64,7 @@ Cog
 Context
 -------
 
-.. autoclass:: telegrampy.ext.commands.Context
+.. autoclass:: telegrampy.ext.commands.Context()
     :members:
 
 Converters

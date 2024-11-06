@@ -58,37 +58,38 @@ Telegram Models
 Message
 ~~~~~~~
 
-.. autoclass:: Message
+.. autoclass:: Message()
     :members:
 
 User
 ~~~~
 
-.. autoclass:: User
+.. autoclass:: User()
     :members:
 
 Chat
 ~~~~
 
-.. autoclass:: Chat
+.. autoclass:: Chat()
     :members:
 
 Member
 ~~~~~~
 
-.. autoclass:: Member
+.. autoclass:: Member()
     :members:
+    :inherited-members:
 
-.. autoclass:: MemberUpdated
+.. autoclass:: MemberUpdated()
     :members:
 
 Poll
 ~~~~
 
-.. autoclass:: Poll
+.. autoclass:: Poll()
     :members:
 
-.. autoclass:: PollAnswer
+.. autoclass:: PollAnswer()
     :members:
 
 Exceptions
