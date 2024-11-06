@@ -12,8 +12,8 @@ Getting Started
 ---------------
 
 - :doc:`quickstart`
-- `Creating a Bot <https://core.telegram.org/bots#3-how-do-i-create-a-bot>`_
 - `Examples <https://github.com/ilovetocode2019/telegram.py>`_
+- `Registering a Bot <https://core.telegram.org/bots#3-how-do-i-create-a-bot>`_
 
 Contents
 --------
