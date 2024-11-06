@@ -28,6 +28,10 @@ Events
 
     Called when a channel post is edited.
 
+.. function:: on_inline_query(message: telegrampy.Message)
+
+    Called when an inline query is received.
+
 .. function:: on_poll(poll: telegrampy.Poll)
 
     Called when a poll is created.
