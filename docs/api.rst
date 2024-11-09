@@ -85,10 +85,10 @@ Chat
 Member
 ~~~~~~
 
-.. autoclass:: Member
+.. autoclass:: Member()
     :members:
 
-.. autoclass:: MemberUpdated
+.. autoclass:: MemberUpdated()
     :members:
 
 Inline

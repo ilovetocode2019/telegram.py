@@ -348,6 +348,7 @@ class HTTPClient:
         url = self._base_url + "unpinAllChatMessages"
         data = {"chat_id": chat_id}
         await self.request(Route("POST", url), json=data)
+
     async def leave_chat(self, chat_id: int) -> None:
         """Leaves a chat."""
 
