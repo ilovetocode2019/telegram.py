@@ -17,6 +17,8 @@ New Feautures
 - Add :py:mod:`telegrampy.ext.conversations`.
 - Add :class:`telegrampy.TelegramID`.
 - Add :meth:`telegrampy.on_post`, :meth:`telegrampy.on_post_edit`, :meth:`telegrampy.on_member_update`, :meth:`telegrampy.on_poll`, and :meth:`telegrampy.on_poll_answer` event listeners.
+- Add :meth:`telegrampy.on_inline_query` and :meth:`telegrampy.on_inline_query_chosen_result` event listeners.
+- Add :class:`telegrampy.InlineQuery`, :class:`telegrampy.ChosenInlineResult`, :class:`telegrampy.InlineQueryResult`, and :class:`telegrampy.InlineQueryResultsButton`.
 - Add :class:`telegrampy.Poll` and :class:`telegrampy.PollAnswer`.
 - Add :attr:`telegrampy.User.language_code`, :attr:`telegrampy.User.is_premium`.
 - Add :attr:`telegrampy.User.added_to_attachment_menu`, :attr:`telegrampy.User.is_premium`, :attr:`telegrampy.User.can_join_groups`, :attr:`telegrampy.User.can_read_all_group_messages`, :attr:`telegrampy.User.supports_inline_queries`, :attr:`telegrampy.User.can_connect_to_business`, :attr:`telegrampy.User.has_main_web_app`.

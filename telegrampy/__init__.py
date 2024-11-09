@@ -20,7 +20,7 @@ from .abc import TelegramObject, TelegramID
 from .chat import Chat
 from .client import Client
 from .errors import *
-from .inline import InlineQuery, InlineQueryResult, InlineQueryResultsButton
+from .inline import InlineQuery, ChosenInlineResult, InlineQueryResult, InlineQueryResultsButton
 from .location import Location
 from .member import Member, MemberUpdated
 from .message import Message

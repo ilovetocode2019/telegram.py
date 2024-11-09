@@ -28,9 +28,11 @@ Events
 
     Called when a channel post is edited.
 
-.. function:: on_inline_query(message: telegrampy.Message)
+.. function:: on_inline_query(query: telegrampy.InlineQuery)
 
     Called when an inline query is received.
+
+.. function:: on_inline_query_chosen_result(result: telegrampy.ChosenInlineResult)
 
 .. function:: on_member_update(member_update: telegrampy.MemberUpdated)
 
@@ -94,10 +96,13 @@ Member
 Inline
 ~~~~~~
 
-.. autoclass:: InlineQuery
+.. autoclass:: InlineQuery()
     :members:
 
-.. autoclass:: InlineQueryResults
+.. autoclass:: ChosenInlineResult()
+    :members:
+
+.. autoclass:: InlineQueryResult
     :members:
 
 .. autoclass:: InlineQueryResultsButton
