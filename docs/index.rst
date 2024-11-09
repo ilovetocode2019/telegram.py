@@ -1,5 +1,5 @@
 .. telegram.py documentation master file, created by
-   sphinx-quickstart on Sun Aug  9 09:18:34 2020-2021.
+   sphinx-quickstart on Sun Aug  9 09:18:34 2020-2024.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
    
@@ -12,8 +12,8 @@ Getting Started
 ---------------
 
 - :doc:`quickstart`
-- `Creating a Bot <https://core.telegram.org/bots#3-how-do-i-create-a-bot>`_
 - `Examples <https://github.com/ilovetocode2019/telegram.py>`_
+- `Registering a Bot <https://core.telegram.org/bots#3-how-do-i-create-a-bot>`_
 
 Contents
 --------

@@ -5,7 +5,7 @@
 ``telegrampy.ext.conversations`` -- Conversation Helper
 =======================================================
 
-The conversations extension is a framework that simplies having back and forth conversations with a user.
+The conversations extension is a framework that simplifies having back and forth conversations with a user.
 
 
 .. toctree::

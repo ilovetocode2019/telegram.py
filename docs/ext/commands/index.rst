@@ -2,11 +2,12 @@
 
 .. _ext_commands:
 
-``telegrampy.ext.commands`` -- Commands Extension
-=================================================
+``telegrampy.ext.commands`` -- Commands Handler
+===============================================
 
-The telegrampy commands extension aids in making and
-managing commands.
+The telegrampy commands extension aids in writing and handling commands.
+It also allows you to seperate commands into modular extensions.
+
 
 .. toctree::
     :maxdepth: 2

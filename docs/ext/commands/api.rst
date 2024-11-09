@@ -12,6 +12,9 @@ Bot
     :members:
     :inherited-members:
 
+    .. autofunction:: telegrampy.ext.commands.Bot.command
+        :decorator:
+
 Events
 ------
 
@@ -39,12 +42,16 @@ Checks
 ------
 
 .. autofunction:: telegrampy.ext.commands.check
+    :decorator:
 
 .. autofunction:: telegrampy.ext.commands.is_owner
+    :decorator:
 
 .. autofunction:: telegrampy.ext.commands.is_private_chat
+    :decorator:
 
 .. autofunction:: telegrampy.ext.commands.is_not_private_chat
+    :decorator:
 
 Help Command
 ------------
@@ -64,7 +71,7 @@ Cog
 Context
 -------
 
-.. autoclass:: telegrampy.ext.commands.Context
+.. autoclass:: telegrampy.ext.commands.Context()
     :members:
 
 Converters

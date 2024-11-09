@@ -32,6 +32,10 @@ Events
 
     Called when an inline query is received.
 
+.. function:: on_member_update(member_update: telegrampy.MemberUpdated)
+
+    Called when a chat member is updated.
+
 .. function:: on_poll(poll: telegrampy.Poll)
 
     Called when a poll is created.
@@ -39,6 +43,8 @@ Events
 .. function:: on_poll_answer(answer: telegrampy.PollAnswer)
 
     Called when someone answers a non-anonymous poll.
+
+.. function: 
 
 .. function:: on_error(error)
 
@@ -53,22 +59,27 @@ Utilities
 Telegram Models
 ---------------
 
+Base
+~~~~
+.. autoclass:: TelegramID
+    :members:
+
 Message
 ~~~~~~~
 
-.. autoclass:: Message
+.. autoclass:: Message()
     :members:
 
 User
 ~~~~
 
-.. autoclass:: User
+.. autoclass:: User()
     :members:
 
 Chat
 ~~~~
 
-.. autoclass:: Chat
+.. autoclass:: Chat()
     :members:
 
 Member
@@ -96,15 +107,14 @@ Location
 ~~~~~~~~
 
 .. autoclass:: Location
-    :members:
 
 Poll
 ~~~~
 
-.. autoclass:: Poll
+.. autoclass:: Poll()
     :members:
 
-.. autoclass:: PollAnswer
+.. autoclass:: PollAnswer()
     :members:
 
 Exceptions

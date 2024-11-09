@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2020-2021 ilovetocode
+Copyright (c) 2020-2024 ilovetocode
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -66,7 +66,6 @@ class Chat(TelegramObject, Hashable):
         .. describe:: str(x)
 
             Returns the chat's title.
-
 
     Attributes
     ----------
@@ -265,7 +264,7 @@ class Chat(TelegramObject, Hashable):
 
         Returns
         -------
-        :class:`telegrampy.User`
+        :class:`telegrampy.Member`
             The member fetched.
 
         Raises
@@ -276,13 +275,90 @@ class Chat(TelegramObject, Hashable):
 
         return await self._http.get_chat_member(chat_id=self.id, user_id=user_id)
 
+    async def set_photo(self, photo: Optional[Union[io.BytesIO, str]]) -> None:
+        """|coro|
+
+        Sets the photo for the chat. This does not work in private chats.
+
+        Parameters
+        ----------
+        photo: Union[:class:`io.BytesIO`, str]
+            The new profile photo for the chat. Pass :class:`None` to clear.
+        """
+
+        if isinstance(photo, str):
+            with open(photo, "rb") as file:
+                content = file.read()
+                photo = io.BytesIO(content)
+
+        if photo:
+            await self._http.set_chat_photo(chat_id=self.id, photo=photo)
+        else:
+            await self._http.delete_chat_photo(chat_id=self.id)
+
+    async def set_title(self, title: str) -> None:
+        """|coro|
+
+        Changes the title of the chat.
+        This only works in non-private chats with administrator privillages.
+
+        Parameters
+        ----------
+        title: :class:`str`
+            The new name of the chat, from 1 to 128 characaters.
+
+        Raises
+        ------
+        :exc:`telegrampy.HTTPException`
+            Changing the title failed.
+        """
+
+        await self._http.set_chat_title(chat_id=self.id, title=title)
+
+    async def set_description(self, description: str = None) -> None:
+        """|coro|
+
+        Changes the description of the chat.
+        This only works in non-private chats with administrator privillages.
+
+        Paramaters
+        ----------
+        description: :class:`str`
+            The new description of the chat, up to 255 characters.
+
+        Raises
+        ------
+        :exc:`telegrampy.HTTPException`
+            Changing the description failed.
+        """
+
+        await self._http.set_chat_description(chat_id=self.id, description=description)
+
+    async def clear_pins(self) -> None:
+        """|coro|
+
+        Removes all pins from the chat. Must have administrator with proper permissions.
+
+        Raises
+        ------
+        :exc:`telegrampy.HTTPException`
+            Clearing all pins failed.
+        """
+
+        await self._http.unpin_all_chat_messages(chat_id=self.id)
+
     async def leave(self) -> None:
         """|coro|
 
-        Removes the logged in bot from the chat.
+        Removes the logged in bot from a non-private chat.
+
+        Raises
+        ------
+        :exc:`telegrampy.HTTPException`
+            Leaving the chat failed.
         """
 
-        return await self._http.leave_chat(chat_id=self.id)
+        await self._http.leave_chat(chat_id=self.id)
 
 class ChatActionSender:
     def __init__(self, chat: Chat, action: str) -> None:

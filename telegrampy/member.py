@@ -12,8 +12,10 @@ if TYPE_CHECKING:
     from .types.member import Member as MemberPayload
     from .types.member import MemberUpdated as MemberUpdatedPayload
 
+
 class Member(User):
-    """
+    """Represents a chat member, with the associated user.
+
     Attributes
     ----------
     status: :class:`str`
@@ -34,7 +36,8 @@ class Member(User):
 
 
 class MemberUpdated(TelegramObject):
-    """
+    """Contains information about any change regarding a chat member.
+
     Attributes
     ----------
     chat: :class:`telegrampy.Chat`

@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2020-2021 ilovetocode
+Copyright (c) 2020-2024 ilovetocode
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -84,7 +84,7 @@ class MessageEntity(TelegramObject):
 
         self.language: Optional[str] = data.get("language")
         self.custom_emoji_id: Optional[str] = data.get("custom_emoji_id")
-        self.value: str = text[self.offset:self.offset+self.length+1]
+        self.value: str = text[self.offset:self.offset+self.length]
 
 class Message(TelegramObject, Hashable):
     """Represents a message in Telegram.
@@ -220,7 +220,52 @@ class Message(TelegramObject, Hashable):
             Editing the message failed.
         """
 
-        return await self._http.edit_message_content(chat_id=self.chat.id, message_id=self.id, content=content, parse_mode=parse_mode)
+        return await self._http.edit_message_content(
+            chat_id=self.chat.id,
+            message_id=self.id,
+            content=content,
+            parse_mode=parse_mode
+        )
+
+    async def pin(self, *, silent: bool = False) -> None:
+        """|coro|
+
+        Pins the message to the chat.
+
+        Parameters
+        ----------
+        silent: :class:`bool`
+            Whether to not notify chat members when a message is sent.
+            Notifications are never sent for channels and private chats.
+
+        Raises
+        ------
+        :exc:`telegrampy.HTTPException`
+            Pinning the message failed.
+        """
+
+        await self._http.pin_chat_message(
+            chat_id=self.chat.id,
+            message_id=self.id,
+            disable_notification=silent
+        )
+
+    async def unpin(self) -> None:
+        """|coro|
+
+        Unpins the message from the chat.
+
+        Raises
+        ------
+        :exc:`telegrampy.HTTPException`
+            Unpinning the message failed.
+        """
+
+        await self._http.unpin_chat_message(
+            chat_id=self.chat.id,
+            message_id=self.id
+        )
+
 
     async def delete(self) -> None:
         """|coro|
