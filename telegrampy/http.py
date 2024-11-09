@@ -300,6 +300,22 @@ class HTTPClient:
 
         return User(self, response["result"])
 
+    async def answer_inline_query(
+        self,
+        inline_query_id: int,
+        results: List[Dict[str, Any]],
+        button: [Dict[str, Any]] = None
+    ) -> None:
+        """Answers an inline query."""
+
+        url = self._base_url + "answerInlineQuery"
+        data = {"inline_query_id": inline_query_id, "results": json.dumps(results)}
+
+        if button:
+            data["button"] = json.dumps(button)
+
+        await self.request(Route("POST", url), json=data)
+
     async def get_updates(
         self,
         offset: int = None,

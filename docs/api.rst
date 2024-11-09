@@ -86,6 +86,12 @@ Inline
 .. autoclass:: InlineQuery
     :members:
 
+.. autoclass:: InlineQueryResults
+    :members:
+
+.. autoclass:: InlineQueryResultsButton
+    :members:
+
 Location
 ~~~~~~~~
 

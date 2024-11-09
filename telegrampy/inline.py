@@ -24,7 +24,7 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Callable, List, Optional
 
 from .abc import TelegramObject
 from .location import Location
@@ -67,22 +67,50 @@ class InlineQuery(TelegramObject, Hashable):
         The location of the sender, if set up to be requested.
     """
 
-    id: str
-    author: User
-    content: str
-    offset: str
-    chat_type: Optional[str]
-    location: Optional[str]
+    if TYPE_CHECKING:
+        id: str
+        author: User
+        content: str
+        offset: str
+        chat_type: Optional[str]
+        location: Optional[str]
 
     def __init__(self, http: HTTPClient, data: InlineQueryPayload):
-        super().__init__(http, data)
+        super().__init__(http)
 
         self.id: str = data.get("id")
-        self.author: User = User(data.get("user"))
+        self.author: User = User(http, data.get("from"))
         self.content: str = data.get("query")
         self.offset: str = data.get("offset")
         self.chat_type: Optional[str] = data.get("chat_type")
         self.location: Optional[str] = data.get("location")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.content
+
+    async def answer(
+        self,
+        results: List[InlineQueryResult],
+        *,
+        button: InlineQueryResultButton = None
+    ) -> None:
+        await self._http.answer_inline_query(
+            inline_query_id=self.id,
+            results=[result.data for result in results],
+            button={"text": button.text, "web_app": {"url": button.url}} if button else None
+        )
+
+
+class InlineQueryResult(TelegramObject):
+    """Helper class to build an inline query result."""
+
+    def __init__(self, **kwargs):
+        self.data = kwargs
+
+
+class InlineQueryResultsButton:
+    """Helper class to build an inline query results button."""
+
+    def __init__(self, text: str, *, web_app_url: str = None):
+        self.text = text
+        self.web_app_url = web_app_url

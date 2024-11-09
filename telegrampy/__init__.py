@@ -19,7 +19,7 @@ from . import utils
 from .chat import Chat
 from .client import Client
 from .errors import *
-from .inline import InlineQuery
+from .inline import InlineQuery, InlineQueryResult, InlineQueryResultsButton
 from .location import Location
 from .member import Member, MemberUpdated
 from .message import Message
