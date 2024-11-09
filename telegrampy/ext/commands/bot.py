@@ -133,7 +133,7 @@ class Bot(telegrampy.Client):
 
     @property
     def commands(self) -> List[Command]:
-        """List[:class:`Command`:] A list of the commands."""
+        """List[:class:`Command`] A list of the commands."""
 
         return list(self.commands_dict.values())
 
@@ -496,7 +496,15 @@ class Bot(telegrampy.Client):
         )
 
     async def sync(self):
-        """Registers all of the commands associated with the bot to Telegram."""
+        """|coro|
+        
+        Sets the user-facing Telegram commands to the curently registered commands with the instance.
+
+        Raises
+        ------
+        :exc:`telegrampy.HTTPException`
+            Setting the currently registered comands failed. This will happen of commands are missing a description.
+        """
 
         await self.http.set_my_commands([{
             "command": command.name,

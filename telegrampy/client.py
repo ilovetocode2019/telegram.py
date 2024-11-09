@@ -63,8 +63,8 @@ class Client:
         The event loop to run the bot on. Uses :func:`asyncio.get_event_loop` is none is specified.
     wait: Optional[:class:`int`]
         The timeout in seconds for long polling. Defaults to 10.
-    read_unread_updates: Optional[:class:`bool`]
-        If the bot should read unread updates on startup. Defaults to False.
+    process_unread: Optional[:class:`bool`]
+        Whether the bot should process unread updates received while offline. Defaults to False.
 
     Attributes
     ----------
@@ -72,7 +72,7 @@ class Client:
         The event loop that the bot is running on.
     """
 
-    def __init__(self, token: str, *, loop: asyncio.AbstractEventLoop = None, **options: Any):
+    def __init__(self, token: str, *, loop: asyncio.AbstractEventLoop = None, **options: Dict[str, Any]):
         self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
         self.http: HTTPClient = HTTPClient(token=token, loop=self.loop)
 
@@ -83,7 +83,7 @@ class Client:
         self._running: bool = False
         self._last_update_id: Optional[int] = None
         self._wait: int = wait
-        self._read_unread_updates: bool = options.get("read_unread_updates", False)
+        self._process_unread: bool = options.get("process_unread", False)
 
         self._listeners: Dict[str, List[CoroFunc]] = {}
         self._waiting_for: Dict[str, List[Tuple[asyncio.Future, Callable[..., bool]]]] = {}
@@ -139,7 +139,7 @@ class Client:
 
         Sets the description that is shown for the bot.
 
-        Paramaters
+        Parameters
         ----------
         name: :class:`str`
             The display name of the bot, no longer than 64 chatacters.
@@ -158,10 +158,10 @@ class Client:
 
         Sets the description that is shown for the bot.
 
-        Paramaters
+        Parameters
         ----------
         description: :class:`str`
-            The new description. Clear the description by setting an empty string.
+            The new description.
             Maxmium of 512 characters for full description and 120 for short description.
         language_code: :class:`str`
             The two-letter ISO 639-1 language code for this description.
@@ -186,7 +186,7 @@ class Client:
             if updates:
                 update_ids = [int(update["update_id"]) for update in updates]
                 self._last_update_id = max(update_ids) + 1
-                if self._read_unread_updates:
+                if self._process_unread:
                     log.debug(f"Handling updates: {[update['update_id'] for update in updates]} ({len(updates)}")
                     for update in updates:
                         await self._handle_update(update)
@@ -389,7 +389,7 @@ class Client:
         Parameters
         ---------
         name: Optional[:class:`str`]
-             The name of the event to register the function as.
+            The name of the event to register the function as.
         """
 
         def deco(func: CoroFunc) -> CoroFunc:
@@ -408,6 +408,11 @@ class Client:
         """|coro|
 
         Starts the bot.
+
+        Raises
+        ------
+        :exc:`RuntimeError`
+            This instance of the bot is already running.
         """
 
         if self._running:
@@ -422,6 +427,11 @@ class Client:
         """|coro|
 
         Stops the bot.
+
+        Raises
+        ------
+        :exc:`RuntimeError`
+            This instance of the bot is not running.
         """
 
         if not self._running:

@@ -323,7 +323,7 @@ class HTTPClient:
         """Changes the name of the bot."""
 
         url = self._base_url + "setMyName"
-        data = {"name": name}
+        data = {"name": name or ""}
 
         if language_code:
             data["language_code"] = language_code
@@ -338,7 +338,7 @@ class HTTPClient:
         """Changes the full description of the bot."""
 
         url = self._base_url + "setMyDescription"
-        data = {"description": description}
+        data = {"description": description or ""}
 
         if language_code:
             data["language_code"] = language_code
@@ -353,7 +353,7 @@ class HTTPClient:
         """Changes the short description of the bot."""
 
         url = self._base_url + "setMyShortDescription"
-        data = {"short_description": short_description}
+        data = {"short_description": short_description or ""}
 
         if language_code:
             data["language_code"] = language_code
