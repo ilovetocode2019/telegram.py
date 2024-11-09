@@ -301,7 +301,7 @@ class Chat(TelegramObject, Hashable):
         This only works in non-private chats with administrator privillages.
 
         Paramaters
-        ---------
+        ----------
         description: :class:`str`
             The new description of the chat, up to 255 characters.
 

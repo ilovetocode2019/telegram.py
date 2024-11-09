@@ -16,19 +16,26 @@ New Feautures
 - Add :meth:`telegrampy.Chat.leave`.
 - Add :py:mod:`telegrampy.ext.conversations`.
 - Add :class:`telegrampy.TelegramID`.
-- Add new event listeners: :meth:`telegrampy.on_post`, :meth:`telegrampy.on_post_edit`, :meth:`telegrampy.on_member_update`, :meth:`telegrampy.on_poll`, and :meth:`telegrampy.on_poll_answer`
+- Add :meth:`telegrampy.on_post`, :meth:`telegrampy.on_post_edit`, :meth:`telegrampy.on_member_update`, :meth:`telegrampy.on_poll`, and :meth:`telegrampy.on_poll_answer` event listeners.
 - Add :class:`telegrampy.Poll` and :class:`telegrampy.PollAnswer`
+- Add :attr:`telegrampy.User.language_code`, :attr:`telegrampy.User.is_premium`
+- Add :attr:`telegrampy.User.added_to_attachment_menu`, :attr:`telegrampy.User.is_premium`, :attr:`telegrampy.User.can_join_groups`, :attr:`telegrampy.User.can_read_all_group_messages`, :attr:`telegrampy.User.supports_inline_queries`, :attr:`telegrampy.User.can_connect_to_business`, :attr:`telegrampy.User.has_main_web_app`.
+- Add :meth:`telegrampy.Chat.send_action` and :meth:`telegrampy.Chat.action`
+- Add :class:`telegrampy.BadRequest` and :class:`telegrampy.ServerError`.
+- Add :class:`telegrampy.ext.commands.ExpectedClosingQuote`, :class:`telegrampy.ext.commands.ArgumentParsingError`, and :class:`telegrampy.ext.commands.UserInputError`,
+- Add :class:`telegrampy.ext.commands.ExtensionError`, :class:`telegrampy.ext.commands.NoEntryPointError`, and :class:`telegrampy.ext.commands.ExtensionFailed`
 
 Other Changes
 ~~~~~~~~~~~~~
 - More throrough logging throughout update handling.
 - Add complete typehints to library.
 - Only message entity commands will be processed. Certain use-cases may break.
-- Remove :attr:`telegrampy.Chat.history`, :attr:`telegrampy.Client.messages` and :meth:`telegrampy.Chat.fetch_message`  because they go against the Telegram API design.
+- :meth:`telegrampy.Chat.get_member` should return :class:`telegrampy.Member` instead of :class:`telegrampy.User`
 - Rename :meth:`telegrampy.Client.user` to :meth:`telegrampy.Client.get_me`
 - Rename :meth:`telegrampy.Message.edit` to :meth:`telegrampy.Message.edit_content`
-- :meth:`telegrampy.Chat.get_member` should return :class:`telegrampy.Member` instead of :class:`telegrampy.User`
-
+- Split :meth:`telegrampy.Message.send` into :meth:`telegrampy.Message.send_document` and :meth:`telegrampy.Message.send_photo`
+- Remove :attr:`telegrampy.Chat.history`, :attr:`telegrampy.Client.messages` and :meth:`telegrampy.Chat.fetch_message`  because they go against the Telegram API design.
+- Remove :attr:`telegrampy.Document` and :attr:`telegrampy.Photo` as they are no longer needed with the new seperated send functions.
 
 Bux Fixes
 ~~~~~~~~~
