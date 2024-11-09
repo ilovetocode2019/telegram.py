@@ -16,6 +16,7 @@ __version__ = "1.0.0a"
 from collections import namedtuple
 
 from . import utils
+from .abc import TelegramObject, TelegramID
 from .chat import Chat
 from .client import Client
 from .errors import *

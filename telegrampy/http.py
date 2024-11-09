@@ -36,6 +36,7 @@ import aiohttp
 from . import __version__, errors
 from .chat import Chat
 from .message import Message
+from .member import User
 from .poll import Poll
 from .user import User
 
@@ -283,8 +284,54 @@ class HTTPClient:
         data = {"chat_id": chat_id, "user_id": user_id}
         response = await self.request(Route("GET", url), json=data)
 
-        return User(self, response["result"].get("user"))
+        return ChatMember(self, response["result"].get("user"))
 
+    async def set_chat_title(self, chat_id: int, title: str) -> User:
+        """Sets the title of a chat."""
+
+        url = self._base_url + "setChatTitle"
+        data = {"chat_id": chat_id, "title": title}
+        response = await self.request(Route("POST", url), json=data)
+
+    async def set_chat_description(self, chat_id: int, description: str = None) -> User:
+        """Sets the description of a chat."""
+
+        url = self._base_url + "setChatDescription"
+        data = {"chat_id": chat_id, "description": description or ""}
+        await self.request(Route("POST", url), json=data)
+
+    async def pin_chat_message(
+        self,
+        chat_id: int,
+        message_id: int,
+        disable_notification: bool = False
+    ) -> None:
+        """Adds a message to the list of pinned messages in a chat."""
+
+        url = self._base_url + "pinChatMessage"
+        data = {
+            "chat_id": chat_id,
+            "message_id": message_id,
+            "disable_notification": disable_notification
+        }
+        await self.request(Route("POST", url), json=data)
+
+    async def unpin_chat_message(self, chat_id: int, message_id: int) -> None:
+        """Removes a message from the list of pinned messages in a chat."""
+
+        url = self._base_url + "unpinChatMessage"
+        data = {
+            "chat_id": chat_id,
+            "message_id": message_id
+        }
+        await self.request(Route("POST", url), json=data)
+
+    async def unpin_all_chat_messages(self, chat_id: int) -> None:
+        """Clears the list of pinned messages in a chat."""
+
+        url = self._base_url + "unpinAllChatMessages"
+        data = {"chat_id": chat_id}
+        await self.request(Route("POST", url), json=data)
     async def leave_chat(self, chat_id: int) -> None:
         """Leaves a chat."""
 
@@ -317,7 +364,7 @@ class HTTPClient:
 
     async def set_my_name(
         self,
-        name: str = None,
+        name: str,
         language_code: str = None
     ) -> None:
         """Changes the name of the bot."""
@@ -332,7 +379,7 @@ class HTTPClient:
 
     async def set_my_description(
         self,
-        description: str = None,
+        description: str,
         language_code: str = None
     ) -> None:
         """Changes the full description of the bot."""
@@ -347,7 +394,7 @@ class HTTPClient:
 
     async def set_my_short_description(
         self,
-        short_description: str = None,
+        short_description: str,
         language_code: str = None
     ) -> None:
         """Changes the short description of the bot."""

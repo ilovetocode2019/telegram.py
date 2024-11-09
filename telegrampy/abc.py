@@ -35,3 +35,15 @@ class TelegramObject:
 
     def __init__(self, http: HTTPClient) -> None:
         self._http: HTTPClient = http
+
+class TelegramID:
+    """Represents a Telegram resource with a specific ID, that has not been fetched.
+
+    Paramaters
+    ----------
+    id: :class:`int`
+        The ID of the resource.
+    """
+
+    def __init__(self, *, id: int) -> None:
+        self.id = id
