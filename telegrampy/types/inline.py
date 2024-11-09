@@ -41,3 +41,13 @@ InlineQuery = TypedDict(
         "location": Optional[Location]
     }
 )
+
+ChosenInlineResult = TypedDict(
+    "ChosenInlineResult", {
+        "result_id": str,
+        "from": User,
+        "location": Optional[Location],
+        "inline_message_id": Optional[str],
+        "query": str
+    }
+)

@@ -34,7 +34,7 @@ from .user import User
 if TYPE_CHECKING:
     from .http import HTTPClient
     from .types.inline import InlineQuery as InlineQueryPayload
-
+    from .types.inline import ChosenInlineResult as ChosenInlineResultPayload
 
 class InlineQuery(TelegramObject, Hashable):
     """Represents an incoming inline query.
@@ -73,7 +73,7 @@ class InlineQuery(TelegramObject, Hashable):
         content: str
         offset: str
         chat_type: Optional[str]
-        location: Optional[str]
+        location: Optional[Location]
 
     def __init__(self, http: HTTPClient, data: InlineQueryPayload):
         super().__init__(http)
@@ -83,7 +83,7 @@ class InlineQuery(TelegramObject, Hashable):
         self.content: str = data.get("query")
         self.offset: str = data.get("offset")
         self.chat_type: Optional[str] = data.get("chat_type")
-        self.location: Optional[str] = data.get("location")
+        self.location: Optional[Location] = Location(data.get("location")) if "location" in data else None
 
     def __str__(self) -> str:
         return self.content
@@ -101,7 +101,41 @@ class InlineQuery(TelegramObject, Hashable):
         )
 
 
-class InlineQueryResult(TelegramObject):
+class ChosenInlineResult(TelegramObject):
+    """Represents an inline query result that was choosen and sent to a chat.
+
+    Attributes
+    ----------
+    id: :class:`str`
+        The unique identifier of the choosen result.
+    from: :class:`telegrampy.User`
+        The user that choose the result.
+    location: Optional[:class:`telegrampy.Location`]
+        The sender location, if set up to be requested.
+    message_id: Optional[:class:`int`]
+        The ID of the message for inline keyboards.
+    query: :class:`str`
+        The query that was used to obtain the result.
+    """
+
+    if TYPE_CHECKING:
+        self.id: str
+        self.author: User
+        self.location: Optional[Location]
+        self.message_id: Optional[str]
+        self.query: str
+
+    def __init__(self, http, data: ChosenInlineResultPayload):
+        super().__init__(http)
+
+        self.id: str = data["result_id"]
+        self.author: User = User(http, data["from"])
+        self.location: Optional[Location] = Location(http, data["location"]) if "location" in data else None
+        self.message_id: Optional[str] = data.get("message_id")
+        self.query: str = data["query"]
+
+
+class InlineQueryResult:
     """Helper class to build an inline query result."""
 
     def __init__(self, **kwargs):

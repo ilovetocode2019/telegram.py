@@ -62,6 +62,8 @@ class Location(TelegramObject):
     proximity_alert_radius: Optional[int]
 
     def __init__(self, http: HTTPClient, data: LocationPayload):
+        super().__init__(http)
+
         self.latitude: float = data.get("latitude")
         self.longitude: float = data.get("longitude")
         self.horizontal_accuracy: Optional[float] = data.get("horizontal_accuracy")

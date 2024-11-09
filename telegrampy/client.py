@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, Optional
 
 from .errors import InvalidToken, Conflict
 from .http import HTTPClient
-from .inline import InlineQuery
+from .inline import InlineQuery, ChosenInlineResult
 from .member import MemberUpdated
 from .message import Message
 from .poll import Poll, PollAnswer
@@ -237,9 +237,12 @@ class Client:
         elif "edited_channel_post" in update:
             message = Message(self.http, update["edited_channel_post"])
             self.dispatch("post_edit", message)
-        if "inline_query" in update:
+        elif "inline_query" in update:
             inline_query = InlineQuery(self.http, update["inline_query"])
             self.dispatch("inline_query", inline_query)
+        elif "chosen_inline_result" in update:
+            chosen_inline_query_result = ChosenInlineResult(self.http, update["chosen_inline_result"])
+            self.dispatch("inline_query_chosen_result", chosen_inline_query_result)
         elif "poll" in update:
             poll = Poll(self.http, update["poll"])
             self.dispatch("poll", poll)
