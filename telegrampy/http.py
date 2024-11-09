@@ -36,7 +36,7 @@ import aiohttp
 from . import __version__, errors
 from .chat import Chat
 from .message import Message
-from .member import User
+from .member import Member
 from .poll import Poll
 from .user import User
 
@@ -284,7 +284,23 @@ class HTTPClient:
         data = {"chat_id": chat_id, "user_id": user_id}
         response = await self.request(Route("GET", url), json=data)
 
-        return ChatMember(self, response["result"].get("user"))
+        return Member(self, response["result"].get("user"))
+
+    async def set_chat_photo(self, chat_id: int, photo: io.BytesIO) -> None:
+        """Sends a new chat profile photo."""
+
+        url = self._base_url + "setChatPhoto"
+        writer = aiohttp.FormData()
+        writer.add_field("chat_id", str(chat_id))
+        writer.add_field("photo", photo)
+        await self.request(Route("POST", url), data=writer)
+
+    async def delete_chat_photo(self, chat_id: int) -> None:
+        """Deletes a chat profile photo."""
+
+        url = self._base_url + "deleteChatPhoto"
+        data = {"chat_id": chat_id}
+        await self.request(Route("POST", url), json=data)
 
     async def set_chat_title(self, chat_id: int, title: str) -> User:
         """Sets the title of a chat."""

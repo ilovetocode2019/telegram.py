@@ -17,13 +17,14 @@ New Feautures
 - Add :py:mod:`telegrampy.ext.conversations`.
 - Add :class:`telegrampy.TelegramID`.
 - Add :meth:`telegrampy.on_post`, :meth:`telegrampy.on_post_edit`, :meth:`telegrampy.on_member_update`, :meth:`telegrampy.on_poll`, and :meth:`telegrampy.on_poll_answer` event listeners.
-- Add :class:`telegrampy.Poll` and :class:`telegrampy.PollAnswer`
-- Add :attr:`telegrampy.User.language_code`, :attr:`telegrampy.User.is_premium`
+- Add :class:`telegrampy.Poll` and :class:`telegrampy.PollAnswer`.
+- Add :attr:`telegrampy.User.language_code`, :attr:`telegrampy.User.is_premium`.
 - Add :attr:`telegrampy.User.added_to_attachment_menu`, :attr:`telegrampy.User.is_premium`, :attr:`telegrampy.User.can_join_groups`, :attr:`telegrampy.User.can_read_all_group_messages`, :attr:`telegrampy.User.supports_inline_queries`, :attr:`telegrampy.User.can_connect_to_business`, :attr:`telegrampy.User.has_main_web_app`.
-- Add :meth:`telegrampy.Chat.send_action` and :meth:`telegrampy.Chat.action`
+- Add :meth:`telegrampy.Chat.send_action` and :meth:`telegrampy.Chat.action`.
 - Add :class:`telegrampy.BadRequest` and :class:`telegrampy.ServerError`.
-- Add :class:`telegrampy.ext.commands.ExpectedClosingQuote`, :class:`telegrampy.ext.commands.ArgumentParsingError`, and :class:`telegrampy.ext.commands.UserInputError`,
-- Add :class:`telegrampy.ext.commands.ExtensionError`, :class:`telegrampy.ext.commands.NoEntryPointError`, and :class:`telegrampy.ext.commands.ExtensionFailed`
+- Add :class:`telegrampy.ext.commands.ExpectedClosingQuote`, :class:`telegrampy.ext.commands.ArgumentParsingError`, and :class:`telegrampy.ext.commands.UserInputError`.
+- Add :class:`telegrampy.ext.commands.ExtensionError`, :class:`telegrampy.ext.commands.NoEntryPointError`, and :class:`telegrampy.ext.commands.ExtensionFailed`.
+- Add :class:`telegrampy.Chat.set_photo`.
 
 Other Changes
 ~~~~~~~~~~~~~
