@@ -55,6 +55,11 @@ Utilities
 Telegram Models
 ---------------
 
+Base
+~~~~
+.. autoclass:: TelegramID
+    :members:
+
 Message
 ~~~~~~~
 

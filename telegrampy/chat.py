@@ -264,7 +264,7 @@ class Chat(TelegramObject, Hashable):
 
         Returns
         -------
-        :class:`telegrampy.User`
+        :class:`telegrampy.Member`
             The member fetched.
 
         Raises

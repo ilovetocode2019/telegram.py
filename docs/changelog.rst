@@ -1,6 +1,42 @@
 Changelog
 ==========
 
+v1.0.0
+------
+
+New Feautures
+~~~~~~~~~~~~~
+- Add loop, process_unerad, and wait parameters constructor to :class:`telegrampy.Client`.
+- Add options kwargs to :class:`telegrampy.ext.commands.Bot`.
+- Add :attr:`telegrampy.Client.loop`.
+- Add :meth:`telegrampy.Client.set_name` and :meth:`telegrampy.Client.set_description`.
+- Add :meth:`telegrampy.ext.commands.Bot.sync`.
+- Add :meth:`telegrampy.Chat.set_title` and :meth:`telegrampy.Chat.set_description`.
+- Add :meth:`telegrampy.Message.pin`, :meth:`telegrampy.Message.unpin`, and :meth:`telegrampy.Chat.clear_pins`.
+- Add :meth:`telegrampy.Chat.leave`.
+- Add :py:mod:`telegrampy.ext.conversations`.
+- Add :class:`telegrampy.TelegramID`.
+- Add new event listeners: :meth:`telegrampy.on_post`, :meth:`telegrampy.on_post_edit`, :meth:`telegrampy.on_member_update`, :meth:`telegrampy.on_poll`, and :meth:`telegrampy.on_poll_answer`
+- Add :class:`telegrampy.Poll` and :class:`telegrampy.PollAnswer`
+
+Other Changes
+~~~~~~~~~~~~~
+- More throrough logging throughout update handling.
+- Add complete typehints to library.
+- Only message entity commands will be processed. Certain use-cases may break.
+- Remove :attr:`telegrampy.Chat.history`, :attr:`telegrampy.Client.messages` and :meth:`telegrampy.Chat.fetch_message`  because they go against the Telegram API design.
+- Rename :meth:`telegrampy.Client.user` to :meth:`telegrampy.Client.get_me`
+- Rename :meth:`telegrampy.Message.edit` to :meth:`telegrampy.Message.edit_content`
+- :meth:`telegrampy.Chat.get_member` should return :class:`telegrampy.Member` instead of :class:`telegrampy.User`
+
+
+Bux Fixes
+~~~~~~~~~
+There are way too many too be listed.
+
+Chances are most of the bugs you've previously expereinced with the library have been fixed in this version.
+
+
 v0.3.1
 ------
 
