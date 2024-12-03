@@ -74,7 +74,7 @@ class HTTPClient:
         self._token: str = token
         self._base_url: str = Route.BASE_URL.format(self._token)
 
-        self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
+        self.loop: asyncio.AbstractEventLoop = loop
         self.user_agent: str = user_agent.format(__version__, sys.version_info, aiohttp.__version__)
         self.session: aiohttp.ClientSession = aiohttp.ClientSession(loop=self.loop, headers={"User-Agent": self.user_agent})
 
@@ -89,6 +89,7 @@ class HTTPClient:
         route: :class:`telegrampy.http.Route`
             The route to make a request to.
         """
+
         url = route.url
         method = route.method
 

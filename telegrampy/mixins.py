@@ -26,7 +26,6 @@ from __future__ import annotations
 
 
 class EqualityComparable:
-
     id: int
 
     def __eq__(self, other: object) -> bool:

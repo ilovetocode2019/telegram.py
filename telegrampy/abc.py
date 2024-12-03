@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
 
 class TelegramObject:
-    """Base telegram object."""
+    """Base Telegram object."""
 
     def __init__(self, http: HTTPClient) -> None:
         self._http: HTTPClient = http

@@ -77,7 +77,7 @@ Context
 Converters
 ----------
 
-..autoclass:: telegrampy.ext.commands.Converter
+.. autoclass:: telegrampy.ext.commands.Converter
     :members:
 
 .. autoclass:: telegrampy.ext.commands.UserConverter
@@ -110,7 +110,7 @@ Exceptions
 .. autoclass:: telegrampy.ext.commands.NoEntryPointError
     :members:
 
-..autoclass:: telegrampy.ext.commands.ExtensionNotFound
+.. autoclass:: telegrampy.ext.commands.ExtensionNotFound
     :members:
 
 .. autoclass:: telegrampy.ext.commands.ExtensionFailed
