@@ -59,7 +59,7 @@ class HelpCommand:
         The :class:`telegrampy.ext.commands.Bot` from the Context
     """
 
-    def __init__(self, **options: Any) -> None:
+    def __init__(self, **options: Any):
         self.command_attrs: Dict[str, Any] = options.pop('command_attrs', {})
         self.command_attrs.setdefault("name", "help")
         self.command_attrs.setdefault("description", "The help command")
@@ -204,7 +204,7 @@ class DefaultHelpCommand(HelpCommand):
         no_category: str
         sort_commands: bool
 
-    def __init__(self, **options: Any):
+    def __init__(self, **options: Any) -> None:
         self.no_category: str = options.pop("no_category", "No Category")
         self.sort_commands: bool = options.pop("sort_commands", True)
         super().__init__(**options)

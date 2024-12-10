@@ -24,19 +24,19 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import Optional, TypedDict
+from typing import NotRequired, TypedDict
 
 
 class User(TypedDict):
     id: int
     is_bot: bool
     first_name: str
-    last_name: Optional[str]
-    username: Optional[str]
-    language_code: Optional[str]
-    is_premium: Optional[bool]
-    can_join_groups: Optional[bool]
-    can_read_all_group_messages: Optional[bool]
-    supports_inline_queries: Optional[bool]
-    can_connect_to_business: Optional[bool]
-    has_main_web_app: Optional[bool]
+    last_name: NotRequired[str]
+    username: NotRequired[str]
+    language_code: NotRequired[str]
+    is_premium: NotRequired[bool]
+    can_join_groups: NotRequired[bool]
+    can_read_all_group_messages: NotRequired[bool]
+    supports_inline_queries: NotRequired[bool]
+    can_connect_to_business: NotRequired[bool]
+    has_main_web_app: NotRequired[bool]

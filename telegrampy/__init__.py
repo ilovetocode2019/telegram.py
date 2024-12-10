@@ -16,12 +16,12 @@ __version__ = "1.0.0a"
 from collections import namedtuple
 
 from . import utils
-from .abc import TelegramObject, TelegramID
-from .chat import Chat
+from .abc import  Messageable
+from .chat import PartialChat, Chat, ChatInvite
 from .client import Client
 from .errors import *
 from .member import Member, MemberUpdated
-from .message import Message
+from .message import PartialMessage, Message, MessageEntity
 from .poll import Poll, PollAnswer
 from .user import User
 

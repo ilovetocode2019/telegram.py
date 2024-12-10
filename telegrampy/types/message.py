@@ -24,7 +24,7 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, List, Literal, Optional, TypedDict
+from typing import TYPE_CHECKING, Any, List, Literal, NotRequired, TypedDict
 
 if TYPE_CHECKING:
     from .chat import Chat
@@ -36,16 +36,16 @@ class MessageEntity(TypedDict):
     type: str
     offset: int
     length: int
-    url: str
-    user: User
-    language: str
-    custom_emoji_id: str
+    url: NotRequired[str]
+    user: NotRequired[User]
+    language: NotRequired[str]
+    custom_emoji_id: NotRequired[str]
 
 
 class _BaseFile(TypedDict):
     file_id: str
     file_unique_id: str
-    file_size: Optional[int]
+    file_size: NotRequired[int]
 
 class PhotoSize(_BaseFile):
     width: int
@@ -53,9 +53,9 @@ class PhotoSize(_BaseFile):
 
 
 class _File(_BaseFile):
-    thumb: Optional[PhotoSize]
-    file_name: Optional[str]
-    mime_type: Optional[str]
+    thumb: NotRequired[PhotoSize]
+    file_name: NotRequired[str]
+    mime_type: NotRequired[str]
 
 
 class Animation(_File):
@@ -66,8 +66,8 @@ class Animation(_File):
 
 class Audio(_File):
     duration: int
-    performer: Optional[str]
-    title: Optional[str]
+    performer: NotRequired[str]
+    title: NotRequired[str]
 
 
 Document = _File
@@ -77,21 +77,21 @@ Video = Animation
 class VideoNote(_BaseFile):
     length: int
     duration: int
-    thumb: Optional[PhotoSize]
+    thumb: NotRequired[PhotoSize]
 
 
 class Voice(_BaseFile):
     duration: int
-    thumb: Optional[PhotoSize]
-    mime_type: Optional[str]
+    thumb: NotRequired[PhotoSize]
+    mime_type: NotRequired[str]
 
 
 class Contact(TypedDict):
     phone_number: str
     first_name: str
-    last_name: Optional[str]
-    user_id: Optional[int]
-    vcard: Optional[str]
+    last_name: NotRequired[str]
+    user_id: NotRequired[int]
+    vcard: NotRequired[str]
 
 
 class Dice(TypedDict):
@@ -102,20 +102,20 @@ class Dice(TypedDict):
 class Location(TypedDict):
     longitude: float
     latitude: float
-    horizontal_accuracy: Optional[float]
-    live_period: Optional[int]
-    heading: Optional[int]
-    proximity_alert_radius: Optional[int]
+    horizontal_accuracy: NotRequired[float]
+    live_period: NotRequired[int]
+    heading: NotRequired[int]
+    proximity_alert_radius: NotRequired[int]
 
 
 class Venue(TypedDict):
     location: Location
     title: str
     address: str
-    foursquare_id: Optional[str]
-    foursquare_type: Optional[str]
-    google_place_id: Optional[str]
-    google_place_type: Optional[str]
+    foursquare_id: NotRequired[str]
+    foursquare_type: NotRequired[str]
+    google_place_id: NotRequired[str]
+    google_place_type: NotRequired[str]
 
 
 class ProximityAlertTriggered(TypedDict):
@@ -140,7 +140,7 @@ class VoiceChatEnded(TypedDict):
 
 
 class VoiceChatParticipantsInvited(TypedDict):
-    users: Optional[List[User]]
+    users: NotRequired[List[User]]
 
 
 class UserProfilePhotos(TypedDict):
@@ -149,65 +149,64 @@ class UserProfilePhotos(TypedDict):
 
 
 class File(_BaseFile):
-    file_path: Optional[str]
+    file_path: NotRequired[str]
 
-# If there's a better way to include the "from" key, please let me know
 Message = TypedDict(
     "Message",
     {
         "message_id": int,
-        "from": Optional[User],
-        "sender_chat": Optional[Chat],
+        "from": NotRequired[User],
+        "sender_chat": NotRequired[Chat],
         "date": int,
         "chat": Chat,
-        "forward_from": Optional[Chat],
-        "forward_from_chat": Optional[int],
-        "forward_date": Optional[int],
-        "is_automatic_forward": Optional[Literal[True]],
-        "reply_to_message": Optional["Message"],
-        "via_bot": Optional[User],
-        "edit_date": Optional[int],
-        "has_protected_content": Optional[Literal[True]],
-        "media_group_id": Optional[str],
-        "author_signature": Optional[str],
-        "text": Optional[str],
-        "entities": Optional[List[MessageEntity]],
-        "animation": Optional[Animation] ,
-        "audio": Optional[Audio],
-        "document": Optional[Document],
-        "photo": Optional[List[PhotoSize]],
-        "sticker": Optional[Any],  # TODO
-        "video": Optional[Video],
-        "video_note": Optional[VideoNote],
-        "voice": Optional[Voice],
-        "caption": Optional[str],
-        "caption_entities": Optional[List[MessageEntity]],
-        "contact": Optional[Contact],
-        "dice": Optional[Dice],
-        "game": Optional[Any],  # TODO
-        "poll": Optional[Poll],
-        "venue": Optional[Venue],
-        "new_chat_members": Optional[List[User]],
-        "left_chat_member": Optional[User],
-        "new_chat_title": Optional[str],
-        "new_chat_photo": Optional[List[PhotoSize]],
-        "delete_chat_photo": Optional[Literal[True]],
-        "group_chat_created": Optional[Literal[True]],
-        "supergroup_chat_created": Optional[Literal[True]],
-        "channel_chat_created": Optional[Literal[True]],
-        "message_auto_delete_timer_changed": Optional[MessageAutoDeleteTimerChanged],
-        "migrate_to_chat_id": Optional[int],
-        "migrate_from_chat_id": Optional[int],
-        "pinned_message": Optional["Message"],
-        "invoice": Optional[Any],  # TODO
-        "successful_payment": Optional[Any],  # TODO
-        "connected_website": Optional[str],
-        "passport_data": Optional[Any],  # TODO
-        "proximity_alert_triggered": Optional[ProximityAlertTriggered],
-        "voice_chat_scheduled": Optional[VoiceChatScheduled],
-        "voice_chat_started": Optional[VoiceChatStarted],
-        "voice_chat_ended": Optional[VoiceChatEnded],
-        "voice_chat_participants_invited": Optional[VoiceChatParticipantsInvited],
-        "reply_markup": Optional[Any],  # TODO
+        "forward_from": NotRequired[Chat],
+        "forward_from_chat": NotRequired[int],
+        "forward_date": NotRequired[int],
+        "is_automatic_forward": NotRequired[Literal[True]],
+        "reply_to_message": NotRequired["Message"],
+        "via_bot": NotRequired[User],
+        "edit_date": NotRequired[int],
+        "has_protected_content": NotRequired[Literal[True]],
+        "media_group_id": NotRequired[str],
+        "author_signature": NotRequired[str],
+        "text": NotRequired[str],
+        "entities": NotRequired[List[MessageEntity]],
+        "animation": NotRequired[Animation] ,
+        "audio": NotRequired[Audio],
+        "document": NotRequired[Document],
+        "photo": NotRequired[List[PhotoSize]],
+        "sticker": NotRequired[Any],  # TODO
+        "video": NotRequired[Video],
+        "video_note": NotRequired[VideoNote],
+        "voice": NotRequired[Voice],
+        "caption": NotRequired[str],
+        "caption_entities": NotRequired[List[MessageEntity]],
+        "contact": NotRequired[Contact],
+        "dice": NotRequired[Dice],
+        "game": NotRequired[Any],  # TODO
+        "poll": NotRequired[Poll],
+        "venue": NotRequired[Venue],
+        "new_chat_members": NotRequired[List[User]],
+        "left_chat_member": NotRequired[User],
+        "new_chat_title": NotRequired[str],
+        "new_chat_photo": NotRequired[List[PhotoSize]],
+        "delete_chat_photo": NotRequired[Literal[True]],
+        "group_chat_created": NotRequired[Literal[True]],
+        "supergroup_chat_created": NotRequired[Literal[True]],
+        "channel_chat_created": NotRequired[Literal[True]],
+        "message_auto_delete_timer_changed": NotRequired[MessageAutoDeleteTimerChanged],
+        "migrate_to_chat_id": NotRequired[int],
+        "migrate_from_chat_id": NotRequired[int],
+        "pinned_message": NotRequired["Message"],
+        "invoice": NotRequired[Any],  # TODO
+        "successful_payment": NotRequired[Any],  # TODO
+        "connected_website": NotRequired[str],
+        "passport_data": NotRequired[Any],  # TODO
+        "proximity_alert_triggered": NotRequired[ProximityAlertTriggered],
+        "voice_chat_scheduled": NotRequired[VoiceChatScheduled],
+        "voice_chat_started": NotRequired[VoiceChatStarted],
+        "voice_chat_ended": NotRequired[VoiceChatEnded],
+        "voice_chat_participants_invited": NotRequired[VoiceChatParticipantsInvited],
+        "reply_markup": NotRequired[Any],  # TODO
     }
 )

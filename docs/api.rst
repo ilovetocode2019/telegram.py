@@ -57,13 +57,36 @@ Telegram Models
 
 Base
 ~~~~
-.. autoclass:: TelegramID
+
+.. autoclass:: Messageable()
+    :members:
+
+Chat
+~~~~
+
+.. autoclass:: PartialChat()
+    :members:
+    :inherited-members:
+
+.. autoclass:: Chat()
+    :members:
+    :inherited-members:
+
+.. autoclass:: ChatInvite()
     :members:
 
 Message
 ~~~~~~~
 
+.. autoclass:: PartialMessage()
+    :members:
+    :inherited-members:
+
 .. autoclass:: Message()
+    :members:
+    :inherited-members:
+
+.. autoclass:: MessageEntity()
     :members:
 
 User
@@ -72,11 +95,6 @@ User
 .. autoclass:: User()
     :members:
 
-Chat
-~~~~
-
-.. autoclass:: Chat()
-    :members:
 
 Member
 ~~~~~~
@@ -96,6 +114,7 @@ Poll
 
 .. autoclass:: PollAnswer()
     :members:
+
 
 Exceptions
 ----------

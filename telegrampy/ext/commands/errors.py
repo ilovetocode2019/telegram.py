@@ -67,7 +67,7 @@ class ExtensionAlreadyLoaded(ExtensionError):
     This inherits from :exc:`telegrampy.ext.commands.ExtensionError`.
     """
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str):
         self.name = name
         super().__init__(f"Extension {name} is already loaded")
 
@@ -78,7 +78,7 @@ class ExtensionNotLoaded(ExtensionError):
     This inherits from :exc:`telegrampy.ext.commands.ExtensionError`.
     """
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str):
         self.name = name
         super().__init__(f"Extension {name} has not been loaded")
 
@@ -89,7 +89,7 @@ class ExtensionNotFound(ExtensionError):
     This inherits from :exc:`telegrampy.ext.commands.ExtensionError`.
     """
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str):
         self.name = name
         super().__init__(f"Extension {name} could not be loaded")
 
@@ -100,7 +100,7 @@ class NoEntryPointError(ExtensionError):
     This inherits from :exc:`telegrampy.ext.commands.ExtensionError`.
     """
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str):
         self.name = name
         super().__init__(f"Extension {name} has no setup function")
 
@@ -118,7 +118,7 @@ class ExtensionFailed(ExtensionError):
         The original error that was raised.
     """
 
-    def __init__(self, name: str, original: Exception) -> None:
+    def __init__(self, name: str, original: Exception):
         self.name = name
         self.original = original
         super().__init__(f"Extension raised an exception: {original.__class__.__name__}: {original}")
@@ -142,7 +142,7 @@ class MissingRequiredArgument(UserInputError):
         The argument that is missing.
     """
 
-    def __init__(self, param: inspect.Parameter) -> None:
+    def __init__(self, param: inspect.Parameter):
         self.param = param
         super().__init__(f"'{param}' is a required argument that is missing")
 
@@ -160,7 +160,7 @@ class ConversionError(CommandError):
         The original error that was failed.
     """
 
-    def __init__(self, converter: Converter, original: Exception) -> None:
+    def __init__(self, converter: Converter, original: Exception):
         self.converter = converter
         self.original = original
         super().__init__(f"Converter raised an exception: {original.__class__.__name__}: {original}")
@@ -245,6 +245,6 @@ class CommandInvokeError(CommandError):
         The original error that was raised.
     """
 
-    def __init__(self, original: Exception) -> None:
+    def __init__(self, original: Exception):
         self.original = original
         super().__init__(f"Command raised an exception: {original.__class__.__name__}: {original}")

@@ -4,3 +4,4 @@ build/*
 dist/*
 telegram.py.egg-info/*
 .python-version
+venv

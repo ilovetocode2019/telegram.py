@@ -24,13 +24,13 @@ SOFTWARE.
 
 from __future__ import annotations
 
-import io
 from typing import TYPE_CHECKING, Any, Coroutine, Dict, Generic, List, Optional, TypeVar, Union
 
+from telegrampy.abc import Messageable
+
 if TYPE_CHECKING:
-    from telegrampy.chat import Chat, ChatActionSender
+    from telegrampy.chat import Chat
     from telegrampy.message import Message
-    from telegrampy.poll import Poll
     from telegrampy.user import User
     from telegrampy.utils import ParseMode
     from .bot import Bot
@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 BotT = TypeVar("BotT", bound="Bot")
 
 
-class Context(Generic[BotT]):
+class Context(Messageable, Generic[BotT]):
     """Context for a command.
 
     Attributes
@@ -82,7 +82,7 @@ class Context(Generic[BotT]):
         author: User,
         args: Optional[List[Any]] = None,
         kwargs: Optional[Dict[str, Any]] = None
-    ) -> None:
+    ):
         self.bot: BotT = bot
         self.message = message
         self.command = command
@@ -93,158 +93,13 @@ class Context(Generic[BotT]):
         self.kwargs: Dict[str, Any] = kwargs or {}
         self.command_failed: Optional[bool] = None
 
-    async def send(
-        self,
-        content: str,
-        parse_mode: Optional[ParseMode] = None
-    ) -> Message:
-        """|coro|
+    @property
+    def _chat_id(self):
+        return self.chat.id
 
-        Sends a message to the destination.
-
-        Parameters
-        ----------
-        content: :class:`str`
-            The file to send.
-        parse_mode: :class:`str`
-            The parse mode of the message to send.
-
-        Returns
-        -------
-        :class:`telegrampy.Message`
-            The message sent.
-
-        Raises
-        ------
-        :exc:`telegrampy.HTTPException`
-            Sending the message failed.
-        """
-
-        return await self.chat.send(content=content, parse_mode=parse_mode)
-
-    async def send_document(
-        self,
-        document: Union[io.BytesIO, str],
-        filename: Optional[str] = None,
-        caption: Optional[str] = None,
-        parse_mode: Optional[ParseMode] = None
-    ) -> Message:
-        """|coro|
-
-        Sends a document to the destination.
-
-        Parameters
-        ----------
-        document: Union[class:`io.BytesIO`, :class:`str`]
-            The document to send. Either a file or the path to one.
-        filename: :class:`str`
-            The filename of the document.
-        caption: :class:`str`
-            The document's caption.
-        parse_mode: :class:`str`
-            The parse mode for the caption.
-
-        Raises
-        ------
-        :exc:`errors.HTTPException`
-            Sending the document failed.
-        """
-
-        if isinstance(document, str):
-            with open(document, "rb") as file:
-                content = file.read()
-                document = io.BytesIO(content)
-
-        return await self.chat.send_document(document=document, filename=filename, caption=caption, parse_mode=parse_mode)
-
-    async def send_photo(
-        self,
-        photo: Union[io.BytesIO, str],
-        filename: Optional[str] = None,
-        caption: Optional[str] = None,
-        parse_mode: Optional[ParseMode] = None
-    ) -> Message:
-        """|coro|
-
-        Sends a photo to the destination.
-
-        Parameters
-        ----------
-        photo: Union[class:`io.BytesIO`, :class:`str`]
-            The photo to send. Either a file or the path to one.
-        filename: Optional[:class:`str`]
-            The filename of the photo.
-        caption: Optional[:class:`str`]
-            The caption for the photo.
-        parse_mode: Optional[:class:`str`]
-            The parse mode for the caption.
-
-        Raises
-        ------
-        :exc:`errors.HTTPException`
-            Sending the photo failed.
-        """
-
-        if isinstance(photo, str):
-            with open(photo, "rb") as file:
-                content = file.read()
-                photo = io.BytesIO(content)
-
-        return await self.chat.send_photo(photo=photo, filename=filename, caption=caption, parse_mode=parse_mode)
-
-    async def send_poll(self, question: str, options: List[str]) -> Poll:
-        """|coro|
-
-        Sends a poll to the destination.
-
-        Parameters
-        ----------
-        question: :class:`str`
-            The question of the poll.
-        options: List[:class:`str`]
-            The options in the poll.
-
-        Returns
-        -------
-        :class:`telegrampy.Poll`
-            The poll sent.
-
-        Raises
-        ------
-        :exc:`telegrampy.HTTPException`
-            Sending the poll failed.
-        """
-
-        return await self.chat.send_poll(question, options)
-
-    async def send_action(self, action: str) -> None:
-        """|coro|
-
-        Sends an action to the destination.
-
-        Parameters
-        ----------
-        action: :class:`str`
-            The action to send.
-
-        Raises
-        ------
-        :exc:`telegrampy.HTTPException`
-            Sending the action failed.
-        """
-
-        await self.chat.send_action(action)
-
-    def action(self, action: str) -> ChatActionSender:
-        """Returns a context manager that sends a chat action, until the with statement is completed.
-
-        Parameters
-        ----------
-        action: :class:`str`
-            The action to send.
-        """
-
-        return self.chat.action(action)
+    @property
+    def _http_client(self):
+        return self.bot.http
 
     async def reply(self, content: str, parse_mode: Optional[ParseMode] = None) -> Message:
         """|coro|

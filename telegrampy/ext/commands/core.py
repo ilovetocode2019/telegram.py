@@ -86,7 +86,7 @@ class Command(Generic[CogT, P, T]):
             Callable[Concatenate[ContextT, P], Coro[T]],
         ],
         **kwargs
-    ) -> None:
+    ):
         self.callback = func
 
         signature = inspect.signature(func)

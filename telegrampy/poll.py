@@ -26,7 +26,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List
 
-from .abc import TelegramObject
 from .user import User
 
 if TYPE_CHECKING:
@@ -38,7 +37,7 @@ if TYPE_CHECKING:
     )
 
 
-class Poll(TelegramObject):
+class Poll:
     """A Telegram poll.
 
     .. container:: operations
@@ -75,17 +74,8 @@ class Poll(TelegramObject):
         Whether the poll allows multiple answers.
     """
 
-    if TYPE_CHECKING:
-        question: str
-        options: List[PollOptionPayload]
-        total_voter_count: int
-        is_closed: bool
-        is_anonymous: bool
-        type: str
-        allows_multiple_answers: bool
-
-    def __init__(self, http: HTTPClient, data: PollPayload) -> None:
-        super().__init__(http)
+    def __init__(self, http: HTTPClient, data: PollPayload):
+        self._http: HTTPClient = http
         self.question: str = data.get("question")
         self.options: List[PollOptionPayload] = data.get("options")
         self.total_voter_count: int = data.get("total_voter_count")
@@ -111,14 +101,7 @@ class PollAnswer:
         The options that the user selected.
     """
 
-    if TYPE_CHECKING:
-        id: str
-        user: User
-        option_ids: List[int]
-
-    def __init__(self, http: HTTPClient, data: PollAnswerPayload) -> None:
-        self._data = data
-
+    def __init__(self, http: HTTPClient, data: PollAnswerPayload):
         self.id: str = data.get("poll_id")
         self.user: User = User(http, data.get("user"))
         self.option_ids: List[int] = data.get("option_ids")

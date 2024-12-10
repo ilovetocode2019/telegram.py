@@ -24,233 +24,70 @@ SOFTWARE.
 
 from __future__ import annotations
 
-import asyncio
+import datetime
 import io
 
-from .abc import TelegramObject
+from .abc import Messageable
 from .mixins import Hashable
 
 from typing import (
     TYPE_CHECKING,
-    Any,
-    List,
     Optional,
-    TypeVar,
     Union,
 )
 
 if TYPE_CHECKING:
     from .http import HTTPClient
-    from .message import Message
-    from .poll import Poll
+    from .member import Member
+    from .message import PartialMessage
     from .user import User
-    from .utils import ParseMode
-    from .types.chat import Chat as ChatPayload
-
-ChatActionSenderT = TypeVar("ChatActionSenderT", bound="ChatActionSender")
+    from .types.chat import Chat as ChatPayload, ChatInviteLink as ChatInviteLinkPayload
 
 
-class Chat(TelegramObject, Hashable):
-    """Represents a chat in Telegram.
+class PartialChat(Messageable, Hashable):
+    """Represents a partial chat that can be interacted with, without containing information.
 
     .. container:: operations
 
         .. describe:: x == y
 
-            Checks if two chats are equal.
+            Checks if two partial chats are equal.
 
         .. describe:: x != y
 
-            Checks if two chats are not equal.
-
-        .. describe:: str(x)
-
-            Returns the chat's title.
+            Checks if two chats partial are not equal.
 
     Attributes
     ----------
     id: :class:`int`
-        The ID of the chat.
-    type: :class:`str`
-        The type of the chat.
-    title: Optional[:class:`str`]
-        The title of the chat, if applicable..
-    username: Optional[:class:`str`]
-        The username of the chat, if applicable.
-    description: Optional[:class:`str`]
-        The description of the chat, if applicable.
-    invite_link: Optional[:class:`str`]
-        The invite link of the chat, if applicable.
+        The given ID of the partial chat.
     """
 
-    if TYPE_CHECKING:
-        id: int
-        title: Optional[str]
-        username: Optional[str]
-        description: Optional[str]
-        type: str
-        invite_link: Optional[str]
+    def __init__(self, http: HTTPClient, chat_id: int):
+        self._http: HTTPClient = http
+        self.id: int = chat_id
 
-    def __init__(self, http: HTTPClient, data: ChatPayload) -> None:
-        super().__init__(http)
-        self.id: int = data.get("id")
-        self.title: Optional[str] = data.get("title")
-        self.username: Optional[str] = data.get("username")
-        self.description: Optional[str] = data.get("description")
-        self.type: str = data.get("type")
-        self.invite_link: Optional[str] = data.get("invite_link")
+    @property
+    def _chat_id(self) -> int:
+        return self.id
 
-    def __str__(self) -> Optional[str]:
-        return self.title
+    @property
+    def _http_client(self) -> HTTPClient:
+        return self._http
 
-    async def send(self, content: str, parse_mode: Optional[ParseMode] = None) -> Message:
-        """|coro|
+    def get_partial_message(self, message_id: int) -> PartialMessage:
+        """Returns a partial message for the given ID, without fetching anything from Telegram.
 
-        Sends a message to the chat.
-
-        Parameters
-        ----------
-        content: :class:`str`
-            The content of the message to send.
-        parse_mode: :class:`str`
-            The parse mode of the message to send.
+        This is useful for interacting with the messages if you only have an ID.
 
         Returns
         -------
-        :class:`telegrampy.Message`
-            The message sent.
-
-        Raises
-        ------
-        :exc:`errors.HTTPException`
-            Sending the message failed.
+        :class:`telegrampy.PartialMessage`
+            The partial message that can be interacted with.
         """
 
-        return await self._http.send_message(chat_id=self.id, content=content, parse_mode=parse_mode)
-
-    async def send_document(
-        self,
-        document: Union[io.BytesIO, str],
-        filename: Optional[str] = None,
-        caption: Optional[str] = None,
-        parse_mode: Optional[str] = None
-    ) -> Message:
-        """|coro|
-
-        Sends a document to the chat.
-
-        Parameters
-        ----------
-        document: Union[class:`io.BytesIO`, :class:`str`]
-            The document to send. Either a file or the path to one.
-        filename: :class:`str`
-            The filename of the document.
-        caption: :class:`str`
-            The document's caption.
-        parse_mode: :class:`str`
-            The parse mode for the caption.
-
-        Raises
-        ------
-        :exc:`errors.HTTPException`
-            Sending the document failed.
-        """
-
-        if isinstance(document, str):
-            with open(document, "rb") as file:
-                content = file.read()
-                document = io.BytesIO(content)
-
-        return await self._http.send_document(chat_id=self.id, file=document, filename=filename, caption=caption, parse_mode=parse_mode)
-
-    async def send_photo(
-        self,
-        photo: Union[io.BytesIO, str],
-        filename: Optional[str] = None,
-        caption: Optional[str] = None,
-        parse_mode: Optional[str] = None
-    ) -> Message:
-        """|coro|
-
-        Sends a photo to the chat.
-
-        Parameters
-        ----------
-        photo: Union[class:`io.BytesIO`, :class:`str`]
-            The photo to send. Either a file or the path to one.
-        filename: Optional[:class:`str`]
-            The filename of the photo.
-        caption: Optional[:class:`str`]
-            The caption for the photo.
-        parse_mode: Optional[:class:`str`]
-            The parse mode for the caption.
-
-        Raises
-        ------
-        :exc:`errors.HTTPException`
-            Sending the photo failed.
-        """
-
-        if isinstance(photo, str):
-            with open(photo, "rb") as file:
-                content = file.read()
-                photo = io.BytesIO(content)
-
-        return await self._http.send_photo(chat_id=self.id, file=photo, filename=filename, caption=caption, parse_mode=parse_mode)
-
-    async def send_poll(self, question: str, options: List[str]) -> Poll:
-        """|coro|
-
-        Sends a poll to the chat.
-
-        Parameters
-        ----------
-        question: :class:`str`
-            The question of the poll.
-        options: :class:`list`
-            The options in the poll.
-
-        Returns
-        -------
-        :class:`telegrampy.Poll`
-            The poll sent.
-
-        Raises
-        ------
-        :exc:`telegrampy.HTTPException`
-            Sending the poll failed.
-        """
-
-        return await self._http.send_poll(chat_id=self.id, question=question, options=options)
-
-    async def send_action(self, action: str) -> None:
-        """|coro|
-
-        Sends an action to the chat.
-
-        Parameters
-        ----------
-        action: :class:`str`
-            The action to send.
-
-        Raises
-        ------
-        :exc:`telegrampy.HTTPException`
-            Sending the action failed.
-        """
-
-        await self._http.send_chat_action(chat_id=self.id, action=action)
-
-    def action(self, action: str) -> ChatActionSender:
-        """Returns a context manager that sends a chat action until the with statement is completed.
-
-        Parameters
-        ----------
-        action: :class:`str`
-            The action to send.
-        """
-
-        return ChatActionSender(self, action)
+        from .message import PartialMessage
+        return PartialMessage(self._http_client, message_id, chat=self)
 
     async def get_member(self, user_id: int) -> User:
         """|coro|
@@ -273,7 +110,9 @@ class Chat(TelegramObject, Hashable):
             Fetching the member failed.
         """
 
-        return await self._http.get_chat_member(chat_id=self.id, user_id=user_id)
+        from .member import Member
+        result = await self._http.get_chat_member(chat_id=self.id, user_id=user_id)
+        return Member(self._http, result, chat=self)
 
     async def set_photo(self, photo: Optional[Union[io.BytesIO, str]]) -> None:
         """|coro|
@@ -282,7 +121,7 @@ class Chat(TelegramObject, Hashable):
 
         Parameters
         ----------
-        photo: Union[:class:`io.BytesIO`, str]
+        photo: Union[:class:`io.BytesIO`, :class:`str`]
             The new profile photo for the chat. Pass :class:`None` to clear.
         """
 
@@ -315,13 +154,13 @@ class Chat(TelegramObject, Hashable):
 
         await self._http.set_chat_title(chat_id=self.id, title=title)
 
-    async def set_description(self, description: str = None) -> None:
+    async def set_description(self, description: Optional[str]) -> None:
         """|coro|
 
         Changes the description of the chat.
         This only works in non-private chats with administrator privillages.
 
-        Paramaters
+        Parameters
         ----------
         description: :class:`str`
             The new description of the chat, up to 255 characters.
@@ -360,25 +199,107 @@ class Chat(TelegramObject, Hashable):
 
         await self._http.leave_chat(chat_id=self.id)
 
-class ChatActionSender:
-    def __init__(self, chat: Chat, action: str) -> None:
-        self.chat = chat
-        self.action = action
 
-    async def action_loop(self) -> None:
-        while True:
-            await self.chat.send_action(self.action)
-            await asyncio.sleep(5)
+class Chat(PartialChat):
+    """Represents a chat in Telegram.
 
-    def __enter__(self: ChatActionSenderT) -> ChatActionSenderT:
-        self.task = self.chat._http.loop.create_task(self.action_loop())
-        return self
+    .. container:: operations
 
-    def __exit__(self, *args: Any) -> None:
-        self.task.cancel()
+        .. describe:: x == y
 
-    async def __aenter__(self: ChatActionSenderT) -> ChatActionSenderT:
-        return self.__enter__()
+            Checks if two chats are equal.
 
-    async def __aexit__(self, *args) -> None:
-        return self.__exit__()
+        .. describe:: x != y
+
+            Checks if two chats are not equal.
+
+        .. describe:: str(x)
+
+            Returns the chat's title.
+
+    Attributes
+    ----------
+    id: :class:`int`
+        The ID of the chat.
+    type: :class:`str`
+        The type of the chat. Can be "private", "group", "supergroup", or "channel".
+    title: Optional[:class:`str`]
+        The title of the chat, if applicable..
+    username: Optional[:class:`str`]
+        The username of the chat, if applicable.
+    first_name: Optional[:class:`str`]
+        The first name of the user, if applicable.
+    last_name: Optional[:class:`str`]
+        The last name of the user, if applicable.
+    is_forum: :class:`bool`
+        Whether the chat is set up as a forum.
+    """
+
+    def __init__(self, http: HTTPClient, data: ChatPayload):
+        self._http: HTTPClient = http
+        self.id: int = data["id"]
+        self.type: str = data["type"]
+        self.title: Optional[str] = data.get("title")
+        self.username: Optional[str] = data.get("username")
+        self.first_name: Optional[str] = data.get("first_name")
+        self.last_name: Optional[str] = data.get("last_name")
+        self.is_forum: bool = data.get("is_forum", False)
+
+    def __str__(self) -> str:
+        return self.display_name
+
+    @property
+    def display_name(self) -> str:
+        """:class:`str`: The display name of the chat, as it appears in the client."""
+
+        if self.title:
+            return self.title
+        else:
+            return f"{self.first_name} {self.last_name}" if self.last_name else self.first_name
+
+class ChatInvite:
+    """Represents an invite to a chat in the form of a link.
+
+    Attributes
+    ----------
+    invite_link: :class:`str`
+        The invite link.
+    creator: :class:`telegrampy.User`
+        The user who created the link
+    creates_join_request: :class:`bool`
+        Whether users joining the chat need to be approved by the administrators.
+    is_primary: :class:`bool`
+        Whether this is the primary link for the chat.
+    is_revoked: :class:`bool`
+        Whether the link has been revoked.
+    name: Optional[:class:`bool`]
+        The name of the invite link.
+    expire_date: Optional[:class:`datetime.datetime`]
+        The time that the link will expire or the time it expired at if it already has.
+    member_limit: Optional[:class:`int`]
+        The maxmimum number of users that can be simultaneous chat members, by joining through this link.
+    pending_join_request_count: Optional[:class:`int`]
+        The number of pending join requests for users of the link.
+    subscription_period: Optional[class:`int`]
+        The number of seconds the subscription will be active for before the next payment
+    subscription_price: Optional[:class:`int`]
+        The number of stars a chat member must pay initally and after each following subscription period.
+    """
+
+    def __init__(self, http: HTTPClient, data: ChatInviteLinkPayload):
+        self._http: HTTPClient = http
+        self.link: str = data["invite_link"]
+        self.creator: User = User(http, data["creator"])
+        self.creates_join_request: bool = data.get("creates_join_request", False)
+        self.is_primary: bool = data.get("is_primary", False)
+        self.is_revoked: bool = data.get("is_revoked", False)
+        self.name: Optional[str] = data.get("name")
+        self.expire_date: Optional[datetime.datetime] = (
+            datetime.datetime.fromtimestamp(data["expire_date"], tz=datetime.timezone.utc)
+            if "expire_date" in data
+            else None
+        )
+        self.member_limit: Optional[int] = data.get("member_limit")
+        self.pending_join_request_count: Optional[int] = data.get("pending_join_request_count")
+        self.subscription_period: Optional[int] = data.get("subscription_period")
+        self.subscription_price: Optional[int] = data.get("subscription_price")

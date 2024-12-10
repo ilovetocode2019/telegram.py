@@ -30,11 +30,13 @@ import sys
 import traceback
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, Optional, Tuple, TypeVar
 
+from .chat import PartialChat
 from .errors import InvalidToken, Conflict
 from .http import HTTPClient
 from .member import MemberUpdated
 from .message import Message
 from .poll import Poll, PollAnswer
+from .user import User
 
 if TYPE_CHECKING:
     from typing_extensions import ParamSpec
@@ -60,7 +62,7 @@ class Client:
     token: :class:`str`
         The Telegram API token to authenticate the bot with.
     loop: Optional[:class:`asyncio.BaseEventLoop`]
-        The event loop to run the bot on. Uses :func:`asyncio.get_event_loop` is none is specified.
+        The event loop to run the bot on. Uses :func:`asyncio.get_event_loop` if none is specified.
     wait: Optional[:class:`int`]
         The timeout in seconds for long polling. Defaults to 10.
     process_unread: Optional[:class:`bool`]
@@ -72,8 +74,8 @@ class Client:
         The event loop that the bot is running on.
     """
 
-    def __init__(self, token: str, *, loop: asyncio.AbstractEventLoop = None, **options: Dict[str, Any]):
-        self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
+    def __init__(self, token: str, **options: Any):
+        self.loop: asyncio.AbstractEventLoop = options.get("loop") or asyncio.get_event_loop()
         self.http: HTTPClient = HTTPClient(token=token, loop=self.loop)
 
         wait: int = options.get("wait", 10)
@@ -104,7 +106,8 @@ class Client:
             Fetching the bot user failed.
         """
 
-        return await self.http.get_me()
+        result = await self.http.get_me()
+        return User(self.http, result)
 
     async def get_chat(self, chat_id: int) -> Chat:
         """|coro|
@@ -127,13 +130,14 @@ class Client:
             Fetching the chat failed.
         """
 
-        return await self.http.get_chat(chat_id=chat_id)
+        result = await self.http.get_chat(chat_id=chat_id)
+        return Chat(self.http, result)
 
     async def set_name(
         self,
-        name: str = None,
+        name: Optional[str],
         *,
-        language_code: str = None
+        language_code: Optional[str] = None
     ) -> None:
         """|coro|
 
@@ -149,9 +153,9 @@ class Client:
 
     async def set_description(
         self,
-        description: str = None,
+        description: Optional[str],
         *,
-        language_code: str = None,
+        language_code: Optional[str] = None,
         short: bool = False
     ) -> None:
         """|coro|
@@ -174,6 +178,19 @@ class Client:
             await self.http.set_my_short_description(description, language_code)
         else:
             await self.http.set_my_description(description, language_code)
+
+    def get_partial_chat(self, chat_id) -> PartialChat:
+        """Returns a partial chat for the given ID, without fetching anything from Telegram.
+
+        This is useful for interacting with chat that you have an ID for, without making extra API calls.
+
+        Returns
+        -------
+        :class:`telegrampy.PartialChat`
+            The partial chat that can be interacted with.
+        """
+
+        return PartialChat(self.http, chat_id)
 
     async def _poll(self) -> None:
         # Get last update id
@@ -249,7 +266,7 @@ class Client:
             member_updated = MemberUpdated(self.http, update["chat_member"])
             self.dispatch("member_update", member_updated)
         else:
-            log.warning(f"Received an unknown update ({update_id}): {update}")
+            log.warning(f"Received an unknown update: {update}")
 
     async def _use_event_handler(self, func: Callable[P, Any], *args: P.args, **kwargs: P.kwargs) -> None:
         try:
@@ -352,7 +369,7 @@ class Client:
         setattr(self, func.__name__, func)
         return func
 
-    def add_listener(self, func: CoroFunc, name: str = None) -> None:
+    def add_listener(self, func: CoroFunc, name: Optional[str] = None) -> None:
         """Registers a function as a listener.
 
         Parameters
@@ -383,7 +400,7 @@ class Client:
             if func in self._listeners[event]:
                 self._listeners[event].remove(func)
 
-    def listen(self, name: str = None) -> Callable[[CoroFunc], CoroFunc]:
+    def listen(self, name: Optional[str] = None) -> Callable[[CoroFunc], CoroFunc]:
         """A decorator that registers a function as a listener.
 
         Parameters
