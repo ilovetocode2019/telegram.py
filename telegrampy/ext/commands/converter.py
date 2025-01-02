@@ -28,51 +28,58 @@ from typing import TYPE_CHECKING, Any, Union
 
 from telegrampy.chat import Chat
 from telegrampy.errors import HTTPException, BadRequest
+from telegrampy.member import Member
 from .errors import BadArgument
 
 if TYPE_CHECKING:
-    from telegrampy.user import User
     from .context import Context
 
 
 class Converter:
-    """Base class for converters."""
+    """The base class for custom converters that require :class:`.Context` in order to function."""
 
-    async def convert(self, ctx: Context, arg: str) -> Any:
+    async def convert(self, ctx: Context, argument: str) -> Any:
         """|coro|
 
         Does the converting.
         """
+
         raise NotImplementedError
 
 
-class UserConverter(Converter):
-    """Converts an argument into a user."""
-
-    async def convert(self, ctx: Context, arg: Union[str, Any]) -> User:
-        try:
-            arg = int(arg)
-        except ValueError:
-            raise BadArgument(f"User '{arg}' is not an ID")
-        try:
-            return await ctx.chat.get_member(arg)
-        except BadRequest as exc:
-            raise BadArgument(f"User '{arg}' not found") from exc
-        except HTTPException as exc:
-            raise BadArgument(f"Error while fetching user '{arg}'") from exc
-
-
 class ChatConverter(Converter):
-    """Converts an argument into a chat."""
+    """Converts an argument into a :class:`telegrampy.Chat`."""
 
-    async def convert(self, ctx: Context, arg: Union[str, Any]) -> Chat:
+    async def convert(self, ctx: Context, argument: str) -> Chat:
         try:
-            arg = int(arg)
+            argument = int(argument)
         except ValueError:
-            raise BadArgument(f"Chat '{arg}' is not an ID")
+            if not argument.startswith("@"):
+                argument = f"@{argument}"
         try:
-            return await ctx.bot.get_chat(arg)
+            return await ctx.bot.get_chat(argument)
         except BadRequest as exc:
-            raise BadArgument(f"Chat '{arg}' is not found") from exc
+            raise BadArgument(f"Chat '{argument}' is not found") from exc
         except HTTPException as exc:
-            raise BadArgument(f"Error while fetching chat '{arg}'") from exc
+            raise BadArgument(f"Error while fetching chat '{argument}'") from exc
+
+
+class MemberConverter(Converter):
+    """Converts an argument into a :class:`telegrampy.Member`."""
+
+    async def convert(self, ctx: Context, argument: str) -> Member:
+        try:
+            argument = int(argument)
+        except ValueError:
+            raise BadArgument(f"User '{argument}' is not an ID")
+        try:
+            return await ctx.chat.get_member(argument)
+        except BadRequest as exc:
+            raise BadArgument(f"User '{argument}' not found") from exc
+        except HTTPException as exc:
+            raise BadArgument(f"Error while fetching user '{argument}'") from exc
+
+MAPPING = {
+    Member: MemberConverter,
+    Chat: ChatConverter
+}

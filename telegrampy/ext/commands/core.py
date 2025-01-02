@@ -25,13 +25,15 @@ SOFTWARE.
 from __future__ import annotations
 
 import inspect
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, Generic, List, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, Generic, List, Literal, Optional, TypeVar, Union
+from typing_extensions import Self
 
-from telegrampy import Chat, User
+from telegrampy import Chat, Member, User
 
-from . import errors
 from .context import Context
-from .converter import ChatConverter, Converter, UserConverter
+from .errors import *
+from .converter import Converter, MAPPING as CONVERTERS_MAPPING
+from .reader import ArgumentReader
 
 if TYPE_CHECKING:
     from typing_extensions import Concatenate, ParamSpec
@@ -88,15 +90,6 @@ class Command(Generic[CogT, P, T]):
         **kwargs
     ):
         self.callback = func
-
-        signature = inspect.signature(func)
-        self.params: Dict[str, inspect.Parameter] = signature.parameters.copy()
-
-        # Support for PEP-585
-        for key, value in self.params.items():
-            if isinstance(value.annotation, str):
-                self.params[key] = value = value.replace(annotation=eval(value.annotation, function.__globals__))
-
         self._data: Any = kwargs
         self.name: str = kwargs.get("name") or func.__name__
         self.description: Optional[str] = kwargs.get("description")
@@ -105,33 +98,12 @@ class Command(Generic[CogT, P, T]):
         self.hidden: bool = kwargs.get("hidden") or False
         self.cog: Optional[Cog] = None
         self.bot: Optional[Bot] = None
-        self.checks: List[Check] = []
+        self.checks: List[Check] = kwargs.get("checks") or []
+        self.scope = kwargs.get("scope")
+        self.params: Dict[str, inspect.Parameter] = get_parameters(func)
 
     def __str__(self) -> str:
         return self.name
-
-    @property
-    def clean_params(self) -> Dict[str, inspect.Parameter]:
-        """Dict[:class:`str`, :class:`inspect.Parameter`]:
-            Returns a mapping similar to :attr:`inspect.Signature.parameters`,
-            but without self or context.
-        """
-        params = self.params.copy()
-
-        # if in a cog, the first parameter is self
-        if self.cog is not None:
-            try:
-                del params[next(iter(params))]
-            except StopIteration:
-                raise ValueError("Missing self parameter") from None
-
-        # the context parameter is always first/next
-        try:
-            del params[next(iter(params))]
-        except StopIteration:
-            raise ValueError("missing context parameter") from None
-
-        return params
 
     @property
     def signature(self) -> str:
@@ -142,26 +114,20 @@ class Command(Generic[CogT, P, T]):
         [params...] optional list of params
         [optional=0] optional param defaults to 0
         """
+
         if self.usage:
             return self.usage
 
-        params = self.clean_params
-
-        if not params:
-            return ""
-
         final = []
-        for name, param in params.items():
+
+        for name, param in self.params.items():
             if param.default is not param.empty:
                 if param.default is None or (isinstance(param.default, str) and not param.default):
                     final.append(f"[{name}]")
-
                 else:
                     final.append(f"[{name}={param.default}]")
-
             elif param.kind == param.VAR_POSITIONAL:
                 final.append(f"[{name}...]")
-
             else:
                 final.append(f"<{name}>")
 
@@ -192,91 +158,74 @@ class Command(Generic[CogT, P, T]):
 
         self.checks.remove(func)
 
-    async def _convert_argument(self, ctx: Context, argument: str, param: inspect.Parameter) -> Any:
-        # Get the converter for the argument
-        if param.annotation == inspect._empty:
-            converter = str if param.default == inspect._empty or param.default is None else type(param.default)
-        else:
-            converter = param.annotation
-            if converter == User:
-                converter = UserConverter()
-            elif converter == Chat:
-                converter = ChatConverter()
-
-        # If the converter is a subclass of Converter, then create an instance
-        if inspect.isclass(converter) and issubclass(converter, Converter):
+    async def _convert_argument(self, ctx: Context, argument: str, param: inspect.Parameter, converter: Any) -> Any:
+        converter = CONVERTERS_MAPPING.get(converter, converter)
+ 
+        if issubclass(converter, Converter):
             converter = converter()
-
-        # If the converter is a Converter instance, use the convert method to convert
         if isinstance(converter, Converter):
             try:
                 return await converter.convert(ctx, argument)
-            except errors.CommandError:
+            except CommandError:
                 raise
             except Exception as exc:
-                raise errors.ConversionError(converter, exc) from exc
-
-        # Otherwise just use the converter as a callable
-        try:
-            return converter(argument)
-        except errors.CommandError:
-            raise
-        except Exception as exc:
+                raise ConversionError(converter, exc) from exc
+        else:
             try:
-                name = converter.__name__
-            except AttributeError:
-                name = converter.__class__.__name__  # type: ignore
-            raise errors.BadArgument(f"Converting to '{name}' failed for parameter '{param.name}'") from exc
+                return converter(argument)
+            except CommandError:
+                raise
+            except Exception as exc:
+                name = getattr(converter, "name", converter.__class__.__name__)
+                raise BadArgument(f"Converting to '{name}' failed for parameter '{param.name}'") from exc
+
+    async def _parse_argument(self, ctx: Context, argument: Optional[str], param: inspect.Parameter):
+        name = getattr(param.annotation, "name", param.annotation.__class__.__name__)
+        origin = getattr(param.annotation, "__origin__", None)
+
+        if not argument:
+            if param.default != param.empty:
+                return param.default
+            elif origin is Union and type(None) in param.annotation.__args__:
+                return None
+            raise MissingRequiredArgument(param)
+        elif param.annotation == param.empty:
+            return argument
+
+        if origin is Union:
+            for annotation in param.annotation.__args__:
+                if annotation is type(None):
+                    continue
+                try:
+                    return await self._convert_argument(ctx, argument, param, annotation)
+                except CommandError:
+                    pass
+ 
+            if type(None) in param.annotation.__args__:
+                return None
+
+            raise BadArgument(f"Converting to '{name}' failed for parameter '{param.name}'")
+        else:
+            return await self._convert_argument(ctx, argument, param, param.annotation)
 
     async def _parse_arguments(self, ctx: Context) -> None:
-        if not ctx.message or not ctx.message.content:
-            raise RuntimeError  # TODO: better solution?
+        if not ctx.message.content:
+            raise RuntimeError
 
-        # Prepare parameters
+        parser = ArgumentReader(ctx.message.content.split(" ", 1)[1] if " " in ctx.message.content else "")
         ctx.args = [ctx] if not self.cog else [self.cog, ctx]
-        iterator = iter(self.params.items())
+        ctx.kwargs = {}
 
-        # Prepare input
-        text, = ctx.message.content.split(" ", 1)[1:] or ("",)
-        parser = ArgumentParser(text)
-
-        # Eat cog parameter if any
-        if self.cog:
-            try:
-                next(iterator)
-            except StopIteration:
-                raise errors.CommandError(f"Callback for {self} command is missing 'self' parameter")
-
-        # Eat ctx parameter
-        try:
-            next(iterator)
-        except StopIteration:
-            raise errors.CommandError(f"Callback for {self} command is missing 'ctx' parameter")
-
-        # The remaining parameters in the iterator need to be filled with arguments
-        for name, param in iterator:
-            if param.kind == inspect._ParameterKind.POSITIONAL_OR_KEYWORD:
-                argument = parser.argument()
-                if argument:
-                    argument = await self._convert_argument(ctx, argument, param)
-                elif not argument and param.default == inspect._empty:
-                    raise errors.MissingRequiredArgument(param)
-
-                ctx.args.append(argument or param.default)
-
-            elif param.kind == inspect._ParameterKind.KEYWORD_ONLY:
-                argument = parser.keyword_argument()
-                if argument:
-                    argument = await self._convert_argument(ctx, argument, param)
-                elif not argument and param.default == inspect._empty:
-                    raise errors.MissingRequiredArgument(param)
-
-                ctx.kwargs[param.name] = argument or param.default
-
-            elif param.kind == inspect._ParameterKind.VAR_POSITIONAL:
+        for name, param in self.params.items():
+            if param.kind in (param.POSITIONAL_OR_KEYWORD, param.POSITIONAL_ONLY):
+                result = await self._parse_argument(ctx, parser.argument(), param)
+                ctx.args.append(result)
+            elif param.kind == param.KEYWORD_ONLY:
+                result = await self._parse_argument(ctx, parser.keyword_argument(), param)
+                ctx.kwargs[name] = result
+            elif param.kind == param.VAR_POSITIONAL:
                 arguments = parser.extras()
-                arguments = [await self._convert_argument(ctx, argument, param) for argument in arguments]
-                ctx.args.extend(arguments)
+                ctx.args.extend([await self._parse_argument(ctx, argument, param) for argument in arguments])
 
     async def can_run(self, ctx: Context) -> bool:
         """|coro|
@@ -299,15 +248,12 @@ class Command(Generic[CogT, P, T]):
             A check failed.
         """
 
-        # Run command checks
         for check in self.checks:
             if not check(ctx):
                 return False
 
-        # Run cog check if any
-        if self.cog:
-            if not self.cog.cog_check(ctx):
-                return False
+        if self.cog and not self.cog.cog_check(ctx):
+            return False
 
         # When everything passes, return True
         return True
@@ -334,7 +280,7 @@ class Command(Generic[CogT, P, T]):
         """
 
         if not await self.can_run(ctx):
-            raise errors.CheckFailure("The checks for this command failed")
+            raise CheckFailure("The checks for this command failed")
 
         await self._parse_arguments(ctx)
 
@@ -342,62 +288,7 @@ class Command(Generic[CogT, P, T]):
             return await self.callback(*ctx.args, **ctx.kwargs)  # type: ignore
         except Exception as exc:
             ctx.command_failed = True
-            raise errors.CommandInvokeError(exc) from exc
-
-
-class ArgumentParser:
-    def __init__(self, buffer):
-        self.index = 0
-        self.buffer = buffer
-        self.legnth = len(buffer)
-
-    def argument(self):
-        pos = 0
-        in_quotes = False
-        result = ""
-
-        while True:
-            try:
-                current = self.buffer[self.index + pos]
-                pos += 1
-                if current == " " and result.strip(" ") and not in_quotes:
-                    self.index += pos
-                    break
-                elif current == '"':
-                    in_quotes = True if not in_quotes else False
-                else:
-                    result += current
-
-            except IndexError:
-                self.index = self.legnth
-                if in_quotes:
-                    raise errors.ExpectedClosingQuote() from None
-
-                if not result.strip(" "):
-                    result = ""
-                break
-
-        return result
-
-    def keyword_argument(self):
-        result = self.buffer[self.index:]
-        self.index == self.legnth
-
-        if not result.strip(" "):
-            return ""
-        return result
-
-    def extras(self):
-        arguments = []
-        while True:
-            argument = self.argument()
-            if argument:
-                arguments.append(argument)
-            else:
-                break
-
-        return arguments
-
+            raise CommandInvokeError(exc) from exc
 
 def command(
     *args: Any,
@@ -422,10 +313,8 @@ def command(
         ],
     ) -> Command[CogT, P, T]:
         kwargs["name"] = kwargs.get("name")
-
-        command = Command(func, **kwargs)
-        command.checks = getattr(func, "_command_checks", [])
-
+        kwargs["checks"] = getattr(func, "_command_checks", [])
+        kwargs["scope"] = getattr(func, "_command_scope", None)
         command = Command(func, **kwargs)
         return command
 
@@ -439,10 +328,9 @@ def check(check_function: Check) -> Callable[[T], T]:
         if isinstance(func, Command):
             func.add_check(check_function)
         else:
-            if not getattr(func, "_command_checks", None):
-                func._command_checks = [check_function]
-            else:
-                func._command_checks.append(check_function)
+            if not hasattr(func, "_command_checks"):
+                func._command_checks = [] # type: ignore
+            func._command_checks.append(check_function) # type: ignore
         return func
 
     return deco  # type: ignore
@@ -453,7 +341,7 @@ def is_owner() -> Callable[[T], T]:
 
     def is_owner_check(ctx: Context) -> bool:
         if ctx.author.id not in (ctx.bot.owner_ids or [ctx.bot.owner_id]):
-            raise errors.NotOwner("You must be the owner to use this command")
+            raise NotOwner("You must be the owner to use this command")
         return True
 
     return check(is_owner_check)
@@ -464,7 +352,7 @@ def is_private_chat() -> Callable[[T], T]:
 
     def is_private_chat_check(ctx: Context) -> bool:
         if ctx.chat.type != "private":
-            raise errors.PrivateChatOnly()
+            raise PrivateChatOnly()
         return True
 
     return check(is_private_chat_check)
@@ -475,7 +363,25 @@ def is_not_private_chat() -> Callable[[T], T]:
 
     def is_not_private_chat_check(ctx: Context) -> bool:
         if ctx.chat.type == "private":
-            raise errors.GroupOnly()
+            raise GroupOnly()
         return True
 
     return check(is_not_private_chat_check)
+
+
+def get_parameters(func: Callable[..., Any], *, ignored: Optional[Literal[1, 2]] = None):
+    signature = inspect.signature(func)
+    params = {}
+
+    if ignored is None:
+        ignored = 2 if func.__qualname__ != func.__name__ and not func.__qualname__.rpartition(".")[0].endswith("<locals>") else 1
+
+    if len(signature.parameters) < ignored:
+        raise TypeError(f"Command callback must take at least {ignored} parameter(s)")
+
+    for name, value in list(signature.parameters.items())[ignored:]:
+        if isinstance(value.annotation, str): # Support for PEP-563
+            value = value.replace(annotation=eval(value.annotation, func.__globals__))
+        params[name] = value
+
+    return params 

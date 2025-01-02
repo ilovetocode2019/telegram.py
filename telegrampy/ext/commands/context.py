@@ -76,7 +76,7 @@ class Context(Messageable, Generic[BotT]):
         *,
         bot: BotT,
         message: Message,
-        command: Command,
+        command: Optional[Command],
         invoked_with: str,
         chat: Chat,
         author: User,
@@ -84,10 +84,10 @@ class Context(Messageable, Generic[BotT]):
         kwargs: Optional[Dict[str, Any]] = None
     ):
         self.bot: BotT = bot
-        self.message = message
-        self.command = command
-        self.invoked_with = invoked_with
-        self.chat = chat
+        self.message: Message = message
+        self.command: Optional[Command] = command
+        self.invoked_with: str = invoked_with
+        self.chat: Chat = chat
         self.author: User = author
         self.args: List[Any] = args or []
         self.kwargs: Dict[str, Any] = kwargs or {}

@@ -125,11 +125,17 @@ class Bot(telegrampy.Client):
 
     @help_command.setter
     def help_command(self, value: Optional[HelpCommand]) -> None:
-        if not isinstance(value, HelpCommand):
-            raise TypeError("The new help command must inherit from HelpCommand.")
-
-        value._add_to_bot(self)
-        self._help_command = value
+        if value is not None:
+            if not isinstance(value, HelpCommand):
+                raise TypeError("The new help command must inherit from HelpCommand.")
+            if self._help_command is not None:
+                self._help_command._remove_from_bot(self)
+            self._help_command = value
+            value._add_to_bot(self)
+        else:
+            if self._help_command is not None:
+                self._help_command._remove_from_bot(self)
+            self._help_command = None
 
     @property
     def commands(self) -> List[Command]:
@@ -184,29 +190,29 @@ class Bot(telegrampy.Client):
             The command specified was not found.
         """
 
-        if not message.content or not message.author:
-            return None
-
         if not hasattr(self, "_username"):
             me = await self.get_me()
             self._username = me.username
 
-        for entity in message.entities:
-            if entity.type == "bot_command":
-                split = entity.value.split("@")
-                if len(split) == 1 or split[1] == self._username:
-                    invoked_with = split[0][1:]
-                    command = self.get_command(invoked_with)
+        if (
+            message.content is not None
+            and message.author is not None
+            and not message.author.is_bot
+            and message.entities[0].type == "bot_command"
+            and message.entities[0].offset == 0
+        ):
+            parts = message.entities[0].value.split("@")
 
-                    return cls(
-                        bot=self,
-                        message=message,
-                        command=command,
-                        invoked_with=invoked_with,
-                        chat=message.chat,
-                        author=message.author,
-                        args=[],
-                        kwargs={}
+            if len(parts) == 1 or parts[1] == self._username:
+                return cls(
+                    bot=self,
+                    message=message,
+                    command=self.get_command(parts[0][1:]),
+                    invoked_with=parts[0][1:],
+                    chat=message.chat,
+                    author=message.author,
+                    args=[],
+                    kwargs={}
                     )
 
     def load_extension(self, extension: str) -> None:
@@ -371,11 +377,8 @@ class Bot(telegrampy.Client):
             The message to process.
         """
 
-        if not message.content:
-            return
-
         ctx = await self.get_context(message)
-        if ctx:
+        if ctx is not None:
             await self.invoke(ctx)
 
     async def invoke(self, ctx: Context) -> None:

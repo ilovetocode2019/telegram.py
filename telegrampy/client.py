@@ -30,7 +30,7 @@ import sys
 import traceback
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, Optional, Tuple, TypeVar
 
-from .chat import PartialChat
+from .chat import Chat, PartialChat
 from .errors import InvalidToken, Conflict
 from .http import HTTPClient
 from .member import MemberUpdated
@@ -40,9 +40,6 @@ from .user import User
 
 if TYPE_CHECKING:
     from typing_extensions import ParamSpec
-
-    from .chat import Chat
-    from .user import User
 
     P = ParamSpec("P")
 

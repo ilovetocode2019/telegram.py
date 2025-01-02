@@ -80,10 +80,10 @@ Converters
 .. autoclass:: telegrampy.ext.commands.Converter
     :members:
 
-.. autoclass:: telegrampy.ext.commands.UserConverter
+.. autoclass:: telegrampy.ext.commands.ChatConverter
     :members:
 
-.. autoclass:: telegrampy.ext.commands.ChatConverter
+.. autoclass:: telegrampy.ext.commands.MemberConverter
     :members:
 
 Exceptions
