@@ -375,6 +375,15 @@ class HTTPClient:
         data = {"chat_id": chat_id}
         await self.request(Route("POST", url), json=data)
 
+    async def get_chat_member_count(self, chat_id: int) -> int:
+        """Fetches the number of members in a chat."""
+
+        url = self._base_url + "getChatMemberCount"
+        data = {"chat_id": chat_id}
+        response = await self.request(Route("POST", url), json=data)
+
+        return response["result"]
+
     async def get_me(self) -> UserPayload:
         """Fetches the bot account."""
 

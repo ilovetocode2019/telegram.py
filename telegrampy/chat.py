@@ -199,6 +199,24 @@ class PartialChat(Messageable, Hashable):
 
         await self._http.leave_chat(chat_id=self.id)
 
+    async def get_member_count(self) -> int:
+        """|coro|
+
+        Fetches the member count of the chat.
+
+        Returns
+        ------
+        :class:`int`
+            The number of members in the chat.
+
+        Raises
+        ------
+        :exc:`telegrampy.HTTPException`
+            Fetching the member count failed.
+        """
+
+        return await self._http.get_chat_member_count(chat_id=self.id)
+
 
 class Chat(PartialChat):
     """Represents a chat in Telegram.
