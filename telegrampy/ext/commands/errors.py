@@ -48,10 +48,22 @@ class CommandNotFound(CommandError):
 
 
 class CommandRegistrationError(CommandError):
-    """Raised when a command cannot be registered.
+    """Raised when a command cannot be registered, because it's name is already being used.
 
     This inherits from :exc:`telegrampy.ext.commands.CommandError`.
+
+    Attributes
+    ----------
+    name: :class:`str`
+        The command name that had a conflict.
+    alias_conflict: :class:`bool`
+        Whether the command name was an alias of the command being added.
     """
+
+    def __init__(self, name: str, *, alias_conflict: bool = False):
+        self.name: str = name
+        self.alias_conflict: bool = alias_conflict
+        super().__init__(f"The {'alias' if alias_conflict else 'command'} {name} is already registered as a command name or alias.")
 
 
 class ExtensionError(CommandError):

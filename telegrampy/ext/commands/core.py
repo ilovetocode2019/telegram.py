@@ -89,8 +89,10 @@ class Command(Generic[CogT, P, T]):
         ],
         **kwargs
     ):
+        if not inspect.iscoroutinefunction(func):
+            raise TypeError("Command callback is not a coroutine.")
+
         self.callback = func
-        self._data: Any = kwargs
         self.name: str = kwargs.get("name") or func.__name__
         self.description: Optional[str] = kwargs.get("description")
         self.usage: Optional[str] = kwargs.get("usage")
@@ -101,6 +103,11 @@ class Command(Generic[CogT, P, T]):
         self.checks: List[Check] = kwargs.get("checks") or []
         self.scope = kwargs.get("scope")
         self.params: Dict[str, inspect.Parameter] = get_parameters(func)
+
+        try:
+            self.checks: List[Check] = func.__command_checks__ # type: ignore
+        except AttributeError:
+            self.checks: List[Check] = kwargs.get("checks", [])
 
     def __str__(self) -> str:
         return self.name
@@ -255,7 +262,6 @@ class Command(Generic[CogT, P, T]):
         if self.cog and not self.cog.cog_check(ctx):
             return False
 
-        # When everything passes, return True
         return True
 
     async def invoke(self, ctx: Context) -> None:
@@ -291,7 +297,7 @@ class Command(Generic[CogT, P, T]):
             raise CommandInvokeError(exc) from exc
 
 def command(
-    *args: Any,
+    name: Optional[str] = None,
     **kwargs: Any,
 ) -> Callable[
     [
@@ -300,10 +306,19 @@ def command(
             Callable[Concatenate[ContextT, P], Coro[T]],
         ],
     ], Command[CogT, P, T]]:
-    """Turns a function into a command.
+    """Turns a function into a :class:`.Command`.
 
-    See :class:`telegrampy.ext.commands.Command`
-    for parameters.
+    Parameters
+    ----------
+    name: Optional[:class:`str`]
+        The name of the command to create, defaulting to the name of the function.
+    \*\*kwargs:
+        The kwargs to pass into the :class:`.Command` constructor.
+
+    Raises
+    ------
+    TypeError
+        The function is not a coroutine.
     """
 
     def deco(
@@ -312,31 +327,29 @@ def command(
             Callable[Concatenate[ContextT, P], Coro[T]],
         ],
     ) -> Command[CogT, P, T]:
-        kwargs["name"] = kwargs.get("name")
-        kwargs["checks"] = getattr(func, "_command_checks", [])
-        kwargs["scope"] = getattr(func, "_command_scope", None)
-        command = Command(func, **kwargs)
-        return command
+        return Command(func, name=name, **kwargs)
 
     return deco
 
 
-def check(check_function: Check) -> Callable[[T], T]:
+def check(check_func: Check) -> Callable[[Union[Command, CoroFunc]], Union[Command, CoroFunc]]:
     """Makes a check for a command."""
 
     def deco(func: Union[Command, CoroFunc]) -> Union[Command, CoroFunc]:
         if isinstance(func, Command):
-            func.add_check(check_function)
+            func.add_check(check_func)
         else:
-            if not hasattr(func, "_command_checks"):
-                func._command_checks = [] # type: ignore
-            func._command_checks.append(check_function) # type: ignore
+            if not hasattr(func, "__command_checks__"):
+                func.__command_checks__ = [check_func] # type: ignore
+            else:
+                func.__command_checks__.append(check_func) # type: ignore
+
         return func
 
-    return deco  # type: ignore
+    return deco
 
 
-def is_owner() -> Callable[[T], T]:
+def is_owner() -> Callable[[Union[Command, CoroFunc]], Union[Command, CoroFunc]]:
     """A command check for checking that the user is the owner."""
 
     def is_owner_check(ctx: Context) -> bool:
@@ -347,7 +360,7 @@ def is_owner() -> Callable[[T], T]:
     return check(is_owner_check)
 
 
-def is_private_chat() -> Callable[[T], T]:
+def is_private_chat() -> Callable[[Union[Command, CoroFunc]], Union[Command, CoroFunc]]:
     """A command check for checking that the chat is a private chat."""
 
     def is_private_chat_check(ctx: Context) -> bool:
@@ -358,7 +371,7 @@ def is_private_chat() -> Callable[[T], T]:
     return check(is_private_chat_check)
 
 
-def is_not_private_chat() -> Callable[[T], T]:
+def is_not_private_chat() -> Callable[[Union[Command, CoroFunc]], Union[Command, CoroFunc]]:
     """A command check for checking that the chat is not a private chat."""
 
     def is_not_private_chat_check(ctx: Context) -> bool:

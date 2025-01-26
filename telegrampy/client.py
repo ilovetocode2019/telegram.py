@@ -190,6 +190,8 @@ class Client:
         return PartialChat(self.http, chat_id)
 
     async def _poll(self) -> None:
+        await self.setup_hook()
+
         # Get last update id
         log.info("Fetching unread updates")
         try:
@@ -455,6 +457,15 @@ class Client:
 
         self._running = False
         await self.http.close()
+
+    async def setup_hook(self) -> None:
+        """|coro|
+
+        Called before the bot begins polling updates.
+        This is meant to be overrided by subclasses that require asynchronous setup.
+        """
+
+        pass
 
     def _clean_tasks(self) -> None:
         log.info("Cleaning up tasks")

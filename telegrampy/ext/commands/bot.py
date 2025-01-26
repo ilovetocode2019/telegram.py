@@ -35,6 +35,7 @@ from typing import (
     Coroutine,
     Dict,
     List,
+    Mapping,
     Optional,
     Type,
     TypeVar,
@@ -45,7 +46,7 @@ import telegrampy
 from . import errors
 from .cog import Cog
 from .context import Context
-from .core import Command
+from .core import Command, command
 from .help import HelpCommand, DefaultHelpCommand
 
 if TYPE_CHECKING:
@@ -91,10 +92,6 @@ class Bot(telegrampy.Client):
         The owner's ID.
     owner_ids: Optional[List[:class:`int`]]
         The owner IDs.
-    cogs: Mapping[:class:`str`, :class:`telegrampy.ext.commands.Cog`]
-        A dictonary of cogs that are loaded.
-    extensions: Mapping[:class:`str`, :class:`types.ModuleType`]
-        A dictonary of extensions that are loaded.
     """
 
     def __init__(
@@ -111,9 +108,9 @@ class Bot(telegrampy.Client):
         self.owner_ids: Optional[List[int]] = owner_ids
         self.description: Optional[str] = description
 
-        self.commands_dict: Dict[str, Command] = {}
-        self.cogs: Dict[str, Cog] = {}
-        self.extensions: Dict[str, types.ModuleType] = {}
+        self._extensions: Dict[str, types.ModuleType] = {}
+        self._commands: Dict[str, Command] = {}
+        self._cogs: Dict[str, Cog] = {}
 
         self._help_command: Optional[HelpCommand] = None
         self.help_command = help_command
@@ -139,17 +136,17 @@ class Bot(telegrampy.Client):
 
     @property
     def commands(self) -> List[Command]:
-        """List[:class:`Command`] A list of the commands."""
+        """List[:class:`Command`]: A list of the commands added to the bot."""
+        return list(self._commands.values())
 
-        return list(self.commands_dict.values())
+    @property
+    def cogs(self) -> Mapping[str, Cog]:
+        """Mapping[:class:`str`, :class:`.Cog`]: A read-only mapping of cogs added to the bot."""
+        return types.MappingProxyType(self._cogs)
 
-    def _get_all_command_names(self) -> List[str]:
-        all_names = []
-        for command in self.commands_dict.values():
-            all_names.append(command.name)
-            all_names.extend(command.aliases)
-
-        return all_names
+    @property
+    def extensions(self) -> Mapping[str, types.ModuleType]:
+        return types.MappingProxyType(self._extensions)
 
     def get_command(self, name: str) -> Optional[Command]:
         """Gets a command by name.
@@ -165,7 +162,7 @@ class Bot(telegrampy.Client):
             The command with the name.
         """
 
-        for command in self.commands_dict.values():
+        for command in self._commands.values():
             if name in command.aliases or command.name == name:
                 return command
 
@@ -197,6 +194,7 @@ class Bot(telegrampy.Client):
         if (
             message.content is not None
             and message.author is not None
+            and len(message.entities) > 0
             and not message.author.is_bot
             and message.entities[0].type == "bot_command"
             and message.entities[0].offset == 0
@@ -215,152 +213,211 @@ class Bot(telegrampy.Client):
                     kwargs={}
                     )
 
-    def load_extension(self, extension: str) -> None:
-        """Loads an extension.
+    async def load_extension(self, name: str) -> None:
+        """|coro|
+
+        Loads an extension.
 
         Parameters
         ----------
-        extension: :class:`str`
+        name: :class:`str`
             The module location of the extension.
 
         Raises
         ------
-        :exc:`telegrampy.ExtensionAlreadyLoaded`
+        ExtensionAlreadyLoaded
             The extension is already loaded.
-        :exc:`AttributeError`
-            The extension has no setup function.
+        ExtensionNotFound
+            The module to load as an extension could not be found.
+        NoEntryPointError
+            The extension has no ``setup`` function.
+        ExtensionFailed
+            Importing of the extension or execution of it's ``setup`` function failed.
         """
 
-        if extension in self.extensions:
-            raise errors.ExtensionAlreadyLoaded(extension)
+        if name in self._extensions:
+            raise errors.ExtensionAlreadyLoaded(name)
 
-        # Attempt to import the extension
         try:
-            lib = importlib.import_module(extension)
+            lib = importlib.import_module(name)
         except ModuleNotFoundError:
-            raise errors.ExtensionNotFound(extension) from None
+            raise errors.ExtensionNotFound(name) from None
         except Exception as exc:
-            raise errors.ExtensionFailed(extension, exc) from exc
+            raise errors.ExtensionFailed(name, exc) from exc
 
-        # Attempt to get setup function
         try:
             setup = getattr(lib, "setup")
         except AttributeError:
-            self._cleanup_extension(lib)
-            raise errors.NoEntryPointError(extension) from None
+            await self._cleanup_extension(lib)
+            raise errors.NoEntryPointError(name) from None
 
-        # Attempt to setup extension
         try:
-            setup(self)
+            await setup(self)
         except Exception as exc:
-            self._cleanup_extension(lib)
-            raise errors.ExtensionFailed(extension, exc) from exc
+            await self._cleanup_extension(lib)
+            raise errors.ExtensionFailed(name, exc) from exc
 
-        self.extensions[lib.__name__] = lib
+        self._extensions[lib.__name__] = lib
 
-    def unload_extension(self, extension: str) -> None:
-        """Unloads an extension.
+    async def unload_extension(self, name: str) -> None:
+        """|coro|
 
-        Parameters
-        ----------
-        extension: :class:`str`
-             The module location of the extension.
-        """
-
-        if extension not in self.extensions:
-            raise errors.ExtensionNotLoaded(extension)
-
-        lib = sys.modules[extension]
-
-        self._cleanup_extension(lib)
-        self.extensions.pop(extension)
-
-    def reload_extension(self, extension: str) -> None:
-        """Reloads an extension.
+        Unloads an extension.
 
         Parameters
         ----------
-        extension: :class:`str`
+        name: :class:`str`
             The module location of the extension.
+
+        Raises
+        ------
+        ExtensionNotLoaded
+            The extension is not loaded.
         """
 
-        if extension not in self.extensions:
-            raise errors.ExtensionNotLoaded(f"{extension} is not loaded")
+        lib = self._extensions.get(name)
+        if lib is None:
+            raise errors.ExtensionNotLoaded(name)
 
-        # Save the current state
-        lib = sys.modules[extension]
-        modules = {key: value for key, value in sys.modules.items() if key == extension or key.startswith(f"{extension}.")}
+        await self._cleanup_extension(lib)
 
-        # Remove the extension
-        self.unload_extension(extension)
+    async def reload_extension(self, name: str) -> None:
+        """|coro|
+
+        Unloads and loads back the extension, reverting to the original state if anything fails.
+
+        Parameters
+        ----------
+        name: :class:`str`
+            The module location of the extension.
+
+        Raises
+        ------
+        ExtensionNotLoaded
+            The extension is not loaded.
+        ExtensionNotFound
+            The module to load as an extension could not be found.
+        NoEntryPointError
+            The extension has no ``setup`` function.
+        ExtensionFailed
+            Importing of the extension or execution of it's ``setup`` function failed.
+        """
+
+        lib = self._extensions.get(name)
+        if lib is None:
+            raise errors.ExtensionNotLoaded(name)
+
+        # save the current state to rollback
+        modules = {key: value for key, value in sys.modules.items() if self._is_submodule(name, key)}
+        await self._cleanup_extension(lib)
+        del self._extensions[name]
 
         try:
-            # Attempt to load it back
-            self.load_extension(extension)
+            # attempt to load it back
+            await self.load_extension(name)
         except Exception:
-            # If this fails then revert the changes back
-            self.extensions[lib.__name__] = lib
-            lib.setup(self)
+            # revert back to original state and re-raise exception
+            self._extensions[lib.__name__] = lib
+            await lib.setup(self)
             sys.modules.update(modules)
-
-            # Then re-raise the error
             raise
 
-    def _cleanup_extension(self, extension: types.ModuleType) -> None:
-        # Remove cogs, commands, and listeners from the bot
-        for name, cog in self.cogs.copy().items():
-            if cog.__module__ and (cog.__module__ == extension.__name__ or cog.__module__.startswith(f"{extension.__name__}.")):
-                self.remove_cog(name)
+    async def _cleanup_extension(self, extension: types.ModuleType) -> None:
+        for name, cog in self._cogs.copy().items():
+            if self._is_submodule(extension.__name__, cog.__module__):
+                await self.remove_cog(name)
 
-        for name, command in self.commands_dict.copy().items():
-            if command.__module__ and (command.__module__ == extension.__name__ or command.__module__.startswith(f"{extension.__name__}.")):
+        for name, command in self._commands.copy().items():
+            if self._is_submodule(extension.__name__, command.__module__):
                 self.remove_command(name)
 
         for name, listeners in self._listeners.copy().items():
             for listener in listeners:
-                if listener.__module__ and (listener.__module__ == extension.__name__ or listener.__module__.startswith(f"{extension.__name__}.")):
+                if self._is_submodule(extension.__name__, listener.__module__):
                     self.remove_listener(listener)
 
-        # Remove the module and any submodules
-        for name in sys.modules.copy().keys():
-            if name == extension.__name__ or name.startswith(f"{extension.__name__}."):
-                sys.modules.pop(name, None)
+        try:
+            await extension.teardown()
+        except Exception:
+            pass # ignore missing teardown functions or any failures inside of it
 
-    def add_cog(self, cog: Cog) -> None:
-        """Adds a cog to the bot.
+        for name in sys.modules.copy().keys():
+            if self._is_submodule(extension.__name__, name):
+                del sys.modules[name]
+
+    def _is_submodule(self, parent: str, child: str) -> bool:
+        return parent == child or child.startswith(f"{parent}.")
+
+    async def add_cog(self, cog: Cog , *, override: bool = False) -> None:
+        """|coro|
+
+        Adds a cog to the bot.
 
         Parameters
         ----------
-        cog: :class:`telegrampy.ext.commands.Cog`
+        cog: :class:`.Cog`
             The cog to add.
+        override: :class:`bool`
+            Whether to remove conflicting cogs with the same name, rather than raising an exception.
 
         Raises
         ------
-        :exc:`TypeError`
-            The cog is not a subclass of :class:`telegrampy.ext.commands.Cog` or the cog check is not a method.
+        TypeError
+            The cog is not a subclass of :class:`.Cog`.
+        RuntimeError
+            A cog with the same name is already added.
+        CommandRegistrationError
+            The cog has a command with the same name as one that is already registered.
         """
 
         if not isinstance(cog, Cog):
             raise TypeError("Cog is not a subclass of Cog")
 
-        # Add the cog
-        cog._add(self)
-        self.cogs[cog.qualified_name] = cog
+        if cog.qualified_name in self._cogs:
+            if override:
+                await self.remove_cog(cog.qualified_name)
+            else:
+                raise RuntimeError(f"Cog with name '{cog.qualified_name}' is already added")
 
-    def remove_cog(self, cog: str) -> None:
-        """Removes and cog from the bot.
+        await cog._add_to_bot(self)
+        self._cogs[cog.qualified_name] = cog
+
+    async def remove_cog(self, name: str) -> Optional[Cog]:
+        """|coro|
+
+        Removes a cog from the bot.
 
         Parameters
         ----------
-        cog: :class:`str`
+        name: :class:`str`
             The name of the cog to remove.
+
+        Returns
+        -------
+        Optional[:class:`.Cog`]
+            The cog that was removed, if found.
         """
 
-        actual_cog = self.cogs.get(cog)
-        if not actual_cog:
-            return
-        actual_cog._remove(self)
-        self.cogs.pop(actual_cog.qualified_name)
+        cog = self._cogs.pop(name, None)
+        if cog:
+            await cog._remove_from_bot(self)
+        return cog
+
+    def get_cog(self, name: str) -> Optional[Cog]:
+        """Returns the cog instance added to the bot by name, if found.
+
+        Parameters
+        ----------
+        name: :class:`str`
+            The name of the cog to look for.
+
+        Returns
+        --------
+        Optional[:class:`.Cog`]
+            The cog, if found.
+        """
+
+        return self._cogs.get(name)
 
     async def on_message(self, message):
         await self.process_commands(message)
@@ -369,7 +426,7 @@ class Bot(telegrampy.Client):
         """|coro|
 
         Process commands that have been registered.
-        By default this is called in on_message. If you override Bot.on_message you need to call this manually.
+        By default this is called in on_message. If you override :meth:`.on_message` you need to call this manually.
 
         Parameters
         ---------
@@ -397,7 +454,7 @@ class Bot(telegrampy.Client):
 
     def command(
         self,
-        *args: Any,
+        name: Optional[str] = None,
         **kwargs: Any,
     ) -> Callable[
         [
@@ -406,14 +463,21 @@ class Bot(telegrampy.Client):
                 Callable[Concatenate[ContextT, P], Coro[T]],
             ]
         ], Command[CogT, P, T]]:
-        r"""Turns a function into a command.
+        r"""Turns a function into a :class:`.Command` and adds it to the bot.
 
         Parameters
         ----------
-        \*args:
-            The arguments.
-        \*\*kwargs:
-            The keyword arguments.
+        name: Optional[:class:`str`]
+            The name of the command to create, defaulting to the name of the function.
+        \*\*kwargs
+            The kwargs to pass into the :class:`.Command` constructor.
+
+        Raises
+        ------
+        CommandRegistrationError
+            The command name or one if its aliases is already registered by a different command.
+        TypeError
+            The function is not a coroutine.
         """
 
         def deco(
@@ -422,17 +486,9 @@ class Bot(telegrampy.Client):
                 Callable[Concatenate[ContextT, P], Coro[T]],
             ]
         ) -> Command[CogT, P, T]:
-            name = kwargs.get("name") or func.__name__
-
-            kwargs["name"] = name
-            if name in self._get_all_command_names():
-                raise errors.CommandRegistrationError(f"{name} is already registered as a command name or alias")
-
-            command = Command(func, **kwargs)
-            command.checks = getattr(func, "_command_checks", [])
-
-            self.commands_dict[name] = command
-            return command
+            ret = command(name, **kwargs)(func)
+            self.add_command(ret)
+            return ret
 
         return deco
 
@@ -460,10 +516,18 @@ class Bot(telegrampy.Client):
         if not isinstance(command, Command):
             raise TypeError("Command must be a subclass of Command")
 
-        if command.name in self._get_all_command_names():
-            raise errors.CommandRegistrationError(f"{command.name} is already registered as a command name or alias")
+        all_names = []
+        for name in self._commands:
+            all_names.append(name)
+            all_names.extend(self._commands[name].aliases)
 
-        self.commands_dict[command.name] = command
+        if command.name in all_names:
+            raise errors.CommandRegistrationError(command.name)
+        for alias in command.aliases:
+            if alias in all_names:
+                raise errors.CommandRegistrationError(alias, alias_conflict=True)
+
+        self._commands[command.name] = command
         return command
 
     def remove_command(self, name: str) -> Optional[Command]:
@@ -480,14 +544,7 @@ class Bot(telegrampy.Client):
             The command removed.
         """
 
-        command = self.get_command(name)
-
-        if not command:
-            return
-
-        self.commands_dict.pop(name)
-
-        return command
+        return self._commands.pop(name, None)
 
     async def on_command_error(self, ctx: Context, error: Exception) -> None:
         if self._listeners.get("on_command_error"):

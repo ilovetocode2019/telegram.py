@@ -28,62 +28,68 @@ import inspect
 import types
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, List, Optional, TypeVar
 
+from telegrampy import utils
+from telegrampy.ext.commands.errors import CommandRegistrationError
+
 from .core import Command
 
 if TYPE_CHECKING:
-    T = TypeVar('T')
+    from .bot import Bot
 
+    T = TypeVar("T")
     Coro = Coroutine[Any, Any, T]
     CoroFunc = Callable[..., Coro[Any]]
+    FuncT = TypeVar("FuncT", bound=Callable[..., Any])
 
 
 class CogMeta(type):
-    """Metaclass for Cog."""
+    """Metaclass for creating new :class:`.Cog` instances."""
 
-    commands: List[Command]
-    listeners: List[CoroFunc]
+    __cog_name__: str
+    __cog_description__: str
+    __cog_commands__: List[Command]
+    __cog_listeners__: List[CoroFunc]
 
-    def __new__(cls, *args, **kwargs):
-        name, bases, attrs = args
+    def __new__(cls, name, bases, attrs, **kwargs):
+        description = kwargs.pop("description", None)
+        if description is None:
+            description = inspect.cleandoc(attrs.get("__doc__", ""))
+
         attrs["__cog_name__"] = kwargs.pop("name", name)
+        attrs["__cog_description__"] = description
 
+        commands = {}
+        listeners = {}
         new_cls = super().__new__(cls, name, bases, attrs, **kwargs)
-        commands = []
-        listeners = []
 
         for base in new_cls.__mro__:
-            for command in base.__dict__.values():
-                # Add the command if object is a command
-                if isinstance(command, Command):
-                    commands.append(command)
+            for name, value in base.__dict__.items():
+                if name in commands or name in listeners:
+                    continue
+                elif isinstance(value, staticmethod):
+                    value = value.__func__
 
-                # If object is a method and it has _cog_listener attribute, add the listener
-                elif isinstance(command, types.FunctionType):
-                    if hasattr(command, "_cog_listener"):
-                        try:
-                            listeners.append(command)
-                        except AttributeError:
-                            pass
+                if isinstance(value, Command):
+                    commands[name] = value
+                elif inspect.iscoroutinefunction(value) and hasattr(value, "__cog_listener__"):
+                    listeners[name] = value
 
-        new_cls.commands = commands
-        new_cls.listeners = listeners
+        new_cls.__cog_commands__ = list(commands.values())
+        new_cls.__cog_listeners__ = list(listeners.values())
         return new_cls
+
+    @property
+    def qualified_name(cls) -> str:
+        return cls.__cog_name__
 
 
 class Cog(metaclass=CogMeta):
-    """Base cog class.
-
-    Attributes
-    ----------
-    commands: List[:class:`telegrampy.Command`]
-        The cog's commands.
-    listeners: :class:`list`
-        The cog's listeners.
-    """
+    """The base cog class that cogs inherit from."""
 
     __cog_name__: str
-    commands: List[Command]
-    listeners: List[CoroFunc]
+    __cog_description__: str
+    __cog_commands__: List[Command]
+    __cog_listeners__: List[CoroFunc]
 
     @property
     def qualified_name(self) -> str:
@@ -93,7 +99,7 @@ class Cog(metaclass=CogMeta):
     @property
     def description(self) -> Optional[str]:
         """:class:`str`: The cog's description."""
-        return inspect.getdoc(self)
+        return self.__cog_description__
 
     @classmethod
     def listener(cls, name: Optional[str] = None) -> Callable[[CoroFunc], CoroFunc]:
@@ -105,25 +111,61 @@ class Cog(metaclass=CogMeta):
             The name of the event to register the function as.
         """
 
-        def deco(func: CoroFunc) -> CoroFunc:
-            func._cog_listener = name or func.__name__
+        def deco(func: FuncT) -> FuncT:
+            if isinstance(func, staticmethod):
+                func = func.__func__ # type: ignore
+
+            func.__cog_listener__ = True # type: ignore
+            func.__cog_listener_names__ = getattr(func, "__cog_listener_names__", []) + [name or func.__name__] # type: ignore
             return func
 
         return deco
 
-    def _add(self, bot):
-        for command in self.commands:
-            command.bot = bot
-            command.cog = self
-            bot.add_command(command)
-        for listener in self.listeners:
-            bot.add_listener(getattr(self, listener.__name__), listener._cog_listener)
+    async def _add_to_bot(self, bot: Bot) -> None:
+        await utils.maybe_await(self.cog_load)
 
-    def _remove(self, bot):
-        for command in self.commands:
+        for index, command in enumerate(self.__cog_commands__):
+            command.cog = self
+            try:
+                bot.add_command(command)
+            except CommandRegistrationError as exc:
+                for added_command in self.__cog_commands__[:index]:
+                    bot.remove_command(added_command.name)
+                raise exc
+
+        for listener in self.__cog_listeners__:
+            method = listener.__get__(self)
+            for event_name in listener.__cog_listener_names__: # type: ignore
+                bot.add_listener(method, event_name)
+
+    async def _remove_from_bot(self, bot: Bot) -> None:
+        for command in self.__cog_commands__:
             bot.remove_command(command.name)
-        for listener in self.listeners:
-            bot.remove_listener(getattr(self, listener.__name__))
+        for listener in self.__cog_listeners__:
+            bot.remove_listener(listener)
+
+        try:
+            await utils.maybe_await(self.cog_unload)
+        except Exception:
+            pass
 
     def cog_check(self, ctx):
         return True
+
+    async def cog_load(self):
+        """|maybecoro|
+
+        Called when the cog is added to the bot.
+        Subclasses can override this with their own behavior.
+        """
+
+        pass
+
+    async def cog_unload(self):
+        """|maybecoro|
+
+        Called when the cog is removed from the bot.
+        Subclasses can override this with their own behavior.
+        """
+
+        pass

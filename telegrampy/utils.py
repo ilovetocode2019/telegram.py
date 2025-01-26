@@ -24,12 +24,17 @@ SOFTWARE.
 
 from __future__ import annotations
 
+import inspect
 import re
-from typing import Literal
+from typing import TYPE_CHECKING, Awaitable, Callable, Literal, TypeVar, Union
 
-Version = Literal[1, 2]
-ParseMode = Literal["HTML", "Markdown", "MarkdownV2"]
+if TYPE_CHECKING:
+    from typing_extensions import ParamSpec
 
+    P = ParamSpec("P")
+    T = TypeVar("T")
+    Version = Literal[1, 2]
+    ParseMode = Literal["HTML", "Markdown", "MarkdownV2"]
 
 def escape_markdown(text: str, *, version: Version = 2) -> str:
     """Tool that escapes markdown from a given string.
@@ -62,3 +67,10 @@ def escape_markdown(text: str, *, version: Version = 2) -> str:
         raise ValueError(f"Version '{version}' unsupported. Only version 1 and 2 are supported.")
 
     return re.sub(f"([{re.escape(characters)}])", r"\\\1", text)
+
+
+async def maybe_await(func: Callable[P, Union[Awaitable[T], T]], *args: P.args, **kwargs: P.kwargs) -> T:
+    ret = func(*args, **kwargs)
+    if inspect.iscoroutine(ret):
+        ret = await ret
+    return ret # type: ignore
