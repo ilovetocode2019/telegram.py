@@ -57,7 +57,7 @@ class _HelpCommandImplementation(Command):
         await self._parse_arguments(ctx)
 
         try:
-            return await copied.command_callback(*ctx.args, **ctx.kwargs)  # type: ignore
+            return await copied.command_callback(*ctx.args, **ctx.kwargs)
         except Exception as exc:
             ctx.command_failed = True
             raise CommandInvokeError(exc) from exc
@@ -74,7 +74,7 @@ class HelpCommand:
     """
 
     if TYPE_CHECKING:
-        __original_args__: Tuple[Any]
+        __original_args__: Tuple[Any, ...]
         __original_kwargs__: Dict[str, Any]
 
     def __new__(cls, *args: Any, **kwargs: Any) -> Self:

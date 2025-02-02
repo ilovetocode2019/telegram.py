@@ -15,16 +15,16 @@ __version__ = "1.0.0a"
 
 from collections import namedtuple
 
-from . import utils
-from .abc import  Messageable
-from .chat import PartialChat, Chat, ChatInvite
-from .client import Client
+from . import *
+from .abc import  *
+from .chat import *
+from .client import *
 from .errors import *
 from .markup import *
-from .member import Member, MemberUpdated
-from .message import PartialMessage, Message, MessageEntity
-from .poll import Poll, PollAnswer
-from .user import User
+from .member import *
+from .message import *
+from .poll import *
+from .user import *
 
 VersionInfo = namedtuple("VersionInfo", "major minor micro releaselevel serial")
 

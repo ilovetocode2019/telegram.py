@@ -6,7 +6,7 @@ import itertools
 import os
 import sys
 import traceback
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, ClassVar, Coroutine, Dict, List, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Coroutine, Dict, List, Optional, TypeVar, Union
 
 from .chat import Chat
 from .message import PartialMessage, Message
@@ -16,12 +16,12 @@ if TYPE_CHECKING:
     from .http import HTTPClient
     from .types.keyboard import CallbackQuery as CallbackQueryPayload
 
-    KeyboardT = TypeVar("KeyboardT", bound="InlineKeyboard")
-    InlineKeyboardCallbackType = Callable[[KeyboardT, "CallbackQuery", "InlineKeyboardButton"], Awaitable[Any]]
-
     T = TypeVar("T")
     Coro = Coroutine[Any, Any, T]
     CoroFunc = Callable[..., Coro[T]]
+
+    KeyboardT = TypeVar("KeyboardT", bound="InlineKeyboard")
+    InlineKeyboardCallbackType = Callable[[KeyboardT, "CallbackQuery", "InlineKeyboardButton"], Coro]
 
 
 class InlineKeyboard:
@@ -43,8 +43,8 @@ class InlineKeyboard:
         self._buttons: List[InlineKeyboardButton] = []
 
         for callback in self.__inline_keyboard_callbacks__:
-            button = InlineKeyboardButton(**callback.__inline_keyboard_button_kwargs__) # type: ignore
-            button.callback = InlineKeyboardCallbackWrapper(callback, self, button) # type: ignore
+            button = InlineKeyboardButton(**callback.__inline_keyboard_button_kwargs__)
+            button.callback = InlineKeyboardCallbackWrapper(callback, self, button)
             button._keyboard = self
             self._buttons.append(button)
 
@@ -126,7 +126,7 @@ class InlineKeyboardCallbackWrapper:
         self.keyboard: InlineKeyboard = keyboard
         self.button: InlineKeyboardButton = button
 
-    def __call__(self, query: CallbackQuery) -> Awaitable[Any]:
+    def __call__(self, query: CallbackQuery) -> Coro:
         return self.callback(self.keyboard, query, self.button)
 
 
@@ -315,8 +315,8 @@ def inline_keyboard_button(**kwargs: Any) -> Callable[[InlineKeyboardCallbackTyp
         if not inspect.iscoroutinefunction(func):
             raise TypeError("Button callback is not a coroutine.")
 
-        func.__inline_keyboard_button__ = True # type: ignore
-        func.__inline_keyboard_button_kwargs__ = kwargs # type: ignore
+        func.__inline_keyboard_button__ = True
+        func.__inline_keyboard_button_kwargs__ = kwargs
         return func
 
     return deco

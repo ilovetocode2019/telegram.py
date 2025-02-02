@@ -26,7 +26,7 @@ SOFTWARE.
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Union, Optional
+from typing import TYPE_CHECKING, Optional
 
 from .chat import PartialChat, Chat, ChatInvite
 from .user import User

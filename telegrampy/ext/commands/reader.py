@@ -36,7 +36,7 @@ class ArgumentReader:
 
     def keyword_argument(self):
         result = self.buffer[self.index:]
-        self.index == self.legnth
+        self.index = self.legnth
 
         if not result.strip(" "):
             return ""

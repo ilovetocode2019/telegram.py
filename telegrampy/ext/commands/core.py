@@ -26,9 +26,6 @@ from __future__ import annotations
 
 import inspect
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, Generic, List, Literal, Optional, TypeVar, Union
-from typing_extensions import Self
-
-from telegrampy import Chat, Member, User
 
 from .context import Context
 from .errors import *
@@ -101,11 +98,10 @@ class Command(Generic[CogT, P, T]):
         self.cog: Optional[Cog] = None
         self.bot: Optional[Bot] = None
         self.checks: List[Check] = kwargs.get("checks") or []
-        self.scope = kwargs.get("scope")
         self.params: Dict[str, inspect.Parameter] = get_parameters(func)
 
         try:
-            self.checks: List[Check] = func.__command_checks__ # type: ignore
+            self.checks: List[Check] = func.__command_checks__
         except AttributeError:
             self.checks: List[Check] = kwargs.get("checks", [])
 
@@ -340,9 +336,9 @@ def check(check_func: Check) -> Callable[[Union[Command, CoroFunc]], Union[Comma
             func.add_check(check_func)
         else:
             if not hasattr(func, "__command_checks__"):
-                func.__command_checks__ = [check_func] # type: ignore
+                func.__command_checks__ = [check_func]
             else:
-                func.__command_checks__.append(check_func) # type: ignore
+                func.__command_checks__.append(check_func)
 
         return func
 

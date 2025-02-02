@@ -24,7 +24,7 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, List, Literal, NotRequired, TypedDict, Union
+from typing import TYPE_CHECKING, Any, List, Literal, NotRequired, TypedDict
 
 if TYPE_CHECKING:
     from .chat import Chat

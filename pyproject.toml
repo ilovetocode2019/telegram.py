@@ -59,3 +59,9 @@ include-package-data = true
 
 [tool.setuptools.dynamic]
 version = {attr = "telegrampy.__version__"}
+
+[tool.pyright]
+include = ["telegrampy"]
+reportUnnecessaryTypeIgnoreComment = "warning"
+reportUnusedImport = "warning"
+reportFunctionMemberAccess = "none"

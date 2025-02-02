@@ -25,7 +25,6 @@ SOFTWARE.
 from __future__ import annotations
 
 import inspect
-import types
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, List, Optional, TypeVar
 
 from telegrampy import utils
@@ -113,12 +112,12 @@ class Cog(metaclass=CogMeta):
 
         def deco(func: FuncT) -> FuncT:
             if isinstance(func, staticmethod):
-                func = func.__func__ # type: ignore
+                func = func.__func__
             if not inspect.iscoroutinefunction(func):
                 raise TypeError("Listener callback is not a coroutine.")
 
-            func.__cog_listener__ = True # type: ignore
-            func.__cog_listener_names__ = getattr(func, "__cog_listener_names__", []) + [name or func.__name__] # type: ignore
+            func.__cog_listener__ = True
+            func.__cog_listener_names__ = getattr(func, "__cog_listener_names__", []) + [name or func.__name__]
             return func
 
         return deco
@@ -137,7 +136,7 @@ class Cog(metaclass=CogMeta):
 
         for listener in self.__cog_listeners__:
             method = listener.__get__(self)
-            for event_name in listener.__cog_listener_names__: # type: ignore
+            for event_name in listener.__cog_listener_names__:
                 bot.add_listener(method, event_name)
 
     async def _remove_from_bot(self, bot: Bot) -> None:

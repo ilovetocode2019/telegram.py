@@ -25,8 +25,7 @@ SOFTWARE.
 from __future__ import annotations
 
 import html
-import io
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional
 
 from .abc import Messageable
 from .mixins import Hashable
@@ -34,7 +33,6 @@ from .utils import escape_markdown
 
 if TYPE_CHECKING:
     from .http import HTTPClient
-    from .message import Message
     from .utils import ParseMode
     from .types.user import User as UserPayload
 

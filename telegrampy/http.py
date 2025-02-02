@@ -29,7 +29,7 @@ import io
 import json
 import logging
 import sys
-from typing import TYPE_CHECKING, Any, List, Literal, Sequence, TypeVar, Coroutine, Optional, Dict
+from typing import TYPE_CHECKING, Any, List, Literal, TypeVar, Coroutine, Optional, Dict
 
 import aiohttp
 
