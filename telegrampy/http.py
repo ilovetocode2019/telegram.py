@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING, Any, List, Literal, Sequence, TypeVar, Corouti
 import aiohttp
 
 from . import __version__, errors
+from .markup import InlineKeyboardState
 
 if TYPE_CHECKING:
     from .types.chat import Chat as ChatPayload
@@ -46,7 +47,7 @@ if TYPE_CHECKING:
     Response = Coroutine[Any, Any, T]
     HTTPMethod = Literal["GET", "POST", "HEAD", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE"]
 
-log: logging.Logger = logging.getLogger("telegrampy.http")
+log: logging.Logger = logging.getLogger(__name__)
 
 user_agent: str = "TelegramBot (https://github.com/ilovetocode2019/telegram.py {0}) Python/{1[0]}.{1[1]} aiohttp/{2}"
 
@@ -75,6 +76,8 @@ class HTTPClient:
         self.user_agent: str = user_agent.format(__version__, sys.version_info, aiohttp.__version__)
         self.session: aiohttp.ClientSession = aiohttp.ClientSession(loop=self.loop, headers={"User-Agent": self.user_agent})
 
+        self.inline_keyboard_state: InlineKeyboardState = InlineKeyboardState(self)
+
     async def request(self, route: Route, **kwargs: Any) -> Any:
         """Make a request to a route.
 
@@ -95,7 +98,7 @@ class HTTPClient:
 
         # Try a request 5 times before dropping it
         for tries in range(5):
-            log.debug(f"Requesting to {method}:{url} (Attempt {tries+1})")
+            log.debug(f"Requesting to {method}: {url} with {kwargs.get('json', {})} (Attempt {tries+1})")
 
             try:
                 async with self.session.request(method, url, timeout=30, **kwargs) as resp:
@@ -168,16 +171,19 @@ class HTTPClient:
         chat_id: int,
         content: str,
         parse_mode: Optional[str],
-        reply_message_id: Optional[int] = None
+        reply_markup: Optional[Dict[str, Any]],
+        reply_message_id: Optional[int] = None,
     ) -> MessagePayload:
         """Sends a message to a chat."""
 
         url = self._base_url + "sendMessage"
         data = {"chat_id": chat_id, "text": content}
 
-        if parse_mode:
+        if parse_mode is not None:
             data["parse_mode"] = parse_mode
-        if reply_message_id:
+        if reply_markup is not None:
+            data["reply_markup"] = reply_markup
+        if reply_message_id is not None:
             data["reply_to_message_id"] = reply_message_id
 
         response = await self.request(Route("POST", url), json=data)
@@ -225,7 +231,8 @@ class HTTPClient:
         file: io.BytesIO,
         filename: Optional[str],
         caption: Optional[str],
-        parse_mode: Optional[str]
+        parse_mode: Optional[str],
+        reply_markup: Optional[Dict[str, Any]]
     ) -> MessagePayload:
         """Sends a photo to a chat."""
 
@@ -234,10 +241,12 @@ class HTTPClient:
         writer.add_field("chat_id", str(chat_id))
         writer.add_field("photo", file, filename=filename)
 
-        if caption:
+        if caption is not None:
             writer.add_field("caption", caption)
-        if parse_mode:
+        if parse_mode is not None:
             writer.add_field("parse_mode", parse_mode)
+        if reply_markup is not None:
+            writer.add_field("reply_markup", reply_markup)
 
         response = await self.request(Route("POST", url), data=writer)
 
@@ -249,7 +258,8 @@ class HTTPClient:
         file: io.BytesIO,
         filename: Optional[str],
         caption: Optional[str],
-        parse_mode: Optional[str]
+        parse_mode: Optional[str],
+        reply_markup: Optional[Dict[str, Any]]
     ) -> MessagePayload:
         """Sends a document to a chat."""
 
@@ -258,16 +268,23 @@ class HTTPClient:
         writer.add_field("chat_id", str(chat_id))
         writer.add_field("document", file, filename=filename)
 
-        if caption:
+        if caption is not None:
             writer.add_field("caption", caption)
-        if parse_mode:
+        if parse_mode is not None:
             writer.add_field("parse_mode", parse_mode)
+        if reply_markup is not None:
+            writer.add_field("reply_markup", reply_markup)
 
         response = await self.request(Route("POST", url), data=writer)
 
         return response["result"]
 
-    async def send_poll(self, chat_id: int, question: str, options: List[str]) -> PollPayload:
+    async def send_poll(
+        self,
+        chat_id: int,
+        question: str,
+        options: List[str]
+    ) -> PollPayload:
         """Sends a poll to a chat."""
 
         url = self._base_url + "sendPoll"
@@ -464,6 +481,28 @@ class HTTPClient:
             data["language_code"] = language_code
 
         await self.request(Route("POST", url), json=data)
+
+    async def answer_callback_query(
+        self,
+        callback_query_id: str,
+        text: Optional[str],
+        show_alert: Optional[bool],
+        url: Optional[str],
+        cache_time: Optional[int]
+    ) -> None:
+        route = Route("POST", self._base_url + "answerCallbackQuery")
+        data: Dict[str, Any] = {"callback_query_id": callback_query_id}
+
+        if text is not None:
+            data["text"] = text
+        if show_alert is not None:
+            data["show_alert"] = show_alert
+        if url is not None:
+            data["url"] = url
+        if cache_time is not None:
+            data["cache_time"] = cache_time
+
+        await self.request(route, json=data)
 
     async def close(self) -> None:
         """Closes the HTTP session."""

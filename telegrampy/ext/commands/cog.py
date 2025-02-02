@@ -71,7 +71,7 @@ class CogMeta(type):
 
                 if isinstance(value, Command):
                     commands[name] = value
-                elif inspect.iscoroutinefunction(value) and hasattr(value, "__cog_listener__"):
+                elif hasattr(value, "__cog_listener__"):
                     listeners[name] = value
 
         new_cls.__cog_commands__ = list(commands.values())
@@ -114,6 +114,8 @@ class Cog(metaclass=CogMeta):
         def deco(func: FuncT) -> FuncT:
             if isinstance(func, staticmethod):
                 func = func.__func__ # type: ignore
+            if not inspect.iscoroutinefunction(func):
+                raise TypeError("Listener callback is not a coroutine.")
 
             func.__cog_listener__ = True # type: ignore
             func.__cog_listener_names__ = getattr(func, "__cog_listener_names__", []) + [name or func.__name__] # type: ignore

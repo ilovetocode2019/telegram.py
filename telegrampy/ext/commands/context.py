@@ -30,18 +30,14 @@ from telegrampy.abc import Messageable
 
 if TYPE_CHECKING:
     from telegrampy.chat import Chat
+    from telegrampy.markup import *
     from telegrampy.message import Message
     from telegrampy.user import User
     from telegrampy.utils import ParseMode
     from .bot import Bot
-    from .cog import Cog
     from .core import Command
 
-    T = TypeVar("T")
-    Coro = Coroutine[Any, Any, T]
-    ContextT = TypeVar("ContextT", bound="Context")
-    CommandT = TypeVar("CommandT", bound="Command")
-    CogT = TypeVar("CogT", bound="Cog")
+    ReplyMarkup = Union[InlineKeyboard, ReplyKeyboard, ReplyKeyboardRemove, ForceReply]
 
 BotT = TypeVar("BotT", bound="Bot")
 
@@ -101,7 +97,7 @@ class Context(Messageable, Generic[BotT]):
     def _http_client(self):
         return self.bot.http
 
-    async def reply(self, content: str, parse_mode: Optional[ParseMode] = None) -> Message:
+    async def reply(self, content: str, *, parse_mode: Optional[ParseMode] = None, reply_markup: Optional[ReplyMarkup] = None) -> Message:
         """|coro|
 
         Replys to the message.
@@ -110,8 +106,10 @@ class Context(Messageable, Generic[BotT]):
         ----------
         content: :class:`str`
             The content of the message to send.
-        parse_mode: :class:`str`
+        parse_mode: Optional[:class:`str`]
             The parse mode of the message to send.
+        reply_markup: Optional[Union[:class:`InlineKeyboard`, :class:`ReplyKeyboard`, :class:`ReplyKeyboardRemove, :class:`ForceReply`]]
+            The reply markup interface to send with the message.
 
         Returns
         -------
@@ -124,4 +122,4 @@ class Context(Messageable, Generic[BotT]):
             Sending the message failed.
         """
 
-        return await self.message.reply(content=content, parse_mode=parse_mode)
+        return await self.message.reply(content, parse_mode=parse_mode, reply_markup=reply_markup)

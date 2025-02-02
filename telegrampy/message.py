@@ -25,20 +25,21 @@ SOFTWARE.
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from .chat import Chat
 from .user import User
-
-
 from .mixins import Hashable
 
 if TYPE_CHECKING:
     from .chat import PartialChat, Chat
+    from .markup import *
     from .user import User
     from .http import HTTPClient
     from .utils import ParseMode
     from .types.message import Message as MessagePayload, MessageEntity as MessageEntityPayload
+
+    ReplyMarkup = Union[InlineKeyboard, ReplyKeyboard, ReplyKeyboardRemove, ForceReply]
 
 
 class PartialMessage(Hashable):
@@ -62,12 +63,17 @@ class PartialMessage(Hashable):
         The chat the partial message was sent in.
     """
 
-    def __init__(self, http: HTTPClient, message_id: int, *, chat: PartialChat):
-        self._http: HTTPClient = http
+    def __init__(self, message_id: int, chat: Union[PartialChat, Chat]):
+        self._http: HTTPClient = chat._http
         self.id: int = message_id
-        self.chat: PartialChat = chat
+        self.chat: Union[PartialChat, Chat] = chat
 
-    async def reply(self, content: str, parse_mode: Optional[ParseMode] = None) -> Message:
+    async def reply(
+        self,
+        content: str,
+        parse_mode: Optional[ParseMode] = None,
+        reply_markup: Optional[ReplyMarkup] = None
+    ) -> Message:
         """|coro|
 
         Sends a reply to the message.
@@ -76,8 +82,10 @@ class PartialMessage(Hashable):
         ----------
         content: :class:`str`
             The content of the message to send.
-        parse_mode: :class:`str`
+        parse_mode: Optional[:class:`str`]
             The parse mode of the message to send.
+        reply_markup: Optional[Union[:class:`InlineKeyboard`, :class:`ReplyKeyboard`, :class:`ReplyKeyboardRemove, :class:`ForceReply`]]
+            The reply markup interface to send with the message.
 
         Returns
         -------
@@ -94,9 +102,16 @@ class PartialMessage(Hashable):
             chat_id=self.chat.id,
             content=content,
             parse_mode=parse_mode,
+            reply_markup=reply_markup.to_reply_markup() if reply_markup is not None else None,
             reply_message_id=self.id
         )
-        return Message(self._http, result)
+
+        ret = Message(self._http, result)
+
+        if reply_markup is not None and isinstance(reply_markup, InlineKeyboard):
+            self._http.inline_keyboard_state.add(ret.id, reply_markup)
+
+        return ret
 
     async def forward(self, destination: Chat) -> Message:
         """|coro|
@@ -127,8 +142,9 @@ class PartialMessage(Hashable):
 
         return Message(self._http, result)
 
-    async def edit_content(
+    async def edit(
         self,
+        *,
         content: str,
         parse_mode: Optional[ParseMode] = None
     ) -> Optional[Message]:

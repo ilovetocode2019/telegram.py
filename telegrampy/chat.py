@@ -87,7 +87,7 @@ class PartialChat(Messageable, Hashable):
         """
 
         from .message import PartialMessage
-        return PartialMessage(self._http_client, message_id, chat=self)
+        return PartialMessage(message_id, self)
 
     async def get_member(self, user_id: int) -> Member:
         """|coro|

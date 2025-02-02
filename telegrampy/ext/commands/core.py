@@ -312,7 +312,7 @@ def command(
     ----------
     name: Optional[:class:`str`]
         The name of the command to create, defaulting to the name of the function.
-    \*\*kwargs:
+    kwargs:
         The kwargs to pass into the :class:`.Command` constructor.
 
     Raises

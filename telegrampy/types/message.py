@@ -24,7 +24,7 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, List, Literal, NotRequired, TypedDict
+from typing import TYPE_CHECKING, Any, List, Literal, NotRequired, TypedDict, Union
 
 if TYPE_CHECKING:
     from .chat import Chat
@@ -150,6 +150,12 @@ class UserProfilePhotos(TypedDict):
 
 class File(_BaseFile):
     file_path: NotRequired[str]
+
+
+class InaccessibleMessage(TypedDict):
+    chat: Chat
+    message_id: int
+    date: Literal[0]
 
 Message = TypedDict(
     "Message",

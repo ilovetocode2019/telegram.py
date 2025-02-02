@@ -28,23 +28,26 @@ Events
 
     Called when a channel post is edited.
 
+.. function:: on_callback_query(query: telegrampy.CallbackQuery)
+
+    Called when a callback query is received from an inline keyboard button.
+    Instead of trying to handle callbacks yourself, consider using :.InlineKeyboard`, which handles this for you.
+
 .. function:: on_member_update(member_update: telegrampy.MemberUpdated)
 
     Called when a chat member is updated.
 
 .. function:: on_poll(poll: telegrampy.Poll)
 
-    Called when a poll is created.
+    Called when a poll is sent.
 
 .. function:: on_poll_answer(answer: telegrampy.PollAnswer)
 
     Called when someone answers a non-anonymous poll.
 
-.. function: 
-
 .. function:: on_error(error)
 
-    Called when an error occurs.
+    Called when an error occurs within an event handler.
 
 Utilities
 ---------
@@ -78,7 +81,7 @@ Chat
 Message
 ~~~~~~~
 
-.. autoclass:: PartialMessage()
+.. autoclass:: PartialMessage
     :members:
     :inherited-members:
 
@@ -115,6 +118,32 @@ Poll
 .. autoclass:: PollAnswer()
     :members:
 
+Markup
+~~~~~~
+
+.. autoclass:: InlineKeyboard
+    :members:
+
+.. autoclass:: InlineKeyboardButton
+    :members:
+
+.. autofunction:: inline_keyboard_button
+    :decorator:
+
+.. autoclass:: ReplyKeyboard
+    :members:
+
+.. autoclass:: ReplyKeyboardButton
+    :members:
+
+.. autoclass:: ReplyKeyboardRemove
+    :members:
+
+.. autoclass:: ForceReply
+    :members:
+
+.. autoclass:: CallbackQuery
+    :members:
 
 Exceptions
 ----------

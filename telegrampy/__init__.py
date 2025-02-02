@@ -20,6 +20,7 @@ from .abc import  Messageable
 from .chat import PartialChat, Chat, ChatInvite
 from .client import Client
 from .errors import *
+from .markup import *
 from .member import Member, MemberUpdated
 from .message import PartialMessage, Message, MessageEntity
 from .poll import Poll, PollAnswer

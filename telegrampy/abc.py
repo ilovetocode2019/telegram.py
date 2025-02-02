@@ -27,13 +27,16 @@ from __future__ import annotations
 import asyncio
 import io
 
-from typing import TYPE_CHECKING, Any, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Generator, List, Optional, Union
 
 if TYPE_CHECKING:
     from .http import HTTPClient
+    from .markup import *
     from .message import Message
     from .poll import Poll
     from .utils import ParseMode
+
+    ReplyMarkup = Union[InlineKeyboard, ReplyKeyboard, ReplyKeyboardRemove, ForceReply]
 
 
 class Messageable:
@@ -56,7 +59,13 @@ class Messageable:
     def _http_client(self) -> HTTPClient:
         raise NotImplementedError
 
-    async def send(self, content: str, parse_mode: Optional[ParseMode] = None) -> Message:
+    async def send(
+        self,
+        content: str,
+        *,
+        parse_mode: Optional[ParseMode] = None,
+        reply_markup: Optional[ReplyMarkup] = None
+    ) -> Message:
         """|coro|
 
         Sends a message to the destination.
@@ -65,8 +74,10 @@ class Messageable:
         ----------
         content: :class:`str`
             The content of the message to send.
-        parse_mode: :class:`str`
+        parse_mode: Optional[:class:`str`]
             The parse mode of the message to send.
+        reply_markup: Optional[Union[:class:`InlineKeyboard`, :class:`ReplyKeyboard`, :class:`ReplyKeyboardRemove, :class:`ForceReply`]]
+            The reply markup interface to send with the message.
 
         Returns
         -------
@@ -80,21 +91,30 @@ class Messageable:
         """
 
         from .message import Message
+        from .markup import InlineKeyboard
 
         result = await self._http_client.send_message(
             chat_id=self._chat_id,
             content=content,
-            parse_mode=parse_mode
+            parse_mode=parse_mode,
+            reply_markup=reply_markup.to_reply_markup() if reply_markup is not None else None
         )
 
-        return Message(self._http_client, result)
+        ret = Message(self._http_client, result)
+
+        if reply_markup is not None and isinstance(reply_markup, InlineKeyboard):
+            self._http_client.inline_keyboard_state.add(ret.id, reply_markup)
+
+        return ret
 
     async def send_document(
         self,
         document: Union[io.BytesIO, str],
+        *,
         filename: Optional[str] = None,
         caption: Optional[str] = None,
-        parse_mode: Optional[str] = None
+        parse_mode: Optional[str] = None,
+        reply_markup: Optional[ReplyMarkup] = None
     ) -> Message:
         """|coro|
 
@@ -104,12 +124,14 @@ class Messageable:
         ----------
         document: Union[:class:`io.BytesIO`, :class:`str`]
             The document to send. Either a file or the path to one.
-        filename: :class:`str`
+        filename: Optional[:class:`str`]
             The filename of the document.
-        caption: :class:`str`
+        caption: Optional[:class:`str`]
             The document's caption.
-        parse_mode: :class:`str`
+        parse_mode: Optional[:class:`str`]
             The parse mode for the caption.
+        reply_markup: Optional[Union[:class:`InlineKeyboard`, :class:`ReplyKeyboard`, :class:`ReplyKeyboardRemove, :class:`ForceReply`]]
+            The reply markup interface to send with the message.
 
         Raises
         ------
@@ -129,17 +151,25 @@ class Messageable:
             file=document,
             filename=filename,
             caption=caption,
-            parse_mode=parse_mode
+            parse_mode=parse_mode,
+            reply_markup=reply_markup.to_reply_markup() if reply_markup is not None else None
         )
 
-        return Message(self._http_client, result)
+        ret = Message(self._http_client, result)
+
+        if reply_markup is not None and isinstance(reply_markup, InlineKeyboard):
+            self._http_client.inline_keyboard_state.add(ret.id, reply_markup)
+
+        return ret
 
     async def send_photo(
         self,
         photo: Union[io.BytesIO, str],
+        *,
         filename: Optional[str] = None,
         caption: Optional[str] = None,
-        parse_mode: Optional[str] = None
+        parse_mode: Optional[str] = None,
+        reply_markup: Optional[ReplyMarkup] = None
     ) -> Message:
         """|coro|
 
@@ -155,6 +185,8 @@ class Messageable:
             The caption for the photo.
         parse_mode: Optional[:class:`str`]
             The parse mode for the caption.
+        reply_markup: Optional[Union[:class:`InlineKeyboard`, :class:`ReplyKeyboard`, :class:`ReplyKeyboardRemove, :class:`ForceReply`]]
+            The reply markup interface to send with the message.
 
         Raises
         ------
@@ -174,12 +206,23 @@ class Messageable:
             file=photo,
             filename=filename,
             caption=caption,
-            parse_mode=parse_mode
+            parse_mode=parse_mode,
+            reply_markup=reply_markup.to_reply_markup() if reply_markup is not None else None
         )
 
-        return Message(self._http_client, result)
+        ret = Message(self._http_client, result)
 
-    async def send_poll(self, question: str, options: List[str]) -> Poll:
+
+        if reply_markup is not None and isinstance(reply_markup, InlineKeyboard):
+            self._http_client.inline_keyboard_state.add(ret.id, reply_markup)
+
+        return ret
+
+    async def send_poll(
+        self,
+        question: str,
+        options: List[str]
+    ) -> Poll:
         """|coro|
 
         Sends a poll to the destination.
@@ -190,6 +233,8 @@ class Messageable:
             The question of the poll.
         options: List[:class:`str`]
             The options in the poll.
+        reply_markup: Optional[Union[:class:`InlineKeyboard`, :class:`ReplyKeyboard`, :class:`ReplyKeyboardRemove, :class:`ForceReply`]]
+            The reply markup interface to send with the message.
 
         Returns
         -------
@@ -212,52 +257,55 @@ class Messageable:
 
         return Poll(self._http_client, result)
 
-    async def send_action(self, action: str) -> None:
-        """|coro|
-
-        Sends an action to the destination.
-
-        Parameters
-        ----------
-        action: :class:`str`
-            The action to send.
-
-        Raises
-        ------
-        :exc:`telegrampy.HTTPException`
-            Sending the action failed.
+    def typing(self) -> MessageableAction:
+        """Returns a context manager that shows a typing indicicator in the destination.
+        This is eqivalent to calling :meth:`.action("typing")`
         """
 
-        await self._http_client.send_chat_action(chat_id=self._chat_id, action=action)
+        return MessageableAction(self, "typing")
 
-    def action(self, action: str) -> MessageableActionSender:
-        """Returns a context manager that sends a chat action in the destionation until the with statement is completed.
+    def action(self, action: str) -> MessageableAction:
+        """Returns a context manager that sends a chat action to the destination until completed or for up to 5 seconds if called with ``await``.
 
         Usage: ::
 
-            async with chat.typing():
+            async with chat.action("typing"):
                 # do some computing here
 
             await chat.send("Done!")
 
+        Usage: ::
+
+            await chat.action("typing")
+
         Parameters
         ----------
         action: :class:`str`
             The action to send.
         """
 
-        return MessageableActionSender(self, action)
+        return MessageableAction(self, action)
 
 
-class MessageableActionSender:
+class MessageableAction:
     def __init__(self, messageable: Messageable, action: str):
         self.messageable = messageable
         self.action = action
 
     async def action_loop(self) -> None:
         while True:
-            await self.messageable.send_action(self.action)
+            await self.messageable._http_client.send_chat_action(
+                chat_id=self.messageable._chat_id,
+                action=self.action
+            )
             await asyncio.sleep(5)
+
+    def __await__(self) -> Generator[None, None, None]:
+        sender = self.messageable._http_client.send_chat_action(
+            chat_id=self.messageable._chat_id,
+            action=self.action
+        )
+        return sender.__await__()
 
     def __enter__(self) -> None:
         self.task = self.messageable._http_client.loop.create_task(self.action_loop())

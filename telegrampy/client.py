@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, Optional
 from .chat import Chat, PartialChat
 from .errors import InvalidToken, Conflict
 from .http import HTTPClient
+from .markup import CallbackQuery, InlineKeyboard
 from .member import MemberUpdated
 from .message import Message
 from .poll import Poll, PollAnswer
@@ -48,7 +49,7 @@ if TYPE_CHECKING:
     Coro = Coroutine[Any, Any, T]
     CoroFunc = Callable[..., Coro[Any]]
 
-log: logging.Logger = logging.getLogger("telegrampy")
+log: logging.Logger = logging.getLogger(__name__)
 
 
 class Client:
@@ -189,6 +190,13 @@ class Client:
 
         return PartialChat(self.http, chat_id)
 
+    def add_inline_keyboard(self, message_id: int, keyboard: InlineKeyboard) -> None:
+        """Binds :class:`.InlineKeyboard` to a specific message on the client, to listen for updates.
+        This is intended to be used when you want the inline keyboard to last longer than the lifecycle of the program.
+        """
+
+        self.http.inline_keyboard_state.add(message_id, keyboard)
+
     async def _poll(self) -> None:
         await self.setup_hook()
 
@@ -252,6 +260,10 @@ class Client:
         elif "edited_channel_post" in update:
             message = Message(self.http, update["edited_channel_post"])
             self.dispatch("post_edit", message)
+        elif "callback_query" in update:
+            query = CallbackQuery(self.http, update["callback_query"])
+            self.dispatch("callback_query", query)
+            self.http.inline_keyboard_state.dispatch(query)
         elif "poll" in update:
             poll = Poll(self.http, update["poll"])
             self.dispatch("poll", poll)
