@@ -53,7 +53,7 @@ log: logging.Logger = logging.getLogger(__name__)
 
 
 class Client:
-    """Represents a client connection to Telegram.
+    """A client that polls updates and make requests to Telegram.
 
     Parameters
     ----------
@@ -61,10 +61,8 @@ class Client:
         The Telegram API token to authenticate the bot with.
     loop: Optional[:class:`asyncio.BaseEventLoop`]
         The event loop to run the bot on. Uses :func:`asyncio.get_event_loop` if none is specified.
-    wait: Optional[:class:`int`]
+    timeout: Optional[:class:`int`]
         The timeout in seconds for long polling. Defaults to 10.
-    process_unread: Optional[:class:`bool`]
-        Whether the bot should process unread updates received while offline. Defaults to False.
 
     Attributes
     ----------
@@ -76,14 +74,9 @@ class Client:
         self.loop: asyncio.AbstractEventLoop = options.get("loop") or asyncio.get_event_loop()
         self.http: HTTPClient = HTTPClient(token=token, loop=self.loop)
 
-        wait: int = options.get("wait", 10)
-        if wait < 1 or wait > 10:
-            raise ValueError("Wait time must be between 1 and 10 seconds")
-
         self._running: bool = False
         self._last_update_id: Optional[int] = None
-        self._wait: int = wait
-        self._process_unread: bool = options.get("process_unread", False)
+        self._timeout: int = options.get("timeout") or 10
 
         self._listeners: Dict[str, List[CoroFunc]] = {}
         self._waiting_for: Dict[str, List[Tuple[asyncio.Future, Callable[..., bool]]]] = {}
@@ -199,29 +192,13 @@ class Client:
 
     async def _poll(self) -> None:
         await self.setup_hook()
-
-        # Get last update id
-        log.info("Fetching unread updates")
-        try:
-            updates = await self.http.get_updates(offset=self._last_update_id)
-        except Exception:
-            raise
-        else:
-            if updates:
-                update_ids = [int(update["update_id"]) for update in updates]
-                self._last_update_id = max(update_ids) + 1
-                if self._process_unread:
-                    log.debug(f"Handling updates: {[update['update_id'] for update in updates]} ({len(updates)}")
-                    for update in updates:
-                        await self._handle_update(update)
-
         tries = 0
 
-        # Main loop
+        log.info("Polling updates from Telegram...")
+
         while self._running:
-            # Fetch updates
             try:
-                updates = await self.http.get_updates(offset=self._last_update_id, timeout=self._wait)
+                updates = await self.http.get_updates(offset=self._last_update_id, timeout=self._timeout)
             except (InvalidToken, Conflict):
                 raise
             except Exception:
@@ -232,16 +209,13 @@ class Client:
                     await asyncio.sleep(tries*2)
             else:
                 if updates:
-                    # Handle them
                     update_ids = [int(update["update_id"]) for update in updates]
                     self._last_update_id = max(update_ids) + 1
-                    log.debug(f"Handling updates: {[update['update_id'] for update in updates]}")
+                    log.debug(f"Handling updates: {update_ids}")
                     for update in updates:
                         await self._handle_update(update)
 
                 tries = 0
-
-        log.info("The bot successfully completed")
 
     async def _handle_update(self, update: Dict[str, Any]) -> None:
         update_id = update["update_id"]
@@ -480,7 +454,6 @@ class Client:
         pass
 
     def _clean_tasks(self) -> None:
-        log.info("Cleaning up tasks")
         tasks = asyncio.all_tasks(loop=self.loop)
         if not tasks:
             return
@@ -497,10 +470,8 @@ class Client:
         self._running = True
 
         try:
-            log.info("Running the bot")
             self.loop.run_until_complete(self._poll())
         except KeyboardInterrupt:
-            log.info("Received signal to stop bot")
             self.loop.run_until_complete(self.stop())
 
         self._clean_tasks()
