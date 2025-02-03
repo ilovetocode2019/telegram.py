@@ -370,7 +370,7 @@ class DefaultHelpCommand(HelpCommand):
             help_text.append(html.escape(cog.description))
             help_text.append("")  # blank line
 
-        commands = await self.filter_commands(cog.commands)
+        commands = await self.filter_commands(cog.get_commands())
 
         help_text.extend(await self.format_commands(commands, heading="Commands"))
 

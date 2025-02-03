@@ -33,6 +33,8 @@ from telegrampy.ext.commands.errors import CommandRegistrationError
 from .core import Command
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from .bot import Bot
 
     T = TypeVar("T")
@@ -149,6 +151,17 @@ class Cog(metaclass=CogMeta):
             await utils.maybe_await(self.cog_unload)
         except Exception:
             pass
+
+    def get_commands(self) -> List[Command[Self, ..., Any]]:
+        """Returns all the commands registered in the cog.
+
+        Parameters
+        ----------
+        List[:class:`.Command`]
+            The commands defined inside the cog.
+        """
+
+        return self.__cog_commands__
 
     def cog_check(self, ctx):
         return True
