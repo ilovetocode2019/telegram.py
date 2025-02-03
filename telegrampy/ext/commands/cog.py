@@ -103,7 +103,7 @@ class Cog(metaclass=CogMeta):
         return self.__cog_description__
 
     @classmethod
-    def listener(cls, name: Optional[str] = None) -> Callable[[CoroFunc], CoroFunc]:
+    def listener(cls, name: Optional[str] = None) -> Callable[[FuncT], FuncT]:
         """Makes a method in a cog a listener.
 
         Parameters
@@ -164,6 +164,7 @@ class Cog(metaclass=CogMeta):
         return self.__cog_commands__
 
     def cog_check(self, ctx):
+        """A special check that registers for all commands in the cog."""
         return True
 
     async def cog_load(self):
