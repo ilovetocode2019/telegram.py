@@ -1,12 +1,12 @@
 from .errors import ExpectedClosingQuote
 
 class ArgumentReader:
-    def __init__(self, buffer):
+    def __init__(self, buffer: str) -> None:
         self.index = 0
         self.buffer = buffer
         self.legnth = len(buffer)
 
-    def argument(self):
+    def argument(self) -> str:
         pos = 0
         in_quotes = False
         result = ""
@@ -34,7 +34,7 @@ class ArgumentReader:
 
         return result
 
-    def keyword_argument(self):
+    def keyword_argument(self) -> str:
         result = self.buffer[self.index:]
         self.index = self.legnth
 
@@ -42,7 +42,7 @@ class ArgumentReader:
             return ""
         return result
 
-    def extras(self):
+    def extras(self) -> list[str]:
         arguments = []
         while True:
             argument = self.argument()

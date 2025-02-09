@@ -25,7 +25,7 @@ SOFTWARE.
 from __future__ import annotations
 
 import inspect
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, List, Optional, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from telegrampy import utils
 from telegrampy.ext.commands.errors import CommandRegistrationError
@@ -33,6 +33,7 @@ from telegrampy.ext.commands.errors import CommandRegistrationError
 from .core import Command
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
     from typing_extensions import Self
 
     from .bot import Bot
@@ -48,10 +49,10 @@ class CogMeta(type):
 
     __cog_name__: str
     __cog_description__: str
-    __cog_commands__: List[Command]
-    __cog_listeners__: List[CoroFunc]
+    __cog_commands__: list[Command]
+    __cog_listeners__: list[str]
 
-    def __new__(cls, name, bases, attrs, **kwargs):
+    def __new__(cls, name, bases, attrs, **kwargs) -> CogMeta:
         description = kwargs.pop("description", None)
         if description is None:
             description = inspect.cleandoc(attrs.get("__doc__", ""))
@@ -60,7 +61,7 @@ class CogMeta(type):
         attrs["__cog_description__"] = description
 
         commands = {}
-        listeners = {}
+        listeners = []
         new_cls = super().__new__(cls, name, bases, attrs, **kwargs)
 
         for base in new_cls.__mro__:
@@ -73,10 +74,10 @@ class CogMeta(type):
                 if isinstance(value, Command):
                     commands[name] = value
                 elif hasattr(value, "__cog_listener__"):
-                    listeners[name] = value
+                    listeners.append(name)
 
         new_cls.__cog_commands__ = list(commands.values())
-        new_cls.__cog_listeners__ = list(listeners.values())
+        new_cls.__cog_listeners__ = listeners
         return new_cls
 
     @property
@@ -89,8 +90,8 @@ class Cog(metaclass=CogMeta):
 
     __cog_name__: str
     __cog_description__: str
-    __cog_commands__: List[Command]
-    __cog_listeners__: List[CoroFunc]
+    __cog_commands__: list[Command]
+    __cog_listeners__: list[str]
 
     @property
     def qualified_name(self) -> str:
@@ -98,28 +99,30 @@ class Cog(metaclass=CogMeta):
         return self.__cog_name__
 
     @property
-    def description(self) -> Optional[str]:
+    def description(self) -> str | None:
         """:class:`str`: The cog's description."""
         return self.__cog_description__
 
     @classmethod
-    def listener(cls, name: Optional[str] = None) -> Callable[[FuncT], FuncT]:
+    def listener(cls, name: str | None = None) -> Callable[[FuncT], FuncT]:
         """Makes a method in a cog a listener.
 
         Parameters
         ----------
-        name: Optional[:class:`str`]
+        name: :class:`str` | None
             The name of the event to register the function as.
         """
 
         def deco(func: FuncT) -> FuncT:
-            if isinstance(func, staticmethod):
-                func = func.__func__
-            if not inspect.iscoroutinefunction(func):
+            value = func
+            if isinstance(value, staticmethod):
+                value = value.__func__
+
+            if not inspect.iscoroutinefunction(value):
                 raise TypeError("Listener callback is not a coroutine.")
 
-            func.__cog_listener__ = True
-            func.__cog_listener_names__ = getattr(func, "__cog_listener_names__", []) + [name or func.__name__]
+            value.__cog_listener__ = True
+            value.__cog_listener_names__ = getattr(func, "__cog_listener_names__", []) + [name or func.__name__]
             return func
 
         return deco
@@ -137,37 +140,37 @@ class Cog(metaclass=CogMeta):
                 raise exc
 
         for listener in self.__cog_listeners__:
-            method = listener.__get__(self)
-            for event_name in listener.__cog_listener_names__:
+            method = getattr(self, listener)
+            for event_name in method.__cog_listener_names__:
                 bot.add_listener(method, event_name)
 
     async def _remove_from_bot(self, bot: Bot) -> None:
         for command in self.__cog_commands__:
             bot.remove_command(command.name)
         for listener in self.__cog_listeners__:
-            bot.remove_listener(listener)
+            bot.remove_listener(getattr(self, listener))
 
         try:
             await utils.maybe_await(self.cog_unload)
         except Exception:
             pass
 
-    def get_commands(self) -> List[Command[Self, ..., Any]]:
+    def get_commands(self) -> list[Command[Self, ..., Any]]:
         """Returns all the commands registered in the cog.
 
         Parameters
         ----------
-        List[:class:`.Command`]
+        list[:class:`.Command`]
             The commands defined inside the cog.
         """
 
         return self.__cog_commands__
 
-    def cog_check(self, ctx):
+    def cog_check(self, ctx) -> bool:
         """A special check that registers for all commands in the cog."""
         return True
 
-    async def cog_load(self):
+    async def cog_load(self) -> None:
         """|maybecoro|
 
         Called when the cog is added to the bot.
@@ -176,7 +179,7 @@ class Cog(metaclass=CogMeta):
 
         pass
 
-    async def cog_unload(self):
+    async def cog_unload(self) -> None:
         """|maybecoro|
 
         Called when the cog is removed from the bot.

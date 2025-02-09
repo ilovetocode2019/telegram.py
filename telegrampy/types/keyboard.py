@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, NotRequired, TypedDict, Union
+from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 if TYPE_CHECKING:
     from .message import Message, InaccessibleMessage
@@ -9,7 +9,7 @@ CallbackQuery = TypedDict(
     {
         "id": str,
         "from": User,
-        "message": NotRequired[Union[Message, InaccessibleMessage]],
+        "message": NotRequired[Message | InaccessibleMessage],
         "inline_message_id": NotRequired[str],
         "chat_instance": str,
         "data": NotRequired[str],

@@ -26,10 +26,10 @@ from __future__ import annotations
 
 import inspect
 import re
-from typing import TYPE_CHECKING, Awaitable, Callable, Literal, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Literal, ParamSpec, TypeVar
 
 if TYPE_CHECKING:
-    from typing_extensions import ParamSpec
+    from collections.abc import Awaitable, Callable
 
     P = ParamSpec("P")
     T = TypeVar("T")
@@ -43,7 +43,7 @@ def escape_markdown(text: str, *, version: Version = 2) -> str:
     ----------
     text: :class:`str`
         The text to escape markdown from.
-    version: Optional[:class:`int`]
+    version: :class:`int` | None
         The Telegram markdown version to use. Only 1 and 2 are supported.
 
     Returns
@@ -69,8 +69,15 @@ def escape_markdown(text: str, *, version: Version = 2) -> str:
     return re.sub(f"([{re.escape(characters)}])", r"\\\1", text)
 
 
-async def maybe_await(func: Callable[P, Union[Awaitable[T], T]], *args: P.args, **kwargs: P.kwargs) -> T:
+async def maybe_await(func: Callable[P, Awaitable[T] | T], *args: P.args, **kwargs: P.kwargs) -> T:
     ret = func(*args, **kwargs)
     if inspect.iscoroutine(ret):
         ret = await ret
     return ret # type: ignore
+
+
+class _NoneLikeType:
+    def __bool__(self) -> bool:
+        return False
+
+MISSING: Any = _NoneLikeType()

@@ -27,7 +27,9 @@ from __future__ import annotations
 import copy
 import html
 import itertools
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
+
+from telegrampy.utils import MISSING
 
 from .cog import Cog
 from .context import Context
@@ -36,13 +38,14 @@ from .errors import CommandError, CommandInvokeError, CheckFailure
 
 if TYPE_CHECKING:
     from typing_extensions import Self
+
     from .bot import Bot
 
     CommandT = TypeVar("CommandT", bound="Command")
 
 
 class _HelpCommandImplementation(Command):
-    def __init__(self, original: HelpCommand, *args, **kwargs):
+    def __init__(self, original: HelpCommand, *args, **kwargs) -> None:
         super().__init__(original.command_callback, *args, **kwargs)
         self.params = get_parameters(original.command_callback, ignored=1)
         self._original = original
@@ -67,15 +70,15 @@ class HelpCommand:
 
     Attributes
     ----------
-    context: Optional[:class:`telegrampy.ext.commands.Context`]
+    context: :class:`telegrampy.ext.commands.Context` | None
         The :class:`telegrampy.ext.commands.Context` that invoked the current help callback.
     command_attrs: :class:`dict`
         A dictionary of options to pass into the actual :class:`telegrampy.ext.commands.Command` instance.
     """
 
     if TYPE_CHECKING:
-        __original_args__: Tuple[Any, ...]
-        __original_kwargs__: Dict[str, Any]
+        __original_args__: tuple[Any, ...]
+        __original_kwargs__: dict[str, Any]
 
     def __new__(cls, *args: Any, **kwargs: Any) -> Self:
         self = super().__new__(cls)
@@ -83,12 +86,12 @@ class HelpCommand:
         self.__original_kwargs__ = {k: copy.deepcopy(v) for k, v in kwargs.items()}
         return self
 
-    def __init__(self, **options: Any):
-        self.command_attrs: Dict[str, Any] = options.pop("command_attrs", {})
+    def __init__(self, **options: Any) -> None:
+        self.command_attrs: dict[str, Any] = options.pop("command_attrs", {})
         self.command_attrs.setdefault("name", "help")
         self.command_attrs.setdefault("description", "The help command")
         self.command_attrs.setdefault("aliases", ["start"])
-        self.context: Optional[Context] = None
+        self.context: Context = MISSING # use sentinel so subclasses don't have to check for None
         self._implementation: _HelpCommandImplementation = _HelpCommandImplementation(self, **self.command_attrs)
 
     def copy(self) -> Self:
@@ -171,7 +174,7 @@ class HelpCommand:
 
         await self.context.send(f"A command or cog named '{query}' was not found.")
 
-    async def command_callback(self, ctx: Context, query: Optional[str]) -> None:
+    async def command_callback(self, ctx: Context, query: str | None) -> None:
         """|coro|
 
         The callback that searches for a matching commmand or cog.
@@ -180,7 +183,7 @@ class HelpCommand:
 
         Parameters
         ----------
-        query: Optional[:class:`str`]
+        query: :class:`str` | None
             The user's query. Defaults to ``None``.
         """
 
@@ -197,19 +200,19 @@ class HelpCommand:
 
         await self.send_not_found(query)
 
-    async def filter_commands(self, commands: List[CommandT]) -> List[CommandT]:
+    async def filter_commands(self, commands: list[CommandT]) -> list[CommandT]:
         """|coro|
 
         Takes a list of commands and filters them.
 
         Parameters
         ----------
-        commands: List[:class:`telegrampy.ext.commands.Command`]
+        commands: list[:class:`telegrampy.ext.commands.Command`]
             The commands to filter.
 
         Returns
         -------
-        List[:class:`telegrampy.ext.commands.Command`]
+        list[:class:`telegrampy.ext.commands.Command`]
             The filtered commands.
         """
 
@@ -235,10 +238,10 @@ class DefaultHelpCommand(HelpCommand):
 
     Parameters
     ----------
-    no_category: Optional[:class:`str`]
+    no_category: :class:`str` | None
         The heading for commands without a category.
         Defaults to "No Category".
-    sort_commands: Optional[:class:`bool`]
+    sort_commands: :class:`bool` | None
         Whether to sort the commands.
         Defaults to ``True``.
     """
@@ -263,14 +266,14 @@ class DefaultHelpCommand(HelpCommand):
             f"You can also type /{name} [category] for more info on a category."
         )
 
-    async def format_commands(self, commands: List[Command], *, heading: str) -> List[str]:
+    async def format_commands(self, commands: list[Command], *, heading: str) -> list[str]:
         """|coro|
 
         The method that formats a given list of commands.
 
         Parameters
         ----------
-        commands: List[:class`telegrampy.ext.commands.Command`]
+        commands: list[:class`telegrampy.ext.commands.Command`]
             The list of commands to format.
         heading: :class:`str`
             The heading to display.
@@ -303,7 +306,7 @@ class DefaultHelpCommand(HelpCommand):
 
         return formatted
 
-    async def format_command(self, command: Command) -> List[str]:
+    async def format_command(self, command: Command) -> list[str]:
         """|coro|
 
         The method that formats an individual command.
@@ -323,7 +326,7 @@ class DefaultHelpCommand(HelpCommand):
 
         return help_text
 
-    async def send_help_text(self, help_text: List[str]) -> None:
+    async def send_help_text(self, help_text: list[str]) -> None:
         message = "\n".join(help_text)
         await self.context.send(message, parse_mode="HTML")
 

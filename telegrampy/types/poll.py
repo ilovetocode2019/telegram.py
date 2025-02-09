@@ -24,7 +24,7 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
     from .message import MessageEntity
@@ -39,7 +39,7 @@ class PollOption(TypedDict):
 class Poll(TypedDict):
     id: str
     question: str
-    options: List[PollOption]
+    options: list[PollOption]
     total_voter_count: int
     is_closed: bool
     is_anonymous: bool
@@ -47,7 +47,7 @@ class Poll(TypedDict):
     allows_multiple_answers: bool
     correct_option_id: int
     explanation: str
-    explanation_entries: List[MessageEntity]
+    explanation_entries: list[MessageEntity]
     open_period: int
     close_date: int
 
@@ -55,4 +55,4 @@ class Poll(TypedDict):
 class PollAnswer(TypedDict):
     poll_id: str
     user: User
-    option_ids: List[int]
+    option_ids: list[int]

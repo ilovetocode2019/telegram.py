@@ -25,7 +25,9 @@ SOFTWARE.
 from __future__ import annotations
 
 import inspect
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, Generic, List, Literal, Optional, TypeVar, Union
+import types
+from collections.abc import Callable, Coroutine
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, Literal, ParamSpec, TypeVar, Union
 
 from .context import Context
 from .errors import *
@@ -33,8 +35,6 @@ from .converter import Converter, MAPPING as CONVERTERS_MAPPING
 from .reader import ArgumentReader
 
 if TYPE_CHECKING:
-    from typing_extensions import Concatenate, ParamSpec
-
     from .bot import Bot
     from .cog import Cog
 
@@ -44,15 +44,11 @@ if TYPE_CHECKING:
 T = TypeVar("T")
 Coro = Coroutine[Any, Any, T]
 CoroFunc = Callable[..., Coro[Any]]
-MaybeCoro = Union[T, Coro[T]]
+MaybeCoro = T | Coro
 Check = Callable[[Context[Any]], MaybeCoro[bool]]
 
 CogT = TypeVar("CogT", bound="Cog")
-
-if TYPE_CHECKING:
-    P = ParamSpec("P")
-else:
-    P = TypeVar("P")
+P = ParamSpec("P")
 
 
 class Command(Generic[CogT, P, T]):
@@ -80,30 +76,27 @@ class Command(Generic[CogT, P, T]):
 
     def __init__(
         self,
-        func: Union[
-            Callable[Concatenate[CogT, ContextT, P], Coro[T]],
-            Callable[Concatenate[ContextT, P], Coro[T]],
-        ],
+        func: Callable[Concatenate[CogT, ContextT, P], Coro[T]] | Callable[Concatenate[ContextT, P], Coro[T]],
         **kwargs
-    ):
+    ) -> None:
         if not inspect.iscoroutinefunction(func):
             raise TypeError("Command callback is not a coroutine.")
 
         self.callback = func
         self.name: str = kwargs.get("name") or func.__name__
-        self.description: Optional[str] = kwargs.get("description")
-        self.usage: Optional[str] = kwargs.get("usage")
-        self.aliases: List[str] = kwargs.get("aliases") or []
+        self.description: str | None = kwargs.get("description")
+        self.usage: str | None = kwargs.get("usage")
+        self.aliases: list[str] = kwargs.get("aliases") or []
         self.hidden: bool = kwargs.get("hidden") or False
-        self.cog: Optional[Cog] = None
-        self.bot: Optional[Bot] = None
-        self.checks: List[Check] = kwargs.get("checks") or []
-        self.params: Dict[str, inspect.Parameter] = get_parameters(func)
+        self.cog: Cog | None = None
+        self.bot: Bot | None = None
+        self.checks: list[Check] = kwargs.get("checks") or []
+        self.params: dict[str, inspect.Parameter] = get_parameters(func)
 
         try:
-            self.checks: List[Check] = func.__command_checks__
+            self.checks: list[Check] = func.__command_checks__
         except AttributeError:
-            self.checks: List[Check] = kwargs.get("checks", [])
+            self.checks: list[Check] = kwargs.get("checks", [])
 
     def __str__(self) -> str:
         return self.name
@@ -182,20 +175,20 @@ class Command(Generic[CogT, P, T]):
                 name = getattr(converter, "name", converter.__class__.__name__)
                 raise BadArgument(f"Converting to '{name}' failed for parameter '{param.name}'") from exc
 
-    async def _parse_argument(self, ctx: Context, argument: Optional[str], param: inspect.Parameter):
+    async def _parse_argument(self, ctx: Context, argument: str | None, param: inspect.Parameter) -> Any:
         name = getattr(param.annotation, "name", param.annotation.__class__.__name__)
         origin = getattr(param.annotation, "__origin__", None)
 
         if not argument:
             if param.default != param.empty:
                 return param.default
-            elif origin is Union and type(None) in param.annotation.__args__:
+            elif origin in [Union, types.UnionType] and type(None) in param.annotation.__args__:
                 return None
             raise MissingRequiredArgument(param)
         elif param.annotation == param.empty:
             return argument
 
-        if origin is Union:
+        if origin in [Union, types.UnionType]:
             for annotation in param.annotation.__args__:
                 if annotation is type(None):
                     continue
@@ -293,23 +286,20 @@ class Command(Generic[CogT, P, T]):
             raise CommandInvokeError(exc) from exc
 
 def command(
-    name: Optional[str] = None,
+    name: str | None = None,
     **kwargs: Any,
 ) -> Callable[
-    [
-        Union[
-            Callable[Concatenate[CogT, ContextT, P], Coro[T]],
-            Callable[Concatenate[ContextT, P], Coro[T]],
-        ],
-    ], Command[CogT, P, T]]:
+        [Callable[Concatenate[CogT, ContextT, P], Coro[T]] | Callable[Concatenate[ContextT, P], Coro[T]]],
+        Command[CogT, P, T]
+    ]:
     """Turns a function into a :class:`.Command`.
 
     Parameters
     ----------
-    name: Optional[:class:`str`]
+    name: :class:`str` | None
         The name of the command to create, defaulting to the name of the function.
     kwargs:
-        The kwargs to pass into the :class:`.Command` constructor.
+        The keyword arguments to pass into the :class:`.Command` constructor.
 
     Raises
     ------
@@ -318,20 +308,17 @@ def command(
     """
 
     def deco(
-        func: Union[
-            Callable[Concatenate[CogT, ContextT, P], Coro[T]],
-            Callable[Concatenate[ContextT, P], Coro[T]],
-        ],
+        func: Callable[Concatenate[CogT, ContextT, P], Coro[T]] | Callable[Concatenate[ContextT, P], Coro[T]]
     ) -> Command[CogT, P, T]:
         return Command(func, name=name, **kwargs)
 
     return deco
 
 
-def check(check_func: Check) -> Callable[[Union[Command, CoroFunc]], Union[Command, CoroFunc]]:
+def check(check_func: Check) -> Callable[[Command | CoroFunc], Command | CoroFunc]:
     """Makes a check for a command."""
 
-    def deco(func: Union[Command, CoroFunc]) -> Union[Command, CoroFunc]:
+    def deco(func: Command | CoroFunc) -> Command | CoroFunc:
         if isinstance(func, Command):
             func.add_check(check_func)
         else:
@@ -345,7 +332,7 @@ def check(check_func: Check) -> Callable[[Union[Command, CoroFunc]], Union[Comma
     return deco
 
 
-def is_owner() -> Callable[[Union[Command, CoroFunc]], Union[Command, CoroFunc]]:
+def is_owner() -> Callable[[Command | CoroFunc], Command | CoroFunc]:
     """A command check for checking that the user is the owner."""
 
     def is_owner_check(ctx: Context) -> bool:
@@ -356,7 +343,7 @@ def is_owner() -> Callable[[Union[Command, CoroFunc]], Union[Command, CoroFunc]]
     return check(is_owner_check)
 
 
-def is_private_chat() -> Callable[[Union[Command, CoroFunc]], Union[Command, CoroFunc]]:
+def is_private_chat() -> Callable[[Command | CoroFunc], Command | CoroFunc]:
     """A command check for checking that the chat is a private chat."""
 
     def is_private_chat_check(ctx: Context) -> bool:
@@ -367,7 +354,7 @@ def is_private_chat() -> Callable[[Union[Command, CoroFunc]], Union[Command, Cor
     return check(is_private_chat_check)
 
 
-def is_not_private_chat() -> Callable[[Union[Command, CoroFunc]], Union[Command, CoroFunc]]:
+def is_not_private_chat() -> Callable[[Command | CoroFunc], Command | CoroFunc]:
     """A command check for checking that the chat is not a private chat."""
 
     def is_not_private_chat_check(ctx: Context) -> bool:
@@ -378,7 +365,7 @@ def is_not_private_chat() -> Callable[[Union[Command, CoroFunc]], Union[Command,
     return check(is_not_private_chat_check)
 
 
-def get_parameters(func: Callable[..., Any], *, ignored: Optional[Literal[1, 2]] = None):
+def get_parameters(func: Callable[..., Any], *, ignored: Literal[1, 2] | None = None) -> dict[str, inspect.Parameter]:
     signature = inspect.signature(func)
     params = {}
 

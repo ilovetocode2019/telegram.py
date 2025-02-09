@@ -31,7 +31,7 @@ Events
 .. function:: on_callback_query(query: telegrampy.CallbackQuery)
 
     Called when a callback query is received from an inline keyboard button.
-    Instead of trying to handle callbacks yourself, consider using :.InlineKeyboard`, which handles this for you.
+    Instead of trying to handle callbacks yourself, consider using :class:`.InlineKeyboard`, which handles this for you.
 
 .. function:: on_member_update(member_update: telegrampy.MemberUpdated)
 
@@ -98,6 +98,8 @@ User
 .. autoclass:: User()
     :members:
 
+.. autoclass:: ClientUser()
+    :members:
 
 Member
 ~~~~~~

@@ -25,7 +25,7 @@ SOFTWARE.
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING
 
 from .chat import Chat
 from .user import User
@@ -39,8 +39,7 @@ if TYPE_CHECKING:
     from .utils import ParseMode
     from .types.message import Message as MessagePayload, MessageEntity as MessageEntityPayload
 
-    ReplyMarkup = Union[InlineKeyboard, ReplyKeyboard, ReplyKeyboardRemove, ForceReply]
-
+    ReplyMarkup = InlineKeyboard | ReplyKeyboard |ReplyKeyboardRemove | ForceReply
 
 class PartialMessage(Hashable):
     """Represents a partial message that can be interacted with, without containing information.
@@ -59,20 +58,20 @@ class PartialMessage(Hashable):
     ----------
     id: :class:`int`
         The given ID of the partial chat.
-    chat: Union[:class:`telegrampy.PartialChat`, :class:`telegrampy.Chat`]
+    chat: :class:`telegrampy.PartialChat` | :class:`telegrampy.Chat`
         The chat the partial message was sent in.
     """
 
-    def __init__(self, message_id: int, chat: Union[PartialChat, Chat]):
+    def __init__(self, message_id: int, chat: PartialChat) -> None:
         self._http: HTTPClient = chat._http
         self.id: int = message_id
-        self.chat: Union[PartialChat, Chat] = chat
+        self.chat: PartialChat = chat
 
     async def reply(
         self,
         content: str,
-        parse_mode: Optional[ParseMode] = None,
-        reply_markup: Optional[ReplyMarkup] = None
+        parse_mode: ParseMode | None = None,
+        reply_markup: ReplyMarkup | None = None
     ) -> Message:
         """|coro|
 
@@ -82,9 +81,9 @@ class PartialMessage(Hashable):
         ----------
         content: :class:`str`
             The content of the message to send.
-        parse_mode: Optional[:class:`str`]
+        parse_mode: :class:`str` | None
             The parse mode of the message to send.
-        reply_markup: Optional[Union[:class:`InlineKeyboard`, :class:`ReplyKeyboard`, :class:`ReplyKeyboardRemove, :class:`ForceReply`]]
+        reply_markup: :class:`InlineKeyboard` | :class:`ReplyKeyboard` | :class:`ReplyKeyboardRemove |:class:`ForceReply`
             The reply markup interface to send with the message.
 
         Returns
@@ -120,7 +119,7 @@ class PartialMessage(Hashable):
 
         Parameters
         ----------
-        destination: Union[:class:`telegrampy.PartialChat`, :class:`telegrampy.Chat`]
+        destination: :class:`telegrampy.PartialChat` | :class:`telegrampy.Chat`
             The chat forward the message to.
 
         Returns
@@ -146,8 +145,8 @@ class PartialMessage(Hashable):
         self,
         *,
         content: str,
-        parse_mode: Optional[ParseMode] = None
-    ) -> Optional[Message]:
+        parse_mode: ParseMode | None = None
+    ) -> Message | None:
         """|coro|
 
         Edits the message.
@@ -245,44 +244,40 @@ class Message(PartialMessage):
     ----------
     id: :class:`int`
         The ID of the message.
-    thread_id: Optional[:class:`int`]
+    thread_id: :class:`int` | None
         The ID of the thread the message was sent in.
-    author: Optional[:class:`int`]
+    author: :class:`int` | None
         The user who sent the message.
-    created_at: :class:`datetime.datetime`
+    created_at: :class:`int` | None
         The time the message was created.
-    edited_at: Optional[:class:`datetime.datetime`]
+    edited_at: :class:`datetime.datetime` | None
         The time the message was edited.
-    content: Optional[:class:`str`]
+    content: :class:`str` | None
         The content of the message, for text messages.
     chat: :class:`telegrampy.Chat`
         The chat the message was sent in.
     """
 
-    def __init__(self, http: HTTPClient, data: MessagePayload):
+    def __init__(self, http: HTTPClient, data: MessagePayload) -> None:
         self._http: HTTPClient = http
         self.id: int = data["message_id"]
-        self.thread_id: Optional[int] = data.get("message_thread_id")
-        self.author: Optional[User] = User(http, data["from"]) if "from" in data else None
+        self.thread_id: int | None = data.get("message_thread_id")
+        self.author: User | None = User(http, data["from"]) if "from" in data else None
 
         self.created_at: datetime.datetime = datetime.datetime.fromtimestamp(
             data["date"],
             tz=datetime.timezone.utc
         )
 
-        self.edited_at: Optional[datetime.datetime] = (
+        self.edited_at: datetime.datetime | None = (
             datetime.datetime.fromtimestamp(data["edit_date"], tz=datetime.timezone.utc)
             if "edit_date" in data
             else None
         )
 
-        self.content: Optional[str] = data.get("text")
-        self.chat: Chat = Chat(http, data.get("chat"))
-
-        self.entities: List[MessageEntity] = [
-            MessageEntity(http, entity, text=self.content)
-            for entity in data.get("entities", [])
-        ]
+        self.content: str | None = data.get("text")
+        self.chat: Chat = Chat(http, data.get("chat")) # type: ignore
+        self.entities: list[MessageEntity] = [MessageEntity(http, entity, text=self.content) for entity in data.get("entities", [])] # type: ignore
 
 
 class MessageEntity:
@@ -296,25 +291,25 @@ class MessageEntity:
         The offset of the start of the entity.
     length: :class:`int`
         The length of the entity.
-    url: Optional[:class:`str`]
+    url: :class:`str` | None
         The URL that will be opened, for `text_link`.
-    user: Optional[:class:`telegrampy.User`]
+    user: :class:`telegrampy.User` | None
         The mentioned user for `text_mention`.
-    language: Optional[:class:`str`]
-        The programming language of the entity text, for `pre`.
-    custom_emoji_id: Optional[:class:`str`]
+    language: :class:`str` | None
+        The programming language of the entity text, for ``pre``.
+    custom_emoji_id: :class:`str` | None
         The ID, for custom_emoji.
     value: :class:`str`
         The text value of the message entity.
     """
 
-    def __init__(self, http: HTTPClient, data: MessageEntityPayload, *, text: str):
+    def __init__(self, http: HTTPClient, data: MessageEntityPayload, *, text: str) -> None:
         self._http: HTTPClient = http
         self.type: str = data["type"]
         self.offset: int = data["offset"]
         self.length: int = data.get("length")
-        self.url: Optional[str] = data.get("url")
-        self.user: Optional[User] = User(http, data["user"]) if "user" in data else None
-        self.language: Optional[str] = data.get("language")
-        self.custom_emoji_id: Optional[str] = data.get("custom_emoji_id")
+        self.url: str | None = data.get("url")
+        self.user: User | None = User(http, data["user"]) if "user" in data else None
+        self.language: str | None = data.get("language")
+        self.custom_emoji_id: str | None = data.get("custom_emoji_id")
         self.value: str = text[self.offset:self.offset+self.length]

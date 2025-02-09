@@ -24,7 +24,7 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from .user import User
 
@@ -74,10 +74,10 @@ class Poll:
         Whether the poll allows multiple answers.
     """
 
-    def __init__(self, http: HTTPClient, data: PollPayload):
+    def __init__(self, http: HTTPClient, data: PollPayload) -> None:
         self._http: HTTPClient = http
         self.question: str = data.get("question")
-        self.options: List[PollOptionPayload] = data.get("options")
+        self.options: list[PollOptionPayload] = data.get("options")
         self.total_voter_count: int = data.get("total_voter_count")
         self.is_closed: bool = data.get("is_closed")
         self.is_anonymous: bool = data.get("is_anonymous")
@@ -97,11 +97,11 @@ class PollAnswer:
         The ID of the poll.
     user: :class:`telegrampy.User`
         The user that answered the poll.
-    option_ids: List[:class:`int`]
+    option_ids: list[:class:`int`]
         The options that the user selected.
     """
 
-    def __init__(self, http: HTTPClient, data: PollAnswerPayload):
+    def __init__(self, http: HTTPClient, data: PollAnswerPayload) -> None:
         self.id: str = data.get("poll_id")
         self.user: User = User(http, data.get("user"))
-        self.option_ids: List[int] = data.get("option_ids")
+        self.option_ids: list[int] = data.get("option_ids")

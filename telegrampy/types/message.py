@@ -24,7 +24,7 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, List, Literal, NotRequired, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict
 
 if TYPE_CHECKING:
     from .chat import Chat
@@ -140,12 +140,12 @@ class VoiceChatEnded(TypedDict):
 
 
 class VoiceChatParticipantsInvited(TypedDict):
-    users: NotRequired[List[User]]
+    users: NotRequired[list[User]]
 
 
 class UserProfilePhotos(TypedDict):
     total_count: int
-    photos: List[PhotoSize]
+    photos: list[PhotoSize]
 
 
 class File(_BaseFile):
@@ -176,26 +176,26 @@ Message = TypedDict(
         "media_group_id": NotRequired[str],
         "author_signature": NotRequired[str],
         "text": NotRequired[str],
-        "entities": NotRequired[List[MessageEntity]],
+        "entities": NotRequired[list[MessageEntity]],
         "animation": NotRequired[Animation] ,
         "audio": NotRequired[Audio],
         "document": NotRequired[Document],
-        "photo": NotRequired[List[PhotoSize]],
+        "photo": NotRequired[list[PhotoSize]],
         "sticker": NotRequired[Any],  # TODO
         "video": NotRequired[Video],
         "video_note": NotRequired[VideoNote],
         "voice": NotRequired[Voice],
         "caption": NotRequired[str],
-        "caption_entities": NotRequired[List[MessageEntity]],
+        "caption_entities": NotRequired[list[MessageEntity]],
         "contact": NotRequired[Contact],
         "dice": NotRequired[Dice],
         "game": NotRequired[Any],  # TODO
         "poll": NotRequired[Poll],
         "venue": NotRequired[Venue],
-        "new_chat_members": NotRequired[List[User]],
+        "new_chat_members": NotRequired[list[User]],
         "left_chat_member": NotRequired[User],
         "new_chat_title": NotRequired[str],
-        "new_chat_photo": NotRequired[List[PhotoSize]],
+        "new_chat_photo": NotRequired[list[PhotoSize]],
         "delete_chat_photo": NotRequired[Literal[True]],
         "group_chat_created": NotRequired[Literal[True]],
         "supergroup_chat_created": NotRequired[Literal[True]],

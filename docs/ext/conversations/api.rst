@@ -16,9 +16,3 @@ Question
 
 .. autoclass:: telegrampy.ext.conversations.Question
     :members:
-
-Exceptions
-----------
-
-.. autoexception:: telegrampy.ext.conversations.NotStarted
-    :members:

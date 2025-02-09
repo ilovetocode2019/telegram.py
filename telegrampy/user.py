@@ -25,7 +25,7 @@ SOFTWARE.
 from __future__ import annotations
 
 import html
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from .abc import Messageable
 from .mixins import Hashable
@@ -37,68 +37,17 @@ if TYPE_CHECKING:
     from .types.user import User as UserPayload
 
 
-class User(Messageable, Hashable):
-    """Represents a Telegram user.
-
-    .. container:: operations
-
-        .. describe:: x == y
-
-            Checks if two users are equal.
-
-        .. describe:: x != y
-
-            Checks if two users are not equal.
-
-        .. describe:: str(x)
-
-            Returns the user's name.
-
-    Attributes
-    ----------
-    id: :class:`int`
-        The ID of the user.
-    is_bot: :class:`bool`
-        If the user is a bot.
-    first_name: :class:`str`
-        The first name of the user, if exists.
-    last_name: Optional[:class:`str`]
-        The last name of the user, if exists.
-    username: Optional[:class:`str`]
-        The username of the user, if applicable.
-    language_code: Optional[:class:`str`]
-        The IETF language tag for the user's language, if applicable.
-    added_to_attachment_menu: :class:`bool`
-        Whether the logged in bot is added to this user's attachment menu.  
-    is_premium: :class:`bool`
-        Whether the user is subscribed to Telegram Premium.
-    can_join_groups: :class:`bool`
-        Whether the logged in bot can join groups. Only returned in :class:`telegrampy.Client.get_me`.
-    can_read_all_group_messages: :class:`bool`
-        Whether privacy mode is disabled for the logged in bot. Only returned in :class:`telegrampy.Client.get_me`.
-    supports_inline_queries: :class:`bool`
-        Whether the logged in bot has inline queries enabled. Only returned in :class:`telegrampy.Client.get_me`.
-    can_connect_to_business: :class:`bool`
-        Whether the logged in bot can be connected to a Telegram business account to receive its messages.
-    has_main_web_app: :class:`bool`
-        Whether the logged in bot has a main web app.
-    """
-
-    def __init__(self, http: HTTPClient, data: UserPayload):
+class BaseUser(Hashable):
+    def __init__(self, http: HTTPClient, data: UserPayload) -> None:
         self._http: HTTPClient = http
         self.id: int = data.get("id")
         self.is_bot: bool = data.get("is_bot")
-        self.username: Optional[str] = data.get("username")
+        self.username: str | None = data.get("username")
         self.first_name: str = data.get("first_name")
-        self.last_name: Optional[str] = data.get("last_name")
-        self.language_code: Optional[str] = data.get("language_code")
+        self.last_name: str | None = data.get("last_name")
+        self.language_code: str | None = data.get("language_code")
         self.is_premium: bool = data.get("is_premium", False)
         self.added_to_attachment_menu: bool = data.get("added_to_attachment_menu", False)
-        self.can_join_groups: bool = data.get("can_join_groups", False)
-        self.can_read_all_group_messages: bool = data.get("can_read_all_group_messages", False)
-        self.supports_inline_queries: bool = data.get("supports_inline_queries", False)
-        self.can_connect_to_business: bool = data.get("can_connect_to_business", False)
-        self.has_main_web_app: bool = data.get("has_main_web_app", False)
 
     def __str__(self) -> str:
         return self.name
@@ -116,12 +65,12 @@ class User(Messageable, Hashable):
         return f"{self.first_name} {self.last_name}" if self.last_name else self.first_name
 
     @property
-    def link(self) -> Optional[str]:
-        """Optional[:class:`str`]: The t.me link for the user, if applicable."""
+    def link(self) -> str | None:
+        """:class:`str` | None: The t.me link for the user, if applicable."""
 
         return f"http://t.me/{self.username}" if self.username else None
 
-    def mention(self, text: Optional[str] = None, parse_mode: ParseMode = "HTML") -> str:
+    def mention(self, text: str | None = None, parse_mode: ParseMode = "HTML") -> str:
         """Returns a mention for the user.
 
         Parameters
@@ -146,3 +95,99 @@ class User(Messageable, Hashable):
             return f"[{escape_markdown(text, version=1)}](tg://user?id={self.id})"
         elif parse_mode == "MarkdownV2":
             return f"[{escape_markdown(text, version=2)}](tg://user?id={self.id})"
+
+
+class User(BaseUser, Messageable):
+    """Represents a Telegram user.
+
+    .. container:: operations
+
+        .. describe:: x == y
+
+            Checks if two users are equal.
+
+        .. describe:: x != y
+
+            Checks if two users are not equal.
+
+        .. describe:: str(x)
+
+            Returns the user's name.
+
+    Attributes
+    ----------
+    id: :class:`int`
+        The ID of the user.
+    is_bot: :class:`bool`
+        Whether the user is a bot.
+    first_name: :class:`str`
+        The first name of the user, if exists.
+    last_name: :class:`str` | None
+        The last name of the user, if exists.
+    username: :class:`str` | None
+        The username of the user, if applicable.
+    language_code: ;class:`str` | None
+        The IETF language tag for the user's language, if applicable.
+    added_to_attachment_menu: :class:`bool`
+        Whether the logged in bot is added to this user's attachment menu.  
+    is_premium: :class:`bool`
+        Whether the user is subscribed to Telegram Premium.
+    """
+
+    pass
+
+
+class ClientUser(BaseUser):
+    """Represents your Telegram user.
+
+    .. container:: operations
+
+        .. describe:: x == y
+
+            Checks if two users are equal.
+
+        .. describe:: x != y
+
+            Checks if two users are not equal.
+
+        .. describe:: str(x)
+
+            Returns the user's name.
+
+    Attributes
+    ----------
+    id: :class:`int`
+        The ID of the user.
+    is_bot: :class:`bool`
+        Whether the user is a bot.
+    first_name: :class:`str`
+        The first name of the user, if exists.
+    last_name: :class:`str` | None
+        The last name of the user, if exists.
+    username: :class:`str` | None
+        The username of the user, if applicable.
+    language_code: ;class:`str` | None
+        The IETF language tag for the user's language, if applicable.
+    added_to_attachment_menu: :class:`bool`
+        Whether the logged in bot is added to this user's attachment menu.  
+    is_premium: :class:`bool`
+        Whether the user is subscribed to Telegram Premium.
+    can_join_groups: :class:`bool`
+        Whether the logged in bot can join groups.
+    can_read_all_group_messages: :class:`bool`
+        Whether privacy mode is disabled for the logged in bot.
+    supports_inline_queries: :class:`bool`
+        Whether the logged in bot has inline queries enabled.
+    can_connect_to_business: :class:`bool`
+        Whether the logged in bot can be connected to a Telegram business account to receive its messages.
+    has_main_web_app: :class:`bool`
+        Whether the logged in bot has a main web app.
+    """
+
+    def __init__(self, http: HTTPClient, data: UserPayload) -> None:
+        super().__init__(http, data)
+        self.can_join_groups: bool = data.get("can_join_groups", False)
+        self.can_read_all_group_messages: bool = data.get("can_read_all_group_messages", False)
+        self.supports_inline_queries: bool = data.get("supports_inline_queries", False)
+        self.can_connect_to_business: bool = data.get("can_connect_to_business", False)
+        self.has_main_web_app: bool = data.get("has_main_web_app", False)

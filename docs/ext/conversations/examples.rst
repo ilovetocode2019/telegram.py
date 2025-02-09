@@ -20,8 +20,8 @@ A Basic Conversation
 
 
     # Somewhere else...
-    convo = BasicConversation()
-    await convo.start(ctx.message, client=ctx.bot)
+    convo = BasicConversation.from_mesage(ctx.message, client=ctx.bot)
+    await convo.start()
 
 This conversation only asks two questions. It asks the name of the user and the user's
 favorite color. When the conversation is done, it repeats what the user said.
@@ -32,8 +32,8 @@ A Setup Conversation
 .. code-block:: python
 
     class SetupConversation(conversations.Conversation):
-        def __init__(self):
-            super().__init__(timeout=120.0)
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs, timeout=120.0)
 
         @conversations.question("What is your email address?", starting_question=True)
         async def email_question(self, message):
@@ -45,14 +45,14 @@ A Setup Conversation
             self.name = message.content
             await self.stop()
 
-        async def setup(self, message, *, client):
-            await self.start(message, client=client, wait=True)
+        async def setup(self):
+            await self.start(wait=True)
             return self.name, self.email
 
 
     # Somewhere else...
-    convo = SetupConversation()
-    name, email = await convo.setup(ctx.message, client=ctx.bot)
+    convo = SetupConversation.from_message(ctx.message, client=ctx.bot)
+    name, email = await convo.setup()
     await ctx.send(f"Name: {name}\nEmail: {email}")
 
 This example demonstrates how setup conversations can be created.

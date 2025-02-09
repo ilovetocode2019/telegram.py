@@ -28,19 +28,7 @@ import importlib
 import sys
 import traceback
 import types
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Coroutine,
-    Dict,
-    List,
-    Mapping,
-    Optional,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar
 
 import telegrampy
 from . import errors
@@ -50,8 +38,7 @@ from .core import Command, command
 from .help import HelpCommand, DefaultHelpCommand
 
 if TYPE_CHECKING:
-    from typing_extensions import ParamSpec, Concatenate
-
+    from collections.abc import Callable, Coroutine, Mapping
     from telegrampy import Message
 
     T = TypeVar("T")
@@ -72,13 +59,13 @@ class Bot(telegrampy.Client):
     ----------
     token: :class:`str`
         The API token.
-    description: Optional[:class:`str`]
+    description: :class:`str` | None
         The bot's description.
-    owner_id: Optional[:class:`int`]
+    owner_id: :class:`int` | None
         The owner's ID.
-    owner_ids: Optional[List[:class:`int`]]
+    owner_ids: list[:class:`int`] | None
         The owner IDs.
-    help_command: Optional[:class:`telegrampy.ext.commands.HelpCommand`]
+    help_command: :class:`telegrampy.ext.commands.HelpCommand` | None
         The bot's help command.
         Defaults to :class:`telegrampy.ext.commands.DefaultHelpCommand`
     \*\*options:
@@ -86,42 +73,42 @@ class Bot(telegrampy.Client):
 
     Attributes
     ----------
-    description: Optional[:class:`str`]
+    description: :class:`str` | None
         The bot's description.
-    owner_id: Optional[:class:`int`]
+    owner_id: :class:`int` | None
         The owner's ID.
-    owner_ids: Optional[List[:class:`int`]]
+    owner_ids: list[:class:`int`] | None
         The owner IDs.
     """
 
     def __init__(
         self,
         token: str, *,
-        description: Optional[str] = None,
-        owner_id: Optional[int] = None,
-        owner_ids: Optional[List[int]] = None,
-        help_command: Optional[HelpCommand] = _default_help,
+        description: str | None = None,
+        owner_id: int | None = None,
+        owner_ids: list[int] | None = None,
+        help_command: HelpCommand | None = _default_help,
         **options: Any
-    ):
+    ) -> None:
         super().__init__(token, **options)
-        self.owner_id: Optional[int] = owner_id
-        self.owner_ids: Optional[List[int]] = owner_ids
-        self.description: Optional[str] = description
+        self.owner_id: int | None = owner_id
+        self.owner_ids: list[int] | None = owner_ids
+        self.description: str | None = description
 
-        self._extensions: Dict[str, types.ModuleType] = {}
-        self._commands: Dict[str, Command] = {}
-        self._cogs: Dict[str, Cog] = {}
+        self._extensions: dict[str, types.ModuleType] = {}
+        self._commands: dict[str, Command] = {}
+        self._cogs: dict[str, Cog] = {}
 
-        self._help_command: Optional[HelpCommand] = None
+        self._help_command: HelpCommand | None = None
         self.help_command = help_command
 
     @property
-    def help_command(self) -> Optional[HelpCommand]:
-        """Optional[:class:`telegrampy.ext.commands.HelpCommand`]: The bot's help command."""
+    def help_command(self) -> HelpCommand | None:
+        """:class:`telegrampy.ext.commands.HelpCommand` | None: The bot's help command."""
         return self._help_command
 
     @help_command.setter
-    def help_command(self, value: Optional[HelpCommand]) -> None:
+    def help_command(self, value: HelpCommand | None) -> None:
         if value is not None:
             if not isinstance(value, HelpCommand):
                 raise TypeError("The new help command must inherit from HelpCommand.")
@@ -135,8 +122,8 @@ class Bot(telegrampy.Client):
             self._help_command = None
 
     @property
-    def commands(self) -> List[Command]:
-        """List[:class:`Command`]: A list of the commands added to the bot."""
+    def commands(self) -> list[Command]:
+        """list[:class:`Command`]: A list of the commands added to the bot."""
         return list(self._commands.values())
 
     @property
@@ -148,7 +135,7 @@ class Bot(telegrampy.Client):
     def extensions(self) -> Mapping[str, types.ModuleType]:
         return types.MappingProxyType(self._extensions)
 
-    def get_command(self, name: str) -> Optional[Command]:
+    def get_command(self, name: str) -> Command | None:
         """Gets a command by name.
 
         Parameters
@@ -166,7 +153,7 @@ class Bot(telegrampy.Client):
             if name in command.aliases or command.name == name:
                 return command
 
-    async def get_context(self, message: Message, *, cls: Type[ContextT] = Context) -> Optional[ContextT]:
+    async def get_context(self, message: Message, *, cls: type[ContextT] = Context) -> ContextT | None:
         """|coro|
 
         Gets context for a given message.
@@ -178,7 +165,7 @@ class Bot(telegrampy.Client):
 
         Returns
         -------
-        Optional:class:`telegrampy.ext.commands.Context`]
+        :class:`telegrampy.ext.commands.Context` | None
             The context created, if applicable.
 
         Raises
@@ -208,10 +195,8 @@ class Bot(telegrampy.Client):
                     command=self.get_command(parts[0][1:]),
                     invoked_with=parts[0][1:],
                     chat=message.chat,
-                    author=message.author,
-                    args=[],
-                    kwargs={}
-                    )
+                    author=message.author
+                )
 
     async def load_extension(self, name: str) -> None:
         """|coro|
@@ -382,7 +367,7 @@ class Bot(telegrampy.Client):
         await cog._add_to_bot(self)
         self._cogs[cog.qualified_name] = cog
 
-    async def remove_cog(self, name: str) -> Optional[Cog]:
+    async def remove_cog(self, name: str) -> Cog | None:
         """|coro|
 
         Removes a cog from the bot.
@@ -394,7 +379,7 @@ class Bot(telegrampy.Client):
 
         Returns
         -------
-        Optional[:class:`.Cog`]
+        :class:`.Cog` | None
             The cog that was removed, if found.
         """
 
@@ -403,7 +388,7 @@ class Bot(telegrampy.Client):
             await cog._remove_from_bot(self)
         return cog
 
-    def get_cog(self, name: str) -> Optional[Cog]:
+    def get_cog(self, name: str) -> Cog | None:
         """Returns the cog instance added to the bot by name, if found.
 
         Parameters
@@ -413,7 +398,7 @@ class Bot(telegrampy.Client):
 
         Returns
         --------
-        Optional[:class:`.Cog`]
+        :class:`.Cog` | None
             The cog, if found.
         """
 
@@ -454,23 +439,17 @@ class Bot(telegrampy.Client):
 
     def command(
         self,
-        name: Optional[str] = None,
+        name: str | None = None,
         **kwargs: Any,
-    ) -> Callable[
-        [
-            Union[
-                Callable[Concatenate[CogT, ContextT, P], Coro[T]],
-                Callable[Concatenate[ContextT, P], Coro[T]],
-            ]
-        ], Command[CogT, P, T]]:
+    ) -> Callable[[Callable[Concatenate[CogT, ContextT, P], Coro[T]] | Callable[Concatenate[ContextT, P], Coro[T]]], Command[CogT, P, T]]:
         r"""Turns a function into a :class:`.Command` and adds it to the bot.
 
         Parameters
         ----------
-        name: Optional[:class:`str`]
+        name: :class:`str` | None
             The name of the command to create, defaulting to the name of the function.
-        \*\*kwargs
-            The kwargs to pass into the :class:`.Command` constructor.
+        kwargs
+            The keyword arguments to pass into the :class:`.Command` constructor.
 
         Raises
         ------
@@ -481,10 +460,7 @@ class Bot(telegrampy.Client):
         """
 
         def deco(
-            func: Union[
-                Callable[Concatenate[CogT, ContextT, P], Coro[T]],
-                Callable[Concatenate[ContextT, P], Coro[T]],
-            ]
+            func: Callable[Concatenate[CogT, ContextT, P], Coro[T]] |Callable[Concatenate[ContextT, P], Coro[T]]
         ) -> Command[CogT, P, T]:
             ret = command(name, **kwargs)(func)
             self.add_command(ret)
@@ -530,7 +506,7 @@ class Bot(telegrampy.Client):
         self._commands[command.name] = command
         return command
 
-    def remove_command(self, name: str) -> Optional[Command]:
+    def remove_command(self, name: str) -> Command | None:
         """Removes a command by name.
 
         Parameters
@@ -555,9 +531,9 @@ class Bot(telegrampy.Client):
             type(error), error, error.__traceback__, file=sys.stderr
         )
 
-    async def sync(self):
+    async def sync(self) -> None:
         """|coro|
-        
+
         Sets the user-facing Telegram commands to the curently registered commands with the instance.
 
         Raises

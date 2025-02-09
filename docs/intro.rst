@@ -11,7 +11,7 @@ Installation
 ------------
 
 .. note::
-    telegram.py requires Python 3.7+
+    telegram.py requires Python 3.10 or higher
 
 Install via pip:
 

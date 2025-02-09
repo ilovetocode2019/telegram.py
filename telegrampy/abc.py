@@ -27,16 +27,19 @@ from __future__ import annotations
 import asyncio
 import io
 
-from typing import TYPE_CHECKING, Any, Generator, List, Optional, Union
+import types
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
+
     from .http import HTTPClient
     from .markup import *
     from .message import Message
     from .poll import Poll
     from .utils import ParseMode
 
-    ReplyMarkup = Union[InlineKeyboard, ReplyKeyboard, ReplyKeyboardRemove, ForceReply]
+    ReplyMarkup = InlineKeyboard | ReplyKeyboard | ReplyKeyboardRemove | ForceReply
 
 
 class Messageable:
@@ -63,8 +66,8 @@ class Messageable:
         self,
         content: str,
         *,
-        parse_mode: Optional[ParseMode] = None,
-        reply_markup: Optional[ReplyMarkup] = None
+        parse_mode: ParseMode | None = None,
+        reply_markup: ReplyMarkup | None = None
     ) -> Message:
         """|coro|
 
@@ -74,9 +77,9 @@ class Messageable:
         ----------
         content: :class:`str`
             The content of the message to send.
-        parse_mode: Optional[:class:`str`]
+        parse_mode: :class:`str` | None
             The parse mode of the message to send.
-        reply_markup: Optional[Union[:class:`InlineKeyboard`, :class:`ReplyKeyboard`, :class:`ReplyKeyboardRemove, :class:`ForceReply`]]
+        reply_markup: :class:`InlineKeyboard` | :class:`ReplyKeyboard` | :class:`ReplyKeyboardRemove` | :class:`ForceReply` | None
             The reply markup interface to send with the message.
 
         Returns
@@ -109,12 +112,12 @@ class Messageable:
 
     async def send_document(
         self,
-        document: Union[io.BytesIO, str],
+        document: io.BytesIO | str,
         *,
-        filename: Optional[str] = None,
-        caption: Optional[str] = None,
-        parse_mode: Optional[str] = None,
-        reply_markup: Optional[ReplyMarkup] = None
+        filename: str | None = None,
+        caption: str | None = None,
+        parse_mode: str | None = None,
+        reply_markup: ReplyMarkup | None = None
     ) -> Message:
         """|coro|
 
@@ -122,15 +125,15 @@ class Messageable:
 
         Parameters
         ----------
-        document: Union[:class:`io.BytesIO`, :class:`str`]
+        document: :class:`io.BytesIO` | :class:`str`
             The document to send. Either a file or the path to one.
-        filename: Optional[:class:`str`]
+        filename: :class:`str` | None
             The filename of the document.
-        caption: Optional[:class:`str`]
+        caption: :class:`str` | None
             The document's caption.
-        parse_mode: Optional[:class:`str`]
+        parse_mode: :class:`str` | None
             The parse mode for the caption.
-        reply_markup: Optional[Union[:class:`InlineKeyboard`, :class:`ReplyKeyboard`, :class:`ReplyKeyboardRemove, :class:`ForceReply`]]
+        reply_markup: :class:`InlineKeyboard` | :class:`ReplyKeyboard` | :class:`ReplyKeyboardRemove` | :class:`ForceReply` | None
             The reply markup interface to send with the message.
 
         Raises
@@ -164,12 +167,12 @@ class Messageable:
 
     async def send_photo(
         self,
-        photo: Union[io.BytesIO, str],
+        photo: io.BytesIO | str,
         *,
-        filename: Optional[str] = None,
-        caption: Optional[str] = None,
-        parse_mode: Optional[str] = None,
-        reply_markup: Optional[ReplyMarkup] = None
+        filename: str | None = None,
+        caption: str | None = None,
+        parse_mode: str | None = None,
+        reply_markup:  ReplyMarkup | None = None
     ) -> Message:
         """|coro|
 
@@ -177,15 +180,15 @@ class Messageable:
 
         Parameters
         ----------
-        photo: Union[:class:`io.BytesIO`, :class:`str`]
+        photo: :class:`io.BytesIO` | :class:`str`
             The photo to send. Either a file or the path to one.
-        filename: Optional[:class:`str`]
+        filename: :class:`str` | None
             The filename of the photo.
-        caption: Optional[:class:`str`]
+        caption: :class:`str` | None
             The caption for the photo.
-        parse_mode: Optional[:class:`str`]
+        parse_mode: :class:`str` | None
             The parse mode for the caption.
-        reply_markup: Optional[Union[:class:`InlineKeyboard`, :class:`ReplyKeyboard`, :class:`ReplyKeyboardRemove, :class:`ForceReply`]]
+        reply_markup: :class:`InlineKeyboard` | :class:`ReplyKeyboard` | :class:`ReplyKeyboardRemove` | :class:`ForceReply` | None
             The reply markup interface to send with the message.
 
         Raises
@@ -221,7 +224,7 @@ class Messageable:
     async def send_poll(
         self,
         question: str,
-        options: List[str]
+        options: list[str]
     ) -> Poll:
         """|coro|
 
@@ -231,9 +234,9 @@ class Messageable:
         ----------
         question: :class:`str`
             The question of the poll.
-        options: List[:class:`str`]
+        options: list[:class:`str`]
             The options in the poll.
-        reply_markup: Optional[Union[:class:`InlineKeyboard`, :class:`ReplyKeyboard`, :class:`ReplyKeyboardRemove, :class:`ForceReply`]]
+        reply_markup: :class:`InlineKeyboard` | :class:`ReplyKeyboard` | :class:`ReplyKeyboardRemove | :class:`ForceReply` | None
             The reply markup interface to send with the message.
 
         Returns
@@ -288,7 +291,7 @@ class Messageable:
 
 
 class MessageableAction:
-    def __init__(self, messageable: Messageable, action: str):
+    def __init__(self, messageable: Messageable, action: str) -> None:
         self.messageable = messageable
         self.action = action
 
@@ -307,14 +310,13 @@ class MessageableAction:
         )
         return sender.__await__()
 
-    def __enter__(self) -> None:
-        self.task = self.messageable._http_client.loop.create_task(self.action_loop())
- 
-    def __exit__(self, *args: List[Any]) -> None:
-        self.task.cancel()
-
     async def __aenter__(self) -> None:
-        self.__enter__()
+        self.task: asyncio.Task = self.messageable._http_client.loop.create_task(self.action_loop())
 
-    async def __aexit__(self, *args: List[Any]) -> None:
-        self.__exit__()
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: types.TracebackType | None
+    ) -> None:
+        self.task.cancel()

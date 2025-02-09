@@ -30,11 +30,7 @@ import io
 from .abc import Messageable
 from .mixins import Hashable
 
-from typing import (
-    TYPE_CHECKING,
-    Optional,
-    Union,
-)
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .http import HTTPClient
@@ -63,7 +59,7 @@ class PartialChat(Messageable, Hashable):
         The given ID of the partial chat.
     """
 
-    def __init__(self, http: HTTPClient, chat_id: int):
+    def __init__(self, http: HTTPClient, chat_id: int) -> None:
         self._http: HTTPClient = http
         self.id: int = chat_id
 
@@ -111,17 +107,18 @@ class PartialChat(Messageable, Hashable):
         """
 
         from .member import Member
+
         result = await self._http.get_chat_member(chat_id=self.id, user_id=user_id)
         return Member(self._http, result, chat=self)
 
-    async def set_photo(self, photo: Optional[Union[io.BytesIO, str]]) -> None:
+    async def set_photo(self, photo: io.BytesIO | str | None) -> None:
         """|coro|
 
         Sets the photo for the chat. This does not work in private chats.
 
         Parameters
         ----------
-        photo: Union[:class:`io.BytesIO`, :class:`str`]
+        photo: :class:`io.BytesIO` | :class:`str`
             The new profile photo for the chat. Pass :class:`None` to clear.
         """
 
@@ -154,7 +151,7 @@ class PartialChat(Messageable, Hashable):
 
         await self._http.set_chat_title(chat_id=self.id, title=title)
 
-    async def set_description(self, description: Optional[str]) -> None:
+    async def set_description(self, description: str | None) -> None:
         """|coro|
 
         Changes the description of the chat.
@@ -241,26 +238,26 @@ class Chat(PartialChat):
         The ID of the chat.
     type: :class:`str`
         The type of the chat. Can be "private", "group", "supergroup", or "channel".
-    title: Optional[:class:`str`]
+    title: :class:`str` | None
         The title of the chat, if applicable..
-    username: Optional[:class:`str`]
+    username: :class:`str` | None
         The username of the chat, if applicable.
-    first_name: Optional[:class:`str`]
+    first_name: :class:`str` | None
         The first name of the user, if applicable.
-    last_name: Optional[:class:`str`]
+    last_name: :class:`str` | None
         The last name of the user, if applicable.
-    is_forum: :class:`bool`
+    is_forum: :class:`str` | None
         Whether the chat is set up as a forum.
     """
 
-    def __init__(self, http: HTTPClient, data: ChatPayload):
+    def __init__(self, http: HTTPClient, data: ChatPayload) -> None:
         self._http: HTTPClient = http
         self.id: int = data["id"]
         self.type: str = data["type"]
-        self.title: Optional[str] = data.get("title")
-        self.username: Optional[str] = data.get("username")
-        self.first_name: Optional[str] = data.get("first_name")
-        self.last_name: Optional[str] = data.get("last_name")
+        self.title: str | None = data.get("title")
+        self.username: str | None = data.get("username")
+        self.first_name: str | None = data.get("first_name")
+        self.last_name: str | None = data.get("last_name")
         self.is_forum: bool = data.get("is_forum", False)
 
     def __str__(self) -> str:
@@ -273,7 +270,7 @@ class Chat(PartialChat):
         if self.title:
             return self.title
         else:
-            return f"{self.first_name} {self.last_name}" if self.last_name else self.first_name
+            return f"{self.first_name} {self.last_name}" if self.last_name else self.first_name # type: ignore
 
 class ChatInvite:
     """Represents an invite to a chat in the form of a link.
@@ -290,34 +287,34 @@ class ChatInvite:
         Whether this is the primary link for the chat.
     is_revoked: :class:`bool`
         Whether the link has been revoked.
-    name: Optional[:class:`bool`]
+    name: :class:`str` | None
         The name of the invite link.
-    expire_date: Optional[:class:`datetime.datetime`]
+    expire_date: :class:`datetime.datetime` | None
         The time that the link will expire or the time it expired at if it already has.
-    member_limit: Optional[:class:`int`]
+    member_limit: :class:`int` | None
         The maxmimum number of users that can be simultaneous chat members, by joining through this link.
-    pending_join_request_count: Optional[:class:`int`]
+    pending_join_request_count: :class:`int` | None
         The number of pending join requests for users of the link.
-    subscription_period: Optional[class:`int`]
+    subscription_period: ;class:`int` | None
         The number of seconds the subscription will be active for before the next payment
-    subscription_price: Optional[:class:`int`]
+    subscription_price: :class:`int` | None
         The number of stars a chat member must pay initally and after each following subscription period.
     """
 
-    def __init__(self, http: HTTPClient, data: ChatInviteLinkPayload):
+    def __init__(self, http: HTTPClient, data: ChatInviteLinkPayload) -> None:
         self._http: HTTPClient = http
         self.link: str = data["invite_link"]
         self.creator: User = User(http, data["creator"])
         self.creates_join_request: bool = data.get("creates_join_request", False)
         self.is_primary: bool = data.get("is_primary", False)
         self.is_revoked: bool = data.get("is_revoked", False)
-        self.name: Optional[str] = data.get("name")
-        self.expire_date: Optional[datetime.datetime] = (
+        self.name: str | None = data.get("name")
+        self.expire_date: datetime.datetime | None = (
             datetime.datetime.fromtimestamp(data["expire_date"], tz=datetime.timezone.utc)
             if "expire_date" in data
             else None
         )
-        self.member_limit: Optional[int] = data.get("member_limit")
-        self.pending_join_request_count: Optional[int] = data.get("pending_join_request_count")
-        self.subscription_period: Optional[int] = data.get("subscription_period")
-        self.subscription_price: Optional[int] = data.get("subscription_price")
+        self.member_limit: int | None = data.get("member_limit")
+        self.pending_join_request_count: int | None = data.get("pending_join_request_count")
+        self.subscription_period: int | None = data.get("subscription_period")
+        self.subscription_price: int | None = data.get("subscription_price")

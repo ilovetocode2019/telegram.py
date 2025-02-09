@@ -29,7 +29,7 @@ import io
 import json
 import logging
 import sys
-from typing import TYPE_CHECKING, Any, List, Literal, TypeVar, Coroutine, Optional, Dict
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import aiohttp
 
@@ -37,6 +37,8 @@ from . import __version__, errors
 from .markup import InlineKeyboardState
 
 if TYPE_CHECKING:
+    from collections.abc import Coroutine
+
     from .types.chat import Chat as ChatPayload
     from .types.member import Member as MemberPayload
     from .types.message import Message as MessagePayload
@@ -57,7 +59,7 @@ class Route:
 
     BASE_URL: str = "https://api.telegram.org/bot{0}/"
 
-    def __init__(self, method: HTTPMethod, url: str):
+    def __init__(self, method: HTTPMethod, url: str) -> None:
         self.method: HTTPMethod = method
         self.url: str = url
 
@@ -68,7 +70,7 @@ class Route:
 class HTTPClient:
     """Represents an HTTP client making requests to Telegram."""
 
-    def __init__(self, token: str, loop: asyncio.AbstractEventLoop):
+    def __init__(self, token: str, loop: asyncio.AbstractEventLoop) -> None:
         self._token: str = token
         self._base_url: str = Route.BASE_URL.format(self._token)
 
@@ -93,15 +95,15 @@ class HTTPClient:
         url = route.url
         method = route.method
 
-        resp: Optional[aiohttp.ClientResponse] = None
-        data: Optional[Dict[str, Any]] = None
+        resp: aiohttp.ClientResponse | None = None
+        data: dict[str, Any] | None = None
 
         # Try a request 5 times before dropping it
         for tries in range(5):
             log.debug(f"Requesting to {method}: {url} with {kwargs.get('json', {})} (Attempt {tries+1})")
 
             try:
-                async with self.session.request(method, url, timeout=30, **kwargs) as resp:
+                async with self.session.request(method, url, timeout=aiohttp.ClientTimeout(30), **kwargs) as resp:
                     # Telegram docs say all responses will have json
                     data = await resp.json()
 
@@ -170,9 +172,9 @@ class HTTPClient:
         self,
         chat_id: int,
         content: str,
-        parse_mode: Optional[str],
-        reply_markup: Optional[Dict[str, Any]],
-        reply_message_id: Optional[int] = None,
+        parse_mode: str | None,
+        reply_markup:dict[str, Any] | None,
+        reply_message_id: int | None = None,
     ) -> MessagePayload:
         """Sends a message to a chat."""
 
@@ -194,8 +196,8 @@ class HTTPClient:
         chat_id: int,
         message_id: int,
         content: str,
-        parse_mode: Optional[str]
-    ) -> Optional[MessagePayload]:
+        parse_mode: str | None
+    ) -> MessagePayload | None:
         """Edits a message."""
 
         url = self._base_url + "editMessageText"
@@ -229,10 +231,10 @@ class HTTPClient:
         self,
         chat_id: int,
         file: io.BytesIO,
-        filename: Optional[str],
-        caption: Optional[str],
-        parse_mode: Optional[str],
-        reply_markup: Optional[Dict[str, Any]]
+        filename: str | None,
+        caption: str | None,
+        parse_mode: str | None,
+        reply_markup: dict[str, Any] | None
     ) -> MessagePayload:
         """Sends a photo to a chat."""
 
@@ -256,10 +258,10 @@ class HTTPClient:
         self,
         chat_id: int,
         file: io.BytesIO,
-        filename: Optional[str],
-        caption: Optional[str],
-        parse_mode: Optional[str],
-        reply_markup: Optional[Dict[str, Any]]
+        filename: str | None,
+        caption: str | None,
+        parse_mode: str | None,
+        reply_markup: dict[str, Any] | None
     ) -> MessagePayload:
         """Sends a document to a chat."""
 
@@ -283,7 +285,7 @@ class HTTPClient:
         self,
         chat_id: int,
         question: str,
-        options: List[str]
+        options: list[str]
     ) -> PollPayload:
         """Sends a poll to a chat."""
 
@@ -341,11 +343,11 @@ class HTTPClient:
         data = {"chat_id": chat_id, "title": title}
         response = await self.request(Route("POST", url), json=data)
 
-    async def set_chat_description(self, chat_id: int, description: Optional[str]) -> None:
+    async def set_chat_description(self, chat_id: int, description: str | None) -> None:
         """Sets the description of a chat."""
 
         url = self._base_url + "setChatDescription"
-        data: Dict[str, Any] = {"chat_id": chat_id}
+        data: dict[str, Any] = {"chat_id": chat_id}
 
         if description:
             data["description"] = description
@@ -411,11 +413,11 @@ class HTTPClient:
 
     async def get_updates(
         self,
-        offset: Optional[int] = None,
+        offset: int | None = None,
         limit: int = 100,
         timeout: int = 0,
-        allowed_updates: Optional[List[str]] = None
-    ) -> List[Dict[str, Any]]:
+        allowed_updates: list[str] | None = None
+    ) -> list[dict[str, Any]]:
         """Fetches the new updates for the bot."""
 
         url = self._base_url + "getUpdates"
@@ -424,11 +426,7 @@ class HTTPClient:
 
         return response["result"]
 
-    async def set_my_name(
-        self,
-        name: Optional[str],
-        language_code: Optional[str]
-    ) -> None:
+    async def set_my_name(self, name: str | None, language_code: str | None) -> None:
         """Changes the name of the bot."""
 
         url = self._base_url + "setMyName"
@@ -439,11 +437,7 @@ class HTTPClient:
 
         await self.request(Route("POST", url), json=data)
 
-    async def set_my_description(
-        self,
-        description: Optional[str],
-        language_code: Optional[str]
-    ) -> None:
+    async def set_my_description(self, description: str | None, language_code: str | None) -> None:
         """Changes the full description of the bot."""
 
         url = self._base_url + "setMyDescription"
@@ -454,11 +448,7 @@ class HTTPClient:
 
         await self.request(Route("POST", url), json=data)
 
-    async def set_my_short_description(
-        self,
-        short_description: Optional[str],
-        language_code: Optional[str]
-    ) -> None:
+    async def set_my_short_description(self, short_description: str | None, language_code: str | None) -> None:
         """Changes the short description of the bot."""
 
         url = self._base_url + "setMyShortDescription"
@@ -469,13 +459,9 @@ class HTTPClient:
 
         await self.request(Route("POST", url), json=data)
 
-    async def set_my_commands(
-        self,
-        commands: List[Dict[str, str]],
-        language_code: Optional[str] = None
-    ) -> None:
+    async def set_my_commands(self, commands: list[dict[str, Any]], language_code: str | None = None) -> None:
         url = self._base_url + "setMyCommands"
-        data: Dict[str, Any] = {"commands": commands}
+        data: dict[str, Any] = {"commands": commands}
 
         if language_code:
             data["language_code"] = language_code
@@ -485,13 +471,13 @@ class HTTPClient:
     async def answer_callback_query(
         self,
         callback_query_id: str,
-        text: Optional[str],
-        show_alert: Optional[bool],
-        url: Optional[str],
-        cache_time: Optional[int]
+        text: str | None,
+        show_alert: bool,
+        url: str | None,
+        cache_time: int | None
     ) -> None:
         route = Route("POST", self._base_url + "answerCallbackQuery")
-        data: Dict[str, Any] = {"callback_query_id": callback_query_id}
+        data: dict[str, Any] = {"callback_query_id": callback_query_id}
 
         if text is not None:
             data["text"] = text

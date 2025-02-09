@@ -24,7 +24,7 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import aiohttp
@@ -43,11 +43,11 @@ class HTTPException(TelegramException):
     ----------
     response: :class:`aiohttp.ClientResponse`
         The response for the request that failed.
-    messsage: Optional[:class:`str`]
+    messsage: :class:`str` | None
        The message for the request that failed.
     """
 
-    def __init__(self, response: aiohttp.ClientResponse, message: Optional[str]):
+    def __init__(self, response: aiohttp.ClientResponse, message: str | None) -> None:
         self.response = response
         self.message = message
         super().__init__(f"{response.status} {message}")

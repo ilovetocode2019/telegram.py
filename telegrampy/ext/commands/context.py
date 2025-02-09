@@ -24,7 +24,7 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, Generic, List, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from telegrampy.abc import Messageable
 
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     from .bot import Bot
     from .core import Command
 
-    ReplyMarkup = Union[InlineKeyboard, ReplyKeyboard, ReplyKeyboardRemove, ForceReply]
+    ReplyMarkup = InlineKeyboard | ReplyKeyboard | ReplyKeyboardRemove | ForceReply
 
 BotT = TypeVar("BotT", bound="Bot")
 
@@ -47,11 +47,11 @@ class Context(Messageable, Generic[BotT]):
 
     Attributes
     ----------
-    bot: :class:`telegrampy.ext.commands.Bot`
+    bot: :class:`.Bot`
         The bot that created the context.
     message: :class:`telegrampy.Message`
         The message the invoked the command.
-    command: :class:`telegrampy.Command`
+    command: :class:`.Command`
         The command that is being invoked.
     invoked_with: :class:`str`
         The text that triggered the invocation.
@@ -64,7 +64,7 @@ class Context(Messageable, Generic[BotT]):
     args: :class:`list`
         The arguments passed into the command.
     kwargs: :class:`dict`
-        The kwargs passed into the command.
+        The keyword arguments passed into the command.
     """
 
     def __init__(
@@ -72,32 +72,32 @@ class Context(Messageable, Generic[BotT]):
         *,
         bot: BotT,
         message: Message,
-        command: Optional[Command],
+        command: Command | None,
         invoked_with: str,
         chat: Chat,
         author: User,
-        args: Optional[List[Any]] = None,
-        kwargs: Optional[Dict[str, Any]] = None
-    ):
+        args: list[Any] | None = None,
+        kwargs: dict[str, Any] | None = None
+    ) -> None:
         self.bot: BotT = bot
         self.message: Message = message
-        self.command: Optional[Command] = command
+        self.command: Command | None = command
         self.invoked_with: str = invoked_with
         self.chat: Chat = chat
         self.author: User = author
-        self.args: List[Any] = args or []
-        self.kwargs: Dict[str, Any] = kwargs or {}
-        self.command_failed: Optional[bool] = None
+        self.args: list[Any] = args if args is not None else []
+        self.kwargs: dict[str, Any] = kwargs if kwargs is not None else {}
+        self.command_failed: bool | None = None
 
     @property
-    def _chat_id(self):
+    def _chat_id(self) -> int:
         return self.chat.id
 
     @property
-    def _http_client(self):
+    def _http_client(self) -> HTTPClient:
         return self.bot.http
 
-    async def reply(self, content: str, *, parse_mode: Optional[ParseMode] = None, reply_markup: Optional[ReplyMarkup] = None) -> Message:
+    async def reply(self, content: str, *, parse_mode: ParseMode | None = None, reply_markup: ReplyMarkup | None = None) -> Message:
         """|coro|
 
         Replys to the message.
@@ -106,9 +106,9 @@ class Context(Messageable, Generic[BotT]):
         ----------
         content: :class:`str`
             The content of the message to send.
-        parse_mode: Optional[:class:`str`]
+        parse_mode: :class:`str` | None
             The parse mode of the message to send.
-        reply_markup: Optional[Union[:class:`InlineKeyboard`, :class:`ReplyKeyboard`, :class:`ReplyKeyboardRemove, :class:`ForceReply`]]
+        reply_markup: :class:`InlineKeyboard` | :class:`ReplyKeyboard` | :class:`ReplyKeyboardRemove` | :class:`ForceReply` | None
             The reply markup interface to send with the message.
 
         Returns

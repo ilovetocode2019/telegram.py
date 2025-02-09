@@ -28,7 +28,7 @@ import asyncio
 import logging
 import sys
 import traceback
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, Optional, Tuple, TypeVar
+from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar
 
 from .chat import Chat, PartialChat
 from .errors import InvalidToken, Conflict
@@ -37,15 +37,13 @@ from .markup import CallbackQuery, InlineKeyboard
 from .member import MemberUpdated
 from .message import Message
 from .poll import Poll, PollAnswer
-from .user import User
+from .user import ClientUser
 
 if TYPE_CHECKING:
-    from typing_extensions import ParamSpec
+    from collections.abc import Callable, Coroutine
 
     P = ParamSpec("P")
-
-    T = TypeVar('T')
-
+    T = TypeVar("T")
     Coro = Coroutine[Any, Any, T]
     CoroFunc = Callable[..., Coro[Any]]
 
@@ -59,36 +57,36 @@ class Client:
     ----------
     token: :class:`str`
         The Telegram API token to authenticate the bot with.
-    loop: Optional[:class:`asyncio.BaseEventLoop`]
+    loop: :class:`asyncio.AbstractEventLoop` | None
         The event loop to run the bot on. Uses :func:`asyncio.get_event_loop` if none is specified.
-    timeout: Optional[:class:`int`]
+    timeout: :class:`int` | None
         The timeout in seconds for long polling. Defaults to 10.
 
     Attributes
     ----------
-    loop: :class:`asyncio.BaseEventLoop`
+    loop: :class:`asyncio.AbstractEventLoop`
         The event loop that the bot is running on.
     """
 
-    def __init__(self, token: str, **options: Any):
+    def __init__(self, token: str, **options: Any) -> None:
         self.loop: asyncio.AbstractEventLoop = options.get("loop") or asyncio.get_event_loop()
         self.http: HTTPClient = HTTPClient(token=token, loop=self.loop)
 
         self._running: bool = False
-        self._last_update_id: Optional[int] = None
+        self._last_update_id: int | None = None
         self._timeout: int = options.get("timeout") or 10
 
-        self._listeners: Dict[str, List[CoroFunc]] = {}
-        self._waiting_for: Dict[str, List[Tuple[asyncio.Future, Callable[..., bool]]]] = {}
+        self._listeners: dict[str, list[CoroFunc]] = {}
+        self._waiting_for: dict[str, list[tuple[asyncio.Future, Callable[..., bool]]]] = {}
 
-    async def get_me(self) -> User:
+    async def get_me(self) -> ClientUser:
         """|coro|
 
         Fetches the authenticated bot account.
 
         Returns
         -------
-        :class:`telegrampy.User`:
+        :class:`telegrampy.ClientUser`:
             The user that was fetched.
 
         Raises
@@ -98,7 +96,7 @@ class Client:
         """
 
         result = await self.http.get_me()
-        return User(self.http, result)
+        return ClientUser(self.http, result)
 
     async def get_chat(self, chat_id: int) -> Chat:
         """|coro|
@@ -124,12 +122,7 @@ class Client:
         result = await self.http.get_chat(chat_id=chat_id)
         return Chat(self.http, result)
 
-    async def set_name(
-        self,
-        name: Optional[str],
-        *,
-        language_code: Optional[str] = None
-    ) -> None:
+    async def set_name(self, name: str | None, *, language_code: str | None = None) -> None:
         """|coro|
 
         Sets the description that is shown for the bot.
@@ -144,9 +137,9 @@ class Client:
 
     async def set_description(
         self,
-        description: Optional[str],
+        description: str | None,
         *,
-        language_code: Optional[str] = None,
+        language_code: str | None = None,
         short: bool = False
     ) -> None:
         """|coro|
@@ -217,7 +210,7 @@ class Client:
 
                 tries = 0
 
-    async def _handle_update(self, update: Dict[str, Any]) -> None:
+    async def _handle_update(self, update: dict[str, Any]) -> None:
         update_id = update["update_id"]
 
         self.dispatch("raw_update", update)
@@ -313,7 +306,8 @@ class Client:
         for handler in handlers:
             self.loop.create_task(self._use_event_handler(handler, *args))
 
-    async def wait_for(self, event: str, *, check: Optional[Callable[..., bool]] = None, timeout: Optional[float] = None):
+    # TODO: Add overloads
+    async def wait_for(self, event: str, *, check: Callable[..., bool] | None = None, timeout: float | None = None) -> Any:
         """|coro|
 
         Waits for an event.
@@ -354,14 +348,14 @@ class Client:
         setattr(self, func.__name__, func)
         return func
 
-    def add_listener(self, func: CoroFunc, name: Optional[str] = None) -> None:
+    def add_listener(self, func: CoroFunc, name: str | None = None) -> None:
         """Registers a function as a listener.
 
         Parameters
         ----------
         func:
             The function to register.
-        name: Optional[:class:`str`]
+        name: :class:`str` | None
             The name of the event to register the function as.
         """
 
@@ -385,12 +379,12 @@ class Client:
             if func in self._listeners[event]:
                 self._listeners[event].remove(func)
 
-    def listen(self, name: Optional[str] = None) -> Callable[[CoroFunc], CoroFunc]:
+    def listen(self, name: str | None = None) -> Callable[[CoroFunc], CoroFunc]:
         """A decorator that registers a function as a listener.
 
         Parameters
         ---------
-        name: Optional[:class:`str`]
+        name: :class:`str` | None
             The name of the event to register the function as.
         """
 

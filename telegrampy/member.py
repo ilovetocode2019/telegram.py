@@ -26,7 +26,7 @@ SOFTWARE.
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from .chat import PartialChat, Chat, ChatInvite
 from .user import User
@@ -44,7 +44,7 @@ class Member(User):
     ----------
     status: :class:`str`
         The status or role of the user in the chat.
-    chat: Union[:class:`telegrampy.PartialChat`, :class:`telegrampy.Chat`]
+    chat: :class:`telegrampy.PartialChat` | :class:`telegrampy.Chat`
         The chat that the user belongs to.
     id: :class:`int`
         The ID of the user.
@@ -52,29 +52,19 @@ class Member(User):
         If the user is a bot.
     first_name: :class:`str`
         The first name of the user, if exists.
-    last_name: Optional[:class:`str`]
+    last_name: :class:`str` | None
         The last name of the user, if exists.
-    username: Optional[:class:`str`]
+    username: :class:`str` | None
         The username of the user, if applicable.
-    language_code: Optional[:class:`str`]
+    language_code: :class:`str` | None
         The IETF language tag for the user's language, if applicable.
     added_to_attachment_menu: :class:`bool`
         Whether the logged in bot is added to this user's attachment menu.  
     is_premium: :class:`bool`
         Whether the user is subscribed to Telegram Premium.
-    can_join_groups: :class:`bool`
-        Whether the logged in bot can join groups. Only returned in :class:`telegrampy.Client.get_me`.
-    can_read_all_group_messages: :class:`bool`
-        Whether privacy mode is disabled for the logged in bot. Only returned in :class:`telegrampy.Client.get_me`.
-    supports_inline_queries: :class:`bool`
-        Whether the logged in bot has inline queries enabled. Only returned in :class:`telegrampy.Client.get_me`.
-    can_connect_to_business: :class:`bool`
-        Whether the logged in bot can be connected to a Telegram business account to receive its messages.
-    has_main_web_app: :class:`bool`
-        Whether the logged in bot has a main web app.
     """
 
-    def __init__(self, http: HTTPClient, data: MemberPayload, *, chat: PartialChat):
+    def __init__(self, http: HTTPClient, data: MemberPayload, *, chat: PartialChat) -> None:
         super().__init__(http, data["user"])
         self.status: str = data.get("status")
         self.chat: PartialChat = chat
@@ -95,7 +85,7 @@ class MemberUpdated:
         The affected chat member, prior to the change.
     new_member: :class:`telegrampy.Member`
         The affected chat member, after the change.
-    invite_link: Optional[Any]
+    invite_link: :class:`ChatInviteLink` | None
         The invite link used to join the chat, if applicable.
     via_join_request: :class:`bool`
         Whether the user joined the chat with a direct join request.
@@ -103,7 +93,7 @@ class MemberUpdated:
         Whether the the user joined the chat with a chat folder invite link.
     """
 
-    def __init__(self, http: HTTPClient, data: MemberUpdatedPayload):
+    def __init__(self, http: HTTPClient, data: MemberUpdatedPayload) -> None:
         self._http: HTTPClient = http
 
         self.chat: Chat = Chat(http, data["chat"])
@@ -116,6 +106,11 @@ class MemberUpdated:
 
         self.old_member: Member = Member(http, data["old_chat_member"], chat=self.chat)
         self.new_member: Member = Member(http, data["new_chat_member"], chat=self.chat)
-        self.invite_link: Optional[ChatInvite] = ChatInvite(http, data["chat_invite_link"]) if "chat_invite_link" in data else None
+
+        self.invite_link: ChatInvite | None = ChatInvite(
+            http,
+            data["chat_invite_link"]
+        ) if "chat_invite_link" in data else None
+
         self.via_join_request: bool = data.get("via_join_request", False)
         self.via_chat_folder_link: bool = data.get("via_chat_folder_link", False)

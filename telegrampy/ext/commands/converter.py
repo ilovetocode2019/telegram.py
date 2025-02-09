@@ -52,12 +52,12 @@ class ChatConverter(Converter):
 
     async def convert(self, ctx: Context, argument: str) -> Chat:
         try:
-            argument = int(argument)
+            chat_id = int(argument)
         except ValueError:
-            if not argument.startswith("@"):
-                argument = f"@{argument}"
+            chat_id = argument if argument.startswith("@") else f"@{argument}"
+
         try:
-            return await ctx.bot.get_chat(argument)
+            return await ctx.bot.get_chat(chat_id)
         except BadRequest as exc:
             raise BadArgument(f"Chat '{argument}' is not found") from exc
         except HTTPException as exc:
@@ -69,11 +69,12 @@ class MemberConverter(Converter):
 
     async def convert(self, ctx: Context, argument: str) -> Member:
         try:
-            argument = int(argument)
+            user_id = int(argument)
         except ValueError:
             raise BadArgument(f"User '{argument}' is not an ID")
+
         try:
-            return await ctx.chat.get_member(argument)
+            return await ctx.chat.get_member(user_id)
         except BadRequest as exc:
             raise BadArgument(f"User '{argument}' not found") from exc
         except HTTPException as exc:
