@@ -25,9 +25,10 @@ SOFTWARE.
 from __future__ import annotations
 
 import inspect
+import sys
 import types
 from collections.abc import Callable, Coroutine
-from typing import TYPE_CHECKING, Any, Concatenate, Generic, Literal, ParamSpec, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Concatenate, ForwardRef, Generic, Literal, ParamSpec, TypeVar, Union
 
 from .context import Context
 from .errors import *
@@ -172,7 +173,7 @@ class Command(Generic[CogT, P, T]):
             except CommandError:
                 raise
             except Exception as exc:
-                name = getattr(converter, "name", converter.__class__.__name__)
+                name = getattr(converter, "__name__", converter.__class__.__name__)
                 raise BadArgument(f"Converting to '{name}' failed for parameter '{param.name}'") from exc
 
     async def _parse_argument(self, ctx: Context, argument: str | None, param: inspect.Parameter) -> Any:
@@ -366,18 +367,26 @@ def is_not_private_chat() -> Callable[[Command | CoroFunc], Command | CoroFunc]:
 
 
 def get_parameters(func: Callable[..., Any], *, ignored: Literal[1, 2] | None = None) -> dict[str, inspect.Parameter]:
-    signature = inspect.signature(func)
-    params = {}
+    if sys.version_info >= (3, 14):
+        signature = inspect.signature(func, annotation_format=inspect.Format.FORWARDREF) # the annotations for ignored parameters may be undefined
+    else:
+        signature = inspect.signature(func)
 
     if ignored is None:
         ignored = 2 if func.__qualname__ != func.__name__ and not func.__qualname__.rpartition(".")[0].endswith("<locals>") else 1
 
     if len(signature.parameters) < ignored:
-        raise TypeError(f"Command callback must take at least {ignored} parameter(s)")
+        raise TypeError(f"Callback with at least {ignored} parameter(s) expected, but given callback only takes {len(signature.parameters)}.")
+
+    params = {}
 
     for name, value in list(signature.parameters.items())[ignored:]:
-        if isinstance(value.annotation, str): # Support for PEP-563
+        if isinstance(value.annotation, ForwardRef):
+            # this will certainly fail if the ForwardRef was created by calling __annotate__(2)
+            value = value.replace(annotation=eval(value.annotation.__forward_arg__, func.__globals__))
+        elif isinstance(value.annotation, str):
             value = value.replace(annotation=eval(value.annotation, func.__globals__))
+
         params[name] = value
 
-    return params 
+    return params
