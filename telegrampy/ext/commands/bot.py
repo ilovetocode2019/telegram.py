@@ -24,7 +24,7 @@ SOFTWARE.
 
 from __future__ import annotations
 
-import importlib
+import importlib.util
 import sys
 import traceback
 import types
@@ -223,10 +223,12 @@ class Bot(telegrampy.Client):
         if name in self._extensions:
             raise errors.ExtensionAlreadyLoaded(name)
 
+
+        if importlib.util.find_spec(name) is None:
+            raise errors.ExtensionNotFound(name)
+
         try:
             lib = importlib.import_module(name)
-        except ModuleNotFoundError:
-            raise errors.ExtensionNotFound(name) from None
         except Exception as exc:
             raise errors.ExtensionFailed(name, exc) from exc
 

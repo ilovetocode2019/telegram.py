@@ -133,7 +133,7 @@ class ExtensionFailed(ExtensionError):
     def __init__(self, name: str, original: Exception) -> None:
         self.name = name
         self.original = original
-        super().__init__(f"Extension raised an exception: {original.__class__.__name__}: {original}")
+        super().__init__(f"Extension {name} raised an exception: {original.__class__.__name__}: {original}")
 
 
 class UserInputError(CommandError):
