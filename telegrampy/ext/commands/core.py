@@ -28,7 +28,7 @@ import inspect
 import sys
 import types
 from collections.abc import Callable, Coroutine
-from typing import TYPE_CHECKING, Any, Concatenate, ForwardRef, Generic, Literal, ParamSpec, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Concatenate, ForwardRef, Generic, Literal, ParamSpec, TypeVar, Union, get_origin
 
 from .context import Context
 from .errors import *
@@ -178,7 +178,7 @@ class Command(Generic[CogT, P, T]):
 
     async def _parse_argument(self, ctx: Context, argument: str | None, param: inspect.Parameter) -> Any:
         name = getattr(param.annotation, "name", param.annotation.__class__.__name__)
-        origin = getattr(param.annotation, "__origin__", None)
+        origin = get_origin(param.annotation)
 
         if not argument:
             if param.default != param.empty:
