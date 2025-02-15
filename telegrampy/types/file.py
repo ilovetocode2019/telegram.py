@@ -24,27 +24,19 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, NotRequired, TypedDict
-
-if TYPE_CHECKING:
-    from .file import PhotoSize
+from typing import NotRequired, TypedDict
 
 
-class User(TypedDict):
-    id: int
-    is_bot: bool
-    first_name: str
-    last_name: NotRequired[str]
-    username: NotRequired[str]
-    language_code: NotRequired[str]
-    is_premium: NotRequired[bool]
-    can_join_groups: NotRequired[bool]
-    can_read_all_group_messages: NotRequired[bool]
-    supports_inline_queries: NotRequired[bool]
-    can_connect_to_business: NotRequired[bool]
-    has_main_web_app: NotRequired[bool]
+class File(TypedDict):
+    file_id: str
+    file_unique_id: str
+    file_size: NotRequired[int]
+    file_path: NotRequired[str]
 
 
-class UserProfilePhotos(TypedDict):
-    total_count: int
-    photos: list[list[PhotoSize]]
+class PhotoSize(TypedDict):
+    file_id: str
+    file_unique_id: str
+    width: int
+    height: int
+    file_size: NotRequired[int]

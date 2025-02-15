@@ -101,6 +101,9 @@ User
 .. autoclass:: ClientUser()
     :members:
 
+.. autoclass:: UserProfilePhotos()
+    :members:
+
 Member
 ~~~~~~
 
@@ -118,6 +121,15 @@ Poll
     :members:
 
 .. autoclass:: PollAnswer()
+    :members:
+
+Files
+-----
+
+.. autoclass:: File()
+    :members:
+
+.. autoclass:: PhotoSize()
     :members:
 
 Markup
@@ -146,6 +158,7 @@ Markup
 
 .. autoclass:: CallbackQuery
     :members:
+
 
 Exceptions
 ----------

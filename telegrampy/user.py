@@ -27,6 +27,8 @@ from __future__ import annotations
 import html
 from typing import TYPE_CHECKING
 
+from telegrampy.file import PhotoSize
+
 from .abc import Messageable
 from .mixins import Hashable
 from .utils import escape_markdown
@@ -34,7 +36,7 @@ from .utils import escape_markdown
 if TYPE_CHECKING:
     from .http import HTTPClient
     from .utils import ParseMode
-    from .types.user import User as UserPayload
+    from .types.user import User as UserPayload, UserProfilePhotos as UserProfilePhotosPayload
 
 
 class BaseUser(Hashable):
@@ -96,6 +98,20 @@ class BaseUser(Hashable):
         elif parse_mode == "MarkdownV2":
             return f"[{escape_markdown(text, version=2)}](tg://user?id={self.id})"
 
+    async def get_profile_photos(self, *, offset: int | None = None, limit: int = 100) -> UserProfilePhotos:
+        """Fetches the profile pictures for the user.
+
+        Parameters
+        ----------
+        :class:`int` | None
+            The sequential number of the first photo to be retrieved.
+            If unspecified, all photos will be retrieved.
+        limit: :class:`int`
+            The maximum number of photos to be retrieved. Defaults to and cannot be more than ``100``.
+        """
+        
+        result = await self._http.get_user_profile_photos(user_id=self.id, offset=offset, limit=limit)
+        return UserProfilePhotos(self._http, result)
 
 class User(BaseUser, Messageable):
     """Represents a Telegram user.
@@ -126,7 +142,7 @@ class User(BaseUser, Messageable):
         The last name of the user, if exists.
     username: :class:`str` | None
         The username of the user, if applicable.
-    language_code: ;class:`str` | None
+    language_code: :class:`str` | None
         The IETF language tag for the user's language, if applicable.
     added_to_attachment_menu: :class:`bool`
         Whether the logged in bot is added to this user's attachment menu.  
@@ -134,7 +150,13 @@ class User(BaseUser, Messageable):
         Whether the user is subscribed to Telegram Premium.
     """
 
-    pass
+    @property
+    def _chat_id(self) -> int:
+        return self.id
+
+    @property
+    def _http_client(self) -> HTTPClient:
+        return self._http
 
 
 class ClientUser(BaseUser):
@@ -166,7 +188,7 @@ class ClientUser(BaseUser):
         The last name of the user, if exists.
     username: :class:`str` | None
         The username of the user, if applicable.
-    language_code: ;class:`str` | None
+    language_code: :class:`str` | None
         The IETF language tag for the user's language, if applicable.
     added_to_attachment_menu: :class:`bool`
         Whether the logged in bot is added to this user's attachment menu.  
@@ -191,3 +213,20 @@ class ClientUser(BaseUser):
         self.supports_inline_queries: bool = data.get("supports_inline_queries", False)
         self.can_connect_to_business: bool = data.get("can_connect_to_business", False)
         self.has_main_web_app: bool = data.get("has_main_web_app", False)
+
+
+class UserProfilePhotos:
+    """Represents a collection of profile photos that belong to a user.
+
+    Attributes
+    ----------
+    total_count: :class:`int`
+        The total amount of profile photos the user has.
+    photos: list[list[:class:`.PhotoSize`]]
+        The photos that belong to the user. Each contained list contains one photo in up to four varying sizes.
+    """
+
+    def __init__(self, http: HTTPClient, data: UserProfilePhotosPayload) -> None:
+        self._http: HTTPClient = http
+        self.total_count: int = data["total_count"]
+        self.photos: list[list[PhotoSize]] = [[PhotoSize(http, photo) for photo in photos] for photos in data["photos"]]

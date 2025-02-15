@@ -40,10 +40,11 @@ if TYPE_CHECKING:
     from collections.abc import Coroutine
 
     from .types.chat import Chat as ChatPayload
+    from .types.file import File as FilePayload
     from .types.member import Member as MemberPayload
     from .types.message import Message as MessagePayload
     from .types.poll import Poll as PollPayload
-    from .types.user import User as UserPayload
+    from .types.user import User as UserPayload, UserProfilePhotos as UserProfilePhotosPayload
 
     T = TypeVar("T")
     Response = Coroutine[Any, Any, T]
@@ -167,6 +168,10 @@ class HTTPClient:
                 raise errors.ServerError(resp, description)
             else:
                 raise errors.HTTPException(resp, description)
+
+    async def fetch_file(self, file_path: str) -> bytes:
+        async with self.session.get(f"https://api.telegram.org/file/bot{self._token}/{file_path}") as resp:
+            return await resp.read()
 
     async def send_message(
         self,
@@ -302,6 +307,15 @@ class HTTPClient:
         data = {"chat_id": chat_id, "action": action}
         await self.request(Route("POST", url), json=data)
 
+    async def get_file(self, file_id: str) -> FilePayload:
+        """Gets basic information about a file to download it."""
+
+        url = self._base_url + "getFile"
+        data = {"file_id": file_id}
+        response = await self.request(Route("POST", url), json=data)
+
+        return response["result"]
+
     async def get_chat(self, chat_id: int) -> ChatPayload:
         """Fetches a chat."""
 
@@ -318,6 +332,20 @@ class HTTPClient:
         data = {"chat_id": chat_id, "user_id": user_id}
         response = await self.request(Route("GET", url), json=data)
 
+        return response["result"]
+
+    async def get_user_profile_photos(self, user_id: int, offset: int | None, limit: int | None) -> UserProfilePhotosPayload:
+        """Requests a list of profile photos for a user."""
+
+        url = self._base_url + "getUserProfilePhotos"
+        data = {"user_id": user_id}
+
+        if offset is not None:
+            data["offset"] = offset
+        if limit is not None:
+            data["limit"] = limit
+
+        response = await self.request(Route("GET", url), json=data)
         return response["result"]
 
     async def set_chat_photo(self, chat_id: int, photo: io.BytesIO) -> None:

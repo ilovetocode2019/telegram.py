@@ -20,6 +20,7 @@ from .abc import  *
 from .chat import *
 from .client import *
 from .errors import *
+from .file import *
 from .markup import *
 from .member import *
 from .message import *
