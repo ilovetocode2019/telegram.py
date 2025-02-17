@@ -29,16 +29,15 @@ import io
 import json
 import logging
 import sys
-from typing import TYPE_CHECKING, Any, Literal, TypeVar
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 
-from . import __version__, errors
+from . import __version__
+from .errors import ClientException, HTTPException, BadRequest, InvalidToken, Forbidden, Conflict, ServerError
 from .markup import InlineKeyboardState
 
 if TYPE_CHECKING:
-    from collections.abc import Coroutine
-
     from .types.chat import Chat as ChatPayload
     from .types.file import File as FilePayload
     from .types.member import Member as MemberPayload
@@ -46,144 +45,78 @@ if TYPE_CHECKING:
     from .types.poll import Poll as PollPayload
     from .types.user import User as UserPayload, UserProfilePhotos as UserProfilePhotosPayload
 
-    T = TypeVar("T")
-    Response = Coroutine[Any, Any, T]
-    HTTPMethod = Literal["GET", "POST", "HEAD", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE"]
-
 log: logging.Logger = logging.getLogger(__name__)
-
-user_agent: str = "TelegramBot (https://github.com/ilovetocode2019/telegram.py {0}) Python/{1[0]}.{1[1]} aiohttp/{2}"
-
-
-class Route:
-    """Represents a Telegram route"""
-
-    BASE_URL: str = "https://api.telegram.org/bot{0}/"
-
-    def __init__(self, method: HTTPMethod, url: str) -> None:
-        self.method: HTTPMethod = method
-        self.url: str = url
-
-    def __str__(self) -> str:
-        return f"{self.method}: {self.url}"
 
 
 class HTTPClient:
     """Represents an HTTP client making requests to Telegram."""
 
-    def __init__(self, token: str, loop: asyncio.AbstractEventLoop) -> None:
+    def __init__(
+        self,
+        *,
+        token: str,
+        loop: asyncio.AbstractEventLoop,
+        api_url: str,
+        is_local: bool,
+    ) -> None:
         self._token: str = token
-        self._base_url: str = Route.BASE_URL.format(self._token)
-
+        self._api_url: str = api_url
+        self.is_local: bool = is_local
         self.loop: asyncio.AbstractEventLoop = loop
-        self.user_agent: str = user_agent.format(__version__, sys.version_info, aiohttp.__version__)
+        self.user_agent: str = f"TelegramBot (https://github.com/ilovetocode2019/telegram.py {__version__}) Python/{sys.version_info[0]}.{sys.version_info[1]} aiohttp/{aiohttp.__version__}"
         self.session: aiohttp.ClientSession = aiohttp.ClientSession(loop=self.loop, headers={"User-Agent": self.user_agent})
-
         self.inline_keyboard_state: InlineKeyboardState = InlineKeyboardState(self)
 
-    async def request(self, route: Route, **kwargs: Any) -> Any:
-        """Make a request to a route.
-
-        All kwargs will be forwarded to
-        :meth:`aiohttp.ClientSession.request`.
-
-        Parameters
-        ----------
-        route: :class:`telegrampy.http.Route`
-            The route to make a request to.
-        """
-
-        url = route.url
-        method = route.method
-
-        resp: aiohttp.ClientResponse | None = None
-        data: dict[str, Any] | None = None
-
-        # Try a request 5 times before dropping it
+    async def request(self, route: str, **kwargs: Any) -> Any:
         for tries in range(5):
-            log.debug(f"Requesting to {method}: {url} with {kwargs.get('json', {})} (Attempt {tries+1})")
+            log.debug(f"Requesting to /{route} with payload {kwargs.get('json', {})} (Attempt {tries+1})")
 
-            try:
-                async with self.session.request(method, url, timeout=aiohttp.ClientTimeout(30), **kwargs) as resp:
-                    # Telegram docs say all responses will have json
-                    data = await resp.json()
+            async with self.session.post(f"{self._api_url}/bot{self._token}/{route}", **kwargs) as resp:
+                data = await resp.json()
 
-                    if not isinstance(data, dict):
-                        raise RuntimeError("Response from Telegram is not in JSON format.")
+                if data["ok"] is True:
+                    return data["result"]
 
-                    if 300 > resp.status >= 200:
-                        return data
+                description = data["description"]
+                parameters = data.get("parameters")
 
-                    # We are getting ratelimited
-                    if resp.status == 429:
-                        params = data.get("parameters")
-
-                        if not params:
-                            raise errors.HTTPException(resp, data.get("description"))
-
-                        retry_after = params.get("retry_after")
-
-                        # We didn't get a retry after, so raise an HTTPException
-                        if not retry_after:
-                            raise errors.HTTPException(resp, data.get("description"))
-
-                        log.warning(f"We are being ratelimited. Retrying in {retry_after} seconds.")
-
-                        await asyncio.sleep(retry_after)
-                        continue
-
-                    # Unauthorized
-                    if resp.status == 400:
-                        raise errors.BadRequest(resp, data.get("description"))
-                    elif resp.status == 401:
-                        raise errors.InvalidToken(resp, data.get("description"))
-                    # Forbidden
-                    elif resp.status == 403:
-                        raise errors.Forbidden(resp, data.get("description"))
-                    # Not found
-                    if resp.status == 404:
-                        raise errors.InvalidToken(resp, data.get("description"))
-                    # Conflict with other request
-                    elif resp.status == 409:
-                        raise errors.Conflict(resp, data.get("description"))
-                    # Some sort of internal Telegram error
-                    if resp.status >= 500:
-                        await asyncio.sleep((1 + tries) * 2)
-                        continue
-                    else:
-                        raise errors.HTTPException(resp, (data).get("description"))
-            except OSError as e:
-                # Connection reset by peer
-                if tries < 4 and e.errno in (54, 10054):
-                    await asyncio.sleep((1 + tries) * 2)
+                if parameters is not None and "retry_after" in parameters and tries < 4:
+                    log.warning(f"We are being ratelimited at /{route}. Retrying in {parameters['retry_after']} seconds.")
+                    await asyncio.sleep(parameters["retry_after"])
                     continue
-                raise
 
-        if resp is not None:
-            log.debug(f"Request to to {method}:{url} failed with status code {resp.status}")
-
-            description = data.get("description") if isinstance(data, dict) else data
-
-            if resp.status >= 500:
-                raise errors.ServerError(resp, description)
-            else:
-                raise errors.HTTPException(resp, description)
+                if resp.status == 400:
+                    raise BadRequest(resp, description)
+                elif resp.status in (401, 404):
+                    raise InvalidToken(resp, description)
+                elif resp.status == 403:
+                    raise Forbidden(resp, description)
+                elif resp.status == 409:
+                    raise Conflict(resp, description)
+                elif resp.status >= 500:
+                    raise ServerError(resp, description)
+                else:
+                    raise HTTPException(resp, description)
 
     async def fetch_file(self, file_path: str) -> bytes:
+        if self.is_local is True:
+            raise ClientException("Unable to download files from server in local mode.")
+
         async with self.session.get(f"https://api.telegram.org/file/bot{self._token}/{file_path}") as resp:
+            if resp.status != 200:
+                data = await resp.json()
+                raise HTTPException(resp, data["description"])
             return await resp.read()
 
     async def send_message(
         self,
+        *,
         chat_id: int,
         content: str,
         parse_mode: str | None,
         reply_markup:dict[str, Any] | None,
         reply_message_id: int | None = None,
     ) -> MessagePayload:
-        """Sends a message to a chat."""
-
-        url = self._base_url + "sendMessage"
         data = {"chat_id": chat_id, "text": content}
 
         if parse_mode is not None:
@@ -193,47 +126,34 @@ class HTTPClient:
         if reply_message_id is not None:
             data["reply_to_message_id"] = reply_message_id
 
-        response = await self.request(Route("POST", url), json=data)
-        return response["result"]
+        return await self.request("sendMessage", json=data)
 
     async def edit_message_content(
         self,
+        *,
         chat_id: int,
         message_id: int,
         content: str,
         parse_mode: str | None
     ) -> MessagePayload | None:
-        """Edits a message."""
-
-        url = self._base_url + "editMessageText"
         data = {"chat_id": chat_id, "message_id": message_id, "text": content}
 
         if parse_mode:
             data["parse_mode"] = parse_mode
 
-        response = await self.request(Route("POST", url), json=data)
+        return await self.request("editMessageText", json=data)
 
-        if "result" in response:
-            return response["result"]
-
-    async def delete_message(self, chat_id: int, message_id: int) -> None:
-        """Deletes a message."""
-
-        url = self._base_url + "deleteMessage"
+    async def delete_message(self, *, chat_id: int, message_id: int) -> None:
         data = {"chat_id": chat_id, "message_id": message_id}
-        await self.request(Route("POST", url), json=data)
+        await self.request("deleteMessage", json=data)
 
-    async def forward_message(self, chat_id: int, from_chat_id: int, message_id: int) -> MessagePayload:
-        """Forwards a message."""
-
-        url = self._base_url + "forwardMessage"
+    async def forward_message(self, *, chat_id: int, from_chat_id: int, message_id: int) -> MessagePayload:
         data = {"chat_id": chat_id, "from_chat_id": from_chat_id, "message_id": message_id}
-        response = await self.request(Route("POST", url), json=data)
-
-        return response["result"]
+        return await self.request("forwardMessage", json=data)
 
     async def send_photo(
         self,
+        *,
         chat_id: int,
         file: io.BytesIO,
         filename: str | None,
@@ -241,9 +161,6 @@ class HTTPClient:
         parse_mode: str | None,
         reply_markup: dict[str, Any] | None
     ) -> MessagePayload:
-        """Sends a photo to a chat."""
-
-        url = self._base_url + "sendPhoto"
         writer = aiohttp.FormData()
         writer.add_field("chat_id", str(chat_id))
         writer.add_field("photo", file, filename=filename)
@@ -255,12 +172,11 @@ class HTTPClient:
         if reply_markup is not None:
             writer.add_field("reply_markup", reply_markup)
 
-        response = await self.request(Route("POST", url), data=writer)
-
-        return response["result"]
+        return await self.request("sendPhoto", data=writer)
 
     async def send_document(
         self,
+        *,
         chat_id: int,
         file: io.BytesIO,
         filename: str | None,
@@ -268,9 +184,6 @@ class HTTPClient:
         parse_mode: str | None,
         reply_markup: dict[str, Any] | None
     ) -> MessagePayload:
-        """Sends a document to a chat."""
-
-        url = self._base_url + "sendDocument"
         writer = aiohttp.FormData()
         writer.add_field("chat_id", str(chat_id))
         writer.add_field("document", file, filename=filename)
@@ -282,62 +195,35 @@ class HTTPClient:
         if reply_markup is not None:
             writer.add_field("reply_markup", reply_markup)
 
-        response = await self.request(Route("POST", url), data=writer)
-
-        return response["result"]
+        return await self.request("sendDocument", data=writer)
 
     async def send_poll(
         self,
+        *,
         chat_id: int,
         question: str,
         options: list[str]
     ) -> PollPayload:
-        """Sends a poll to a chat."""
-
-        url = self._base_url + "sendPoll"
         data = {"chat_id": chat_id, "question": question, "options": json.dumps(options)}
-        response = await self.request(Route("POST", url), json=data)
+        return await self.request("sendPoll", json=data)
 
-        return response["result"]
-
-    async def send_chat_action(self, chat_id: int, action: str) -> None:
-        """Sends a chat action to a chat."""
-
-        url = self._base_url + "sendChatAction"
+    async def send_chat_action(self, *, chat_id: int, action: str) -> None:
         data = {"chat_id": chat_id, "action": action}
-        await self.request(Route("POST", url), json=data)
+        await self.request("sendChatAction", json=data)
 
-    async def get_file(self, file_id: str) -> FilePayload:
-        """Gets basic information about a file to download it."""
-
-        url = self._base_url + "getFile"
+    async def get_file(self, *, file_id: str) -> FilePayload:
         data = {"file_id": file_id}
-        response = await self.request(Route("POST", url), json=data)
+        return await self.request("getFile", json=data)
 
-        return response["result"]
-
-    async def get_chat(self, chat_id: int) -> ChatPayload:
-        """Fetches a chat."""
-
-        url = self._base_url + "getChat"
+    async def get_chat(self, *, chat_id: int) -> ChatPayload:
         data = {"chat_id": chat_id}
-        response = await self.request(Route("GET", url), json=data)
+        return await self.request("getChat", json=data)
 
-        return response["result"]
-
-    async def get_chat_member(self, chat_id: int, user_id: int) -> MemberPayload:
-        """Fetches a member from a chat."""
-
-        url = self._base_url + "getChatMember"
+    async def get_chat_member(self, *, chat_id: int, user_id: int) -> MemberPayload:
         data = {"chat_id": chat_id, "user_id": user_id}
-        response = await self.request(Route("GET", url), json=data)
+        return await self.request("getChatMember", json=data)
 
-        return response["result"]
-
-    async def get_user_profile_photos(self, user_id: int, offset: int | None, limit: int | None) -> UserProfilePhotosPayload:
-        """Requests a list of profile photos for a user."""
-
-        url = self._base_url + "getUserProfilePhotos"
+    async def get_user_profile_photos(self, *, user_id: int, offset: int | None, limit: int | None) -> UserProfilePhotosPayload:
         data = {"user_id": user_id}
 
         if offset is not None:
@@ -345,166 +231,111 @@ class HTTPClient:
         if limit is not None:
             data["limit"] = limit
 
-        response = await self.request(Route("GET", url), json=data)
-        return response["result"]
+        return await self.request("getUserProfilePhotos", json=data)
 
-    async def set_chat_photo(self, chat_id: int, photo: io.BytesIO) -> None:
-        """Sends a new chat profile photo."""
-
-        url = self._base_url + "setChatPhoto"
+    async def set_chat_photo(self, *, chat_id: int, photo: io.BytesIO) -> None:
         writer = aiohttp.FormData()
         writer.add_field("chat_id", str(chat_id))
         writer.add_field("photo", photo)
-        await self.request(Route("POST", url), data=writer)
+        await self.request("setChatPhoto", data=writer)
 
-    async def delete_chat_photo(self, chat_id: int) -> None:
-        """Deletes a chat profile photo."""
-
-        url = self._base_url + "deleteChatPhoto"
+    async def delete_chat_photo(self, *, chat_id: int) -> None:
         data = {"chat_id": chat_id}
-        await self.request(Route("POST", url), json=data)
+        await self.request("deleteChatPhoto", json=data)
 
-    async def set_chat_title(self, chat_id: int, title: str) -> None:
-        """Sets the title of a chat."""
-
-        url = self._base_url + "setChatTitle"
+    async def set_chat_title(self, *, chat_id: int, title: str) -> None:
         data = {"chat_id": chat_id, "title": title}
-        response = await self.request(Route("POST", url), json=data)
+        await self.request("setChatTitle", json=data)
 
-    async def set_chat_description(self, chat_id: int, description: str | None) -> None:
-        """Sets the description of a chat."""
-
-        url = self._base_url + "setChatDescription"
+    async def set_chat_description(self, *, chat_id: int, description: str | None) -> None:
         data: dict[str, Any] = {"chat_id": chat_id}
 
         if description:
             data["description"] = description
 
-        await self.request(Route("POST", url), json=data)
+        await self.request("setChatDescription", json=data)
 
     async def pin_chat_message(
         self,
+        *,
         chat_id: int,
         message_id: int,
         disable_notification: bool = False
     ) -> None:
-        """Adds a message to the list of pinned messages in a chat."""
+        data = {"chat_id": chat_id, "message_id": message_id, "disable_notification": disable_notification}
+        await self.request("pinChatMessage", json=data)
 
-        url = self._base_url + "pinChatMessage"
-        data = {
-            "chat_id": chat_id,
-            "message_id": message_id,
-            "disable_notification": disable_notification
-        }
-        await self.request(Route("POST", url), json=data)
+    async def unpin_chat_message(self, *, chat_id: int, message_id: int) -> None:
+        data = {"chat_id": chat_id, "message_id": message_id}
+        await self.request("unpinChatMessage", json=data)
 
-    async def unpin_chat_message(self, chat_id: int, message_id: int) -> None:
-        """Removes a message from the list of pinned messages in a chat."""
-
-        url = self._base_url + "unpinChatMessage"
-        data = {
-            "chat_id": chat_id,
-            "message_id": message_id
-        }
-        await self.request(Route("POST", url), json=data)
-
-    async def unpin_all_chat_messages(self, chat_id: int) -> None:
-        """Clears the list of pinned messages in a chat."""
-
-        url = self._base_url + "unpinAllChatMessages"
+    async def unpin_all_chat_messages(self, *, chat_id: int) -> None:
         data = {"chat_id": chat_id}
-        await self.request(Route("POST", url), json=data)
+        await self.request("unpinAllChatMessages", json=data)
 
-    async def leave_chat(self, chat_id: int) -> None:
-        """Leaves a chat."""
-
-        url = self._base_url + "leaveChat"
+    async def leave_chat(self, *, chat_id: int) -> None:
         data = {"chat_id": chat_id}
-        await self.request(Route("POST", url), json=data)
+        await self.request("leaveChat", json=data)
 
-    async def get_chat_member_count(self, chat_id: int) -> int:
-        """Fetches the number of members in a chat."""
-
-        url = self._base_url + "getChatMemberCount"
+    async def get_chat_member_count(self, *, chat_id: int) -> int:
         data = {"chat_id": chat_id}
-        response = await self.request(Route("POST", url), json=data)
-
-        return response["result"]
+        return await self.request("getChatMemberCount", json=data)
 
     async def get_me(self) -> UserPayload:
-        """Fetches the bot account."""
-
-        url = self._base_url + "getMe"
-        response = await self.request(Route("GET", url))
-
-        return response["result"]
+        return await self.request("getMe")
 
     async def get_updates(
         self,
+        *,
         offset: int | None = None,
         limit: int = 100,
         timeout: int = 0,
         allowed_updates: list[str] | None = None
     ) -> list[dict[str, Any]]:
-        """Fetches the new updates for the bot."""
-
-        url = self._base_url + "getUpdates"
         data = {"offset": offset, "limit": limit, "timeout": timeout, "allowed_updates": allowed_updates}
-        response = await self.request(Route("POST", url), json=data)
+        return await self.request("getUpdates", json=data)
 
-        return response["result"]
-
-    async def set_my_name(self, name: str | None, language_code: str | None) -> None:
-        """Changes the name of the bot."""
-
-        url = self._base_url + "setMyName"
+    async def set_my_name(self, *, name: str | None, language_code: str | None) -> None:
         data = {"name": name or ""}
 
         if language_code:
             data["language_code"] = language_code
 
-        await self.request(Route("POST", url), json=data)
+        await self.request("setMyName", json=data)
 
-    async def set_my_description(self, description: str | None, language_code: str | None) -> None:
-        """Changes the full description of the bot."""
-
-        url = self._base_url + "setMyDescription"
+    async def set_my_description(self, *, description: str | None, language_code: str | None) -> None:
         data = {"description": description or ""}
 
         if language_code:
             data["language_code"] = language_code
 
-        await self.request(Route("POST", url), json=data)
+        await self.request("setMyDescription", json=data)
 
-    async def set_my_short_description(self, short_description: str | None, language_code: str | None) -> None:
-        """Changes the short description of the bot."""
-
-        url = self._base_url + "setMyShortDescription"
+    async def set_my_short_description(self, *, short_description: str | None, language_code: str | None) -> None:
         data = {"short_description": short_description or ""}
 
         if language_code:
             data["language_code"] = language_code
 
-        await self.request(Route("POST", url), json=data)
+        await self.request("setMyShortDescription", json=data)
 
-    async def set_my_commands(self, commands: list[dict[str, Any]], language_code: str | None = None) -> None:
-        url = self._base_url + "setMyCommands"
+    async def set_my_commands(self, *, commands: list[dict[str, Any]], language_code: str | None = None) -> None:
         data: dict[str, Any] = {"commands": commands}
 
         if language_code:
             data["language_code"] = language_code
 
-        await self.request(Route("POST", url), json=data)
+        await self.request("setMyCommands", json=data)
 
     async def answer_callback_query(
         self,
+        *,
         callback_query_id: str,
         text: str | None,
         show_alert: bool,
         url: str | None,
         cache_time: int | None
     ) -> None:
-        route = Route("POST", self._base_url + "answerCallbackQuery")
         data: dict[str, Any] = {"callback_query_id": callback_query_id}
 
         if text is not None:
@@ -516,9 +347,7 @@ class HTTPClient:
         if cache_time is not None:
             data["cache_time"] = cache_time
 
-        await self.request(route, json=data)
+        await self.request("answerCallbackQuery", json=data)
 
     async def close(self) -> None:
-        """Closes the HTTP session."""
-
         await self.session.close()

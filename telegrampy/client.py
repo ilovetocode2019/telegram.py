@@ -56,11 +56,16 @@ class Client:
     Parameters
     ----------
     token: :class:`str`
-        The Telegram API token to authenticate the bot with.
+        The bot token used to authenticate the account.
     loop: :class:`asyncio.AbstractEventLoop` | None
-        The event loop to run the bot on. Uses :func:`asyncio.get_event_loop` if none is specified.
-    timeout: :class:`int` | None
-        The timeout in seconds for long polling. Defaults to 10.
+        The event loop associated with the client.
+        Uses :func:`asyncio.get_event_loop` if left unspecified.
+    timeout: :class:`int`
+        The long polling timeout in seconds. Defaults to ``10``.
+    api_url: :class:`str`
+        The URL of a selfhosted API server. Otherwise, Telegram's servers will be used.
+    api_is_local: :class:`bool`
+        Whether the API server is in local mode.
 
     Attributes
     ----------
@@ -68,13 +73,21 @@ class Client:
         The event loop that the bot is running on.
     """
 
-    def __init__(self, token: str, **options: Any) -> None:
-        self.loop: asyncio.AbstractEventLoop = options.get("loop") or asyncio.get_event_loop()
-        self.http: HTTPClient = HTTPClient(token=token, loop=self.loop)
+    def __init__(
+        self,
+        token: str,
+        *,
+        loop: asyncio.AbstractEventLoop | None = None,
+        timeout: int = 10,
+        api_url: str = "https://api.telegram.org",
+        is_local: bool = False
+    ) -> None:
+        self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
+        self.http: HTTPClient = HTTPClient(token=token, loop=self.loop, api_url=api_url, is_local=is_local)
 
         self._running: bool = False
         self._last_update_id: int | None = None
-        self._timeout: int = options.get("timeout") or 10
+        self._timeout: int = timeout
 
         self._listeners: dict[str, list[CoroFunc]] = {}
         self._waiting_for: dict[str, list[tuple[asyncio.Future, Callable[..., bool]]]] = {}
@@ -133,7 +146,7 @@ class Client:
             The display name of the bot, no longer than 64 chatacters.
         """
 
-        await self.http.set_my_name(name, language_code)
+        await self.http.set_my_name(name=name, language_code=language_code)
 
     async def set_description(
         self,
@@ -159,9 +172,9 @@ class Client:
         """
 
         if short:
-            await self.http.set_my_short_description(description, language_code)
+            await self.http.set_my_short_description(short_description=description, language_code=language_code)
         else:
-            await self.http.set_my_description(description, language_code)
+            await self.http.set_my_description(description=description, language_code=language_code)
 
     def get_partial_chat(self, chat_id) -> PartialChat:
         """Returns a partial chat for the given ID, without fetching anything from Telegram.
@@ -187,19 +200,19 @@ class Client:
         await self.setup_hook()
         tries = 0
 
-        log.info("Polling updates from Telegram...")
+        log.info("Polling updates from server...")
 
         while self._running:
             try:
                 updates = await self.http.get_updates(offset=self._last_update_id, timeout=self._timeout)
             except (InvalidToken, Conflict):
                 raise
-            except Exception:
+            except Exception as exc:
                 if self._running:
                     if tries < 30:
                         tries += 1
-                    log.warning(f"Couldn't connect to Telegram. Retrying in {tries*2} seconds.")
-                    await asyncio.sleep(tries*2)
+                    log.error(f"Failure while polling updates. Retrying in {tries * 2} seconds.", exc_info=exc)
+                    await asyncio.sleep(tries * 2)
             else:
                 if updates:
                     update_ids = [int(update["update_id"]) for update in updates]

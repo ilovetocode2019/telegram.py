@@ -27,6 +27,8 @@ from __future__ import annotations
 import io
 from typing import TYPE_CHECKING
 
+from .errors import ClientException
+
 if TYPE_CHECKING:
     from .http import HTTPClient
     from .types.file import File as FilePayload, PhotoSize as PhotoSizePayload
@@ -45,8 +47,10 @@ class File:
     size: :class:`int` | None
         The size of the file's content in bytes.
     path: :class:`str` | None
-        The relative path of the file on the server, guaranteed to be valid for at least an hour.
-        It is preferable to use :meth:`.read` or :meth:`.save` to download the content.
+        The relative path of the file on the server.
+        In local mode, this is the absolute path on the filesystem, which may contain sensitive information such as the bot's token.
+        The path is guaranteed to be valid for at least an hour.
+        It is preferable to use :meth:`.read` or :meth:`.save` rather than using this directly.
     """
  
     def __init__(self, http: HTTPClient, data: FilePayload) -> None:
@@ -59,11 +63,11 @@ class File:
     async def refresh(self) -> File:
         """|coro|
 
-        Creates a new file with an updated download path.
+        Creates a new file with an updated path.
 
         Returns
         -------
-            The updated file.
+            The refreshed file.
 
         Raises
         ------
@@ -88,13 +92,12 @@ class File:
         ------
         HTTPException
             Fetching the content of the file failed.
-        RuntimeError
-            The file has no download path associated with it.
-            
+        ClientException
+            The file has an absolute path to the local filesystem or none was provided.
         """
 
         if self.path is None:
-            raise RuntimeError("File is not downloadable from server.")
+            raise ClientException("No path provided for this file.")
 
         return await self._http.fetch_file(file_path=self.path)
 

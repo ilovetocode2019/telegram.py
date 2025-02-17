@@ -31,7 +31,11 @@ if TYPE_CHECKING:
 
 
 class TelegramException(Exception):
-    """Base exception for all errors."""
+    """Base exception for errors relating to telegram.py."""
+
+
+class ClientException(TelegramException):
+    """Raised when something miscellaneous goes wrong."""
 
 
 class HTTPException(TelegramException):
@@ -47,9 +51,9 @@ class HTTPException(TelegramException):
        The message for the request that failed.
     """
 
-    def __init__(self, response: aiohttp.ClientResponse, message: str | None) -> None:
-        self.response = response
-        self.message = message
+    def __init__(self, response: aiohttp.ClientResponse, message: str) -> None:
+        self.response: aiohttp.ClientResponse = response
+        self.message: str = message
         super().__init__(f"{response.status} {message}")
 
 

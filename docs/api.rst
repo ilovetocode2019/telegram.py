@@ -166,6 +166,9 @@ Exceptions
 .. autoclass:: TelegramException
     :members:
 
+.. autoclass:: ClientException
+    :members:
+
 .. autoclass:: HTTPException
     :members:
 
