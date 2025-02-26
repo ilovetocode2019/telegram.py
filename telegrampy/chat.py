@@ -272,6 +272,7 @@ class Chat(PartialChat):
         else:
             return f"{self.first_name} {self.last_name}" if self.last_name else self.first_name # type: ignore
 
+
 class ChatInvite:
     """Represents an invite to a chat in the form of a link.
 
@@ -295,7 +296,7 @@ class ChatInvite:
         The maxmimum number of users that can be simultaneous chat members, by joining through this link.
     pending_join_request_count: :class:`int` | None
         The number of pending join requests for users of the link.
-    subscription_period: ;class:`int` | None
+    subscription_period: :class:`int` | None
         The number of seconds the subscription will be active for before the next payment
     subscription_price: :class:`int` | None
         The number of stars a chat member must pay initally and after each following subscription period.

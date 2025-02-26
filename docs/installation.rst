@@ -1,19 +1,7 @@
-.. _intro:
-
-Introduction
+Installation
 ============
 
-Welcome to the documentation for telegram.py, an async API wrapper for the Telegram bot API in Python.
-
-.. _installation:
-
-Installation
-------------
-
-.. note::
-    telegram.py requires Python 3.10 or higher
-
-Install via pip:
+You can install telegram.py from PyPI. Python 3.10 or higher is required to use the library.
 
 .. tab:: Unix (Mac/Linux)
 

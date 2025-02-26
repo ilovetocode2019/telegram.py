@@ -103,11 +103,11 @@ class BaseUser(Hashable):
 
         Parameters
         ----------
-        :class:`int` | None
+        offset: :class:`int` | None
             The sequential number of the first photo to be retrieved.
             If unspecified, all photos will be retrieved.
         limit: :class:`int`
-            The maximum number of photos to be retrieved. Defaults to and cannot be more than ``100``.
+            The maximum number of photos to be retrieved. Defaults to and cannot exceed ``100``.
         """
         
         result = await self._http.get_user_profile_photos(user_id=self.id, offset=offset, limit=limit)

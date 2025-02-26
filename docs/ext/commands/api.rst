@@ -11,8 +11,9 @@ Bot
 .. autoclass:: telegrampy.ext.commands.Bot
     :members:
     :inherited-members:
+    :exclude-members: command
 
-    .. autofunction:: telegrampy.ext.commands.Bot.command
+    .. automethod:: Bot.command
         :decorator:
 
 Events
@@ -73,6 +74,7 @@ Context
 
 .. autoclass:: telegrampy.ext.commands.Context()
     :members:
+    :inherited-members:
 
 Converters
 ----------

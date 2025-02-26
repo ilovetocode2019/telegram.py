@@ -124,7 +124,7 @@ Poll
     :members:
 
 Files
------
+~~~~~
 
 .. autoclass:: File()
     :members:
