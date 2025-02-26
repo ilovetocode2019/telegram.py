@@ -6,20 +6,34 @@
 Welcome to telegram.py!
 =======================================
 
-An async API wrapper for the Telegram bot API in Python.
+telegram.py is async API wrapper for the Telegram bot API in Python.
 
-- **Introduction:** :doc:`quickstart` | :doc:`guide` | `Registering a Bot <https://core.telegram.org/bots#3-how-do-i-create-a-bot>`_
-- **Examples:** Check out the examples in the `repository <https://github.com/ilovetocode2019/telegram.py>`_
-- **Help:** Are you stuck? Help is available in our `Telegram Group <https://t.me/tpy_group>`_
 
-Contents
---------
+Why telegram.py?
+-----------------
+
+It's good. TBD
+
+
+Getting Started
+-----------------
+
+- **Introduction:** Create your first bot with the :doc:`tutorial </tutorial>`.
+- **Guides:** Looking to do something specific? Browse the :doc:`guides </guides/index>`.
+- **Examples:** Want more? Check out the examples in the `repository <https://github.com/ilovetocode2019/telegram.py>`_.
+- **Help:** Are you stuck? Help is available in our `Telegram Group <https://t.me/tpy_group>`_.
+
+
+Documentation
+--------------
+
 .. toctree::
    :maxdepth: 1
-   
+
    installation
    quickstart
-   guide
+   tutorial
+   guides/index
    api
    changelog
 
