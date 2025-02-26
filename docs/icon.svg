@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="997.73962"
+   height="1000"
+   viewBox="0 0 997.73962 1000"
+   version="1.1"
+   id="svg34"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <!-- Generator: Sketch 53.2 (72643) - https://sketchapp.com -->
+  <title
+     id="title20">Artboard</title>
+  <desc
+     id="desc22">Created with Sketch.</desc>
+  <defs
+     id="defs29">
+    <linearGradient
+       x1="500"
+       y1="0"
+       x2="500"
+       y2="992.58337"
+       id="linearGradient-1"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.8022498,0,0,0.8022498,98.875101,98.875101)">
+      <stop
+         stop-color="#2AABEE"
+         offset="0%"
+         id="stop24" />
+      <stop
+         stop-color="#229ED9"
+         offset="100%"
+         id="stop26" />
+    </linearGradient>
+    <mask
+       maskUnits="userSpaceOnUse"
+       id="mask-powermask-path-effect2376">
+      <path
+         id="mask-powermask-path-effect3446_box"
+         style="fill:#ffffff;fill-opacity:1"
+         d="M 0.4981076,-1 H 998.73966 V 1001 H 0.4981076 Z" />
+      <path
+         id="mask-powermask-path-effect2376_box"
+         style="fill:#ffffff;fill-opacity:1"
+         d="M 0.4981076,-1 H 998.73966 V 1001 H 0.4981076 Z" />
+      <path
+         id="path3448"
+         style="fill:#ffffff;fill-opacity:1"
+         d="M -1,-1 H 1001 V 1001 H -1 Z" />
+      <circle
+         id="circle3450"
+         fill="url(#linearGradient-1)"
+         cx="500"
+         cy="500"
+         r="365.17032"
+         style="display:inline;fill:#000000;fill-opacity:1;stroke-width:0.730341"
+         d="M 865.17032,500 A 365.17032,365.17032 0 0 1 500,865.17032 365.17032,365.17032 0 0 1 134.82968,500 365.17032,365.17032 0 0 1 500,134.82968 365.17032,365.17032 0 0 1 865.17032,500 Z" />
+    </mask>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath7830">
+      <path
+         id="path7832"
+         style="fill:#000000;fill-opacity:1;stroke-width:18.1728;-inkscape-stroke:none;stop-color:#000000"
+         d="M 999.2377,1000.7361 1.4980469,1002.2344 136.66602,866.25195 c 19.66208,17.69589 168.6749,25.29599 121.73242,-122.46289 -45.79069,-144.13341 220.3125,-221.63867 220.3125,-221.63867 0,0 297.56061,-145.81523 265.85742,-267.45508 C 704.25502,100.01976 861.82617,136.73047 861.82617,136.73047 L 997.74023,0 Z" />
+    </clipPath>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath7899">
+      <path
+         style="display:inline;fill:#000000;fill-opacity:1;stroke-width:18.1728;-inkscape-stroke:none;stop-color:#000000"
+         d="M 997.73966,0 861.82635,136.73084 c 0,0 -157.57234,-36.71143 -117.25896,117.96428 31.70322,121.63997 -265.85669,267.45583 -265.85669,267.45583 0,0 -266.10375,77.50466 -220.31302,221.63822 C 305.34021,891.5482 156.32897,883.94809 136.66687,866.25219 L 1.4981076,1002.234 V -4.4943228 Z"
+         id="path7901" />
+    </clipPath>
+  </defs>
+  <g
+     id="Artboard"
+     stroke="none"
+     stroke-width="1"
+     fill="none"
+     fill-rule="evenodd"
+     transform="translate(-1.4980469)">
+    <circle
+       id="Oval"
+       fill="url(#linearGradient-1)"
+       cx="500"
+       cy="500"
+       style="display:inline;fill:url(#linearGradient-1);stroke-width:0.80225"
+       r="401.12491" />
+    <path
+       d="m 226.32842,494.72207 c 145.76015,-63.50539 242.95642,-105.37202 291.5888,-125.59991 138.85531,-57.75473 167.70826,-67.78735 186.51421,-68.11863 4.13619,-0.0729 13.38441,0.95221 19.37502,5.81318 5.05835,4.1045 6.4501,9.6491 7.1161,13.54062 0.666,3.89152 1.49533,12.7565 0.83608,19.68334 -7.52462,79.06182 -40.08353,270.924 -56.64765,359.4746 -7.0089,37.46907 -20.80964,50.03226 -34.17036,51.26174 -29.03594,2.67193 -51.0845,-19.18898 -79.20723,-37.62377 -44.0065,-28.84682 -68.86738,-46.80406 -111.58332,-74.95323 -49.36565,-32.53123 -17.36395,-50.41096 10.76939,-79.63145 7.36263,-7.64714 135.29562,-124.01208 137.77177,-134.5682 0.30968,-1.32023 0.59708,-6.24138 -2.32649,-8.83993 -2.92357,-2.59855 -7.23851,-1.70995 -10.35229,-1.00323 -4.41369,1.00174 -74.71466,47.46807 -210.9029,139.39899 -19.95469,13.70243 -38.02904,20.37872 -54.22303,20.02886 -17.85257,-0.3857 -52.19377,-10.09412 -77.72291,-18.39264 -31.31254,-10.17847 -56.19913,-15.55991 -54.03206,-32.8461 1.12874,-9.00372 13.52769,-18.2118 37.19687,-27.62424 z"
+       id="Path-3"
+       fill="#ffffff" />
+    <path
+       id="path7826"
+       fill="url(#linearGradient-1)"
+       style="display:inline;fill:#ffde57;fill-opacity:1"
+       mask="url(#mask-powermask-path-effect2376)"
+       d="M 1000,500 A 500,500 0 0 1 500,1000 500,500 0 0 1 0,500 500,500 0 0 1 500,0 500,500 0 0 1 1000,500 Z"
+       clip-path="url(#clipPath7830)" />
+    <path
+       id="path6706"
+       fill="url(#linearGradient-1)"
+       style="display:inline;fill:#4584b6;fill-opacity:1"
+       mask="url(#mask-powermask-path-effect2376)"
+       d="M 1000,500 A 500,500 0 0 1 500,1000 500,500 0 0 1 0,500 500,500 0 0 1 500,0 500,500 0 0 1 1000,500 Z"
+       clip-path="url(#clipPath7899)" />
+  </g>
+  <metadata
+     id="metadata2820">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:title>Artboard</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+</svg>

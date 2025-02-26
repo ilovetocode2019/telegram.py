@@ -76,8 +76,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 #
 html_title = "telegram.py"
 html_theme = 'furo'
-html_logo = 'icon.png'
-html_favicon = 'icon.png'
+html_logo = 'icon.svg'
+html_favicon = 'icon.svg'
 
 
 # Add any paths that contain custom static files (such as style sheets) here,

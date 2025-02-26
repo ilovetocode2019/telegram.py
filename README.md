@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://raw.githubusercontent.com/ilovetocode2019/telegram.py/master/docs/icon.png" alt="Logo" title="telegram.py" height="200" width="200"/>
+<img src="./docs/icon.svg" alt="Logo" title="telegram.py" height="200" width="200"/>
 </p>
 
 # telegram.py
